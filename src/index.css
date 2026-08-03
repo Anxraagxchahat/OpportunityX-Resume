@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-dark: #05070D;
+  --bg-card: #0B0D14;
+  --bg-card-hover: #10131D;
+
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+
+  --primary: #F97316;
+  --primary-hover: #EA580C;
+  --secondary: #EAB308;
+  --highlight: #F59E0B;
+
+  --accent-green: #10B981;
+  --accent-red: #ef4444;
+
+  --border-color: rgba(148, 163, 184, 0.12);
+  --border-highlight: rgba(249, 115, 22, 0.25);
+
+  --gradient-primary: linear-gradient(135deg, #F97316 0%, #F59E0B 100%);
+  --gradient-glow: linear-gradient(90deg, rgba(249, 115, 22, 0.15), rgba(234, 179, 8, 0.15));
+  --gradient-text: linear-gradient(135deg, #F8FAFC 0%, #94A3B8 100%);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #05070D;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.4);
+}
+
+/* OpportunityX Design Tokens Utilities */
+.glass-panel {
+  background: rgba(11, 13, 20, 0.75);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.cyber-glass-card {
+  background: rgba(11, 13, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cyber-glass-card:hover {
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 25px rgba(249, 115, 22, 0.15);
+}
+
+.text-gradient-primary {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Authentic A4 Resume Paper Preview Styling */
+.a4-paper-container {
+  width: 210mm;
+  min-height: 297mm;
+  background: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(249, 115, 22, 0.1);
+  box-sizing: border-box;
+  margin: 0 auto;
+  position: relative;
+  transition: transform 0.2s ease-in-out;
+  transform-origin: top center;
+}
+
+/* PDF Print Stylesheet */
+@media print {
+  body * {
+    visibility: hidden;
+    background: transparent !important;
+  }
+  #resume-a4-preview, #resume-a4-preview * {
+    visibility: visible;
+  }
+  #resume-a4-preview {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 !important;
+    padding: 20mm !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+}
