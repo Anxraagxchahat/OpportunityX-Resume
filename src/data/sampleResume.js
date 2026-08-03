@@ -1,24 +1,23 @@
 /**
- * OpportunityX Resume Schema & Sample Data
- * Fully compliant with OpportunityX Ecosystem Profile Specs (career.opportunityx.co.in, verify.opportunityx.co.in)
+ * OpportunityX Resume Schema & Sample Profile
+ * Compliant with OpportunityX Ecosystem Profile Specs
  */
+
+import { createResumeMetadata, createEcosystemSchema, createCloudSchema, createSecuritySchema, createStyleSchema } from '../utils/metadata';
 
 export const defaultResumeData = {
   metadata: {
-    id: "ox-resume-demo-001",
-    title: "Alex Rivera - Software Engineer Resume",
-    template: "modern", // modern, minimal, tech, executive, creative, student
-    fontFamily: "Inter", // Inter, Outfit, Plus Jakarta Sans, JetBrains Mono
-    accentColor: "#F97316", // OpportunityX Orange
-    spacing: "normal", // compact, normal, spacious
-    lastSaved: new Date().toISOString(),
-    version: 1,
+    ...createResumeMetadata("Alex Rivera - Software Engineer Resume", "modern"),
+    id: "ox-resume-demo-001"
   },
-  ecosystem: {
-    version: "1.0.0",
-    verificationHash: "ox_verify_a9f82d4c",
-    syncReady: true,
-    platform: "OpportunityX Career OS"
+  ecosystem: createEcosystemSchema(),
+  cloud: createCloudSchema(),
+  security: createSecuritySchema(),
+  style: createStyleSchema(),
+  assets: {
+    profilePhoto: null,
+    digitalSignature: null,
+    personalLogo: null
   },
   personal: {
     fullName: "Alex Rivera",
@@ -150,21 +149,15 @@ export const defaultResumeData = {
 };
 
 export const emptyResumeSchema = {
-  metadata: {
-    id: `ox-resume-${Date.now()}`,
-    title: "Untitled Resume",
-    template: "modern",
-    fontFamily: "Inter",
-    accentColor: "#F97316",
-    spacing: "normal",
-    lastSaved: new Date().toISOString(),
-    version: 1,
-  },
-  ecosystem: {
-    version: "1.0.0",
-    verificationHash: `ox_verify_${Math.random().toString(36).substring(2, 10)}`,
-    syncReady: true,
-    platform: "OpportunityX Career OS"
+  metadata: createResumeMetadata("Untitled Resume", "modern"),
+  ecosystem: createEcosystemSchema(),
+  cloud: createCloudSchema(),
+  security: createSecuritySchema(),
+  style: createStyleSchema(),
+  assets: {
+    profilePhoto: null,
+    digitalSignature: null,
+    personalLogo: null
   },
   personal: {
     fullName: "",
