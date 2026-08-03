@@ -1,0 +1,177 @@
+import React from 'react';
+import { X, Palette, Type, Layout, Sliders, Check } from 'lucide-react';
+import { useResume } from '../context/ResumeContext';
+
+export const paperBackgroundsList = [
+  { id: 'white', label: 'Plain White', hex: '#ffffff', desc: 'Standard 100% ATS Safe' },
+  { id: 'warm', label: 'Warm Paper', hex: '#fdfbf7', desc: 'Subtle ivory tone' },
+  { id: 'light-gray', label: 'Light Gray', hex: '#f8fafc', desc: 'Clean modern slate tint' },
+  { id: 'minimal-accent', label: 'Minimal Tint', hex: '#f0fdf4', desc: 'Soft accent background' }
+];
+
+export const headerStylesList = [
+  { id: 'modern', label: 'Modern Left' },
+  { id: 'centered', label: 'Centered Executive' },
+  { id: 'classic', label: 'Classic Rules' }
+];
+
+export const dividerStylesList = [
+  { id: 'solid', label: 'Solid Line' },
+  { id: 'double', label: 'Double Rule' },
+  { id: 'dotted', label: 'Dotted Line' },
+  { id: 'minimal', label: 'Minimal Border' }
+];
+
+export const ThemeCustomizerModal = () => {
+  const {
+    isThemeCustomizerOpen,
+    setIsThemeCustomizerOpen,
+    activeResume,
+    updateStyle,
+    setAccentColor,
+    setFontFamily
+  } = useResume();
+
+  if (!isThemeCustomizerOpen) return null;
+
+  const style = activeResume.style || {
+    headerStyle: 'modern',
+    dividerStyle: 'solid',
+    pageMargin: 'normal',
+    lineSpacing: 'normal',
+    sectionSpacing: 'normal',
+    paperBackground: 'white'
+  };
+
+  const metadata = activeResume.metadata || {};
+  const accentHex = metadata.accentColor || '#F97316';
+  const fontFamily = metadata.fontFamily || 'Inter';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="bg-[#0B0D14] border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-5 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <button
+          onClick={() => setIsThemeCustomizerOpen(false)}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-900 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400">
+            <Palette className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-extrabold text-white">Theme & ATS Background Customizer</h3>
+            <p className="text-xs text-slate-400">Customize styling without modifying resume data</p>
+          </div>
+        </div>
+
+        {/* 1. Paper Background */}
+        <div className="space-y-2">
+          <div className="text-xs font-bold text-slate-300">ATS-Safe Paper Background</div>
+          <div className="grid grid-cols-2 gap-2">
+            {paperBackgroundsList.map((bg) => {
+              const isSel = style.paperBackground === bg.id;
+              return (
+                <button
+                  key={bg.id}
+                  onClick={() => updateStyle('paperBackground', bg.id)}
+                  className={`p-2.5 rounded-xl text-left border flex items-center gap-2.5 transition-all ${
+                    isSel ? 'bg-orange-500/10 border-orange-500/50 text-white' : 'bg-[#10131D] border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <div className="w-5 h-5 rounded-full border border-slate-400/30 flex-shrink-0" style={{ backgroundColor: bg.hex }} />
+                  <div>
+                    <div className="text-xs font-bold">{bg.label}</div>
+                    <div className="text-[10px] text-slate-500">{bg.desc}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 2. Header Style */}
+        <div className="space-y-2 pt-2 border-t border-slate-800">
+          <div className="text-xs font-bold text-slate-300">Header Layout Style</div>
+          <div className="grid grid-cols-3 gap-2">
+            {headerStylesList.map((h) => {
+              const isSel = (style.headerStyle || 'modern') === h.id;
+              return (
+                <button
+                  key={h.id}
+                  onClick={() => updateStyle('headerStyle', h.id)}
+                  className={`p-2 rounded-xl text-center text-xs font-semibold border transition-all ${
+                    isSel ? 'bg-orange-500/10 text-orange-300 border-orange-500/40' : 'bg-[#10131D] text-slate-400 border-slate-800 hover:text-slate-200'
+                  }`}
+                >
+                  {h.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3. Section Divider Style */}
+        <div className="space-y-2 pt-2 border-t border-slate-800">
+          <div className="text-xs font-bold text-slate-300">Section Divider Style</div>
+          <div className="grid grid-cols-2 gap-2">
+            {dividerStylesList.map((d) => {
+              const isSel = (style.dividerStyle || 'solid') === d.id;
+              return (
+                <button
+                  key={d.id}
+                  onClick={() => updateStyle('dividerStyle', d.id)}
+                  className={`p-2 rounded-xl text-xs font-semibold border transition-all ${
+                    isSel ? 'bg-orange-500/10 text-orange-300 border-orange-500/40' : 'bg-[#10131D] text-slate-400 border-slate-800 hover:text-slate-200'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 4. Page Margins & Spacing */}
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-300">Page Margins</label>
+            <select
+              value={style.pageMargin || 'normal'}
+              onChange={(e) => updateStyle('pageMargin', e.target.value)}
+              className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white"
+            >
+              <option value="compact">Compact (Tight)</option>
+              <option value="normal">Normal (Standard)</option>
+              <option value="spacious">Spacious (Generous)</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-300">Line Spacing</label>
+            <select
+              value={style.lineSpacing || 'normal'}
+              onChange={(e) => updateStyle('lineSpacing', e.target.value)}
+              className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white"
+            >
+              <option value="compact">Compact</option>
+              <option value="normal">Normal</option>
+              <option value="relaxed">Relaxed</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-slate-800 flex justify-end">
+          <button
+            onClick={() => setIsThemeCustomizerOpen(false)}
+            className="px-5 py-2 text-xs font-bold text-black bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl"
+          >
+            Apply Styling
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
