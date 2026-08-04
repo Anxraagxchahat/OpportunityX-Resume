@@ -3,14 +3,21 @@ import { ShieldCheck, Check, Sparkles, Lock, Zap } from 'lucide-react';
 
 export const freeForeverFeatures = [
   'Unlimited Resume Creation',
-  'Unlimited Resume Editing',
-  'Unlimited Premium Templates',
+  'Unlimited Editing',
+  'Unlimited Templates',
   'Unlimited PDF Download',
-  'No Watermarks Ever',
-  'Client Local Storage Privacy',
-  'Resume JSON Import & Export',
-  'No Login Required'
+  'Unlimited JSON Export',
+  'Unlimited Import',
+  'Unlimited Resume Versions',
+  'Unlimited Resume Health',
+  'Unlimited ATS Analysis',
+  'Unlimited Resume Intelligence',
+  'No Watermark',
+  'No Ads',
+  'No Forced Login',
+  'Privacy First'
 ];
+
 
 export const FreeForeverBadge = ({ compact = false }) => {
   if (compact) {

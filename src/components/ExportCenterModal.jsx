@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Download, FileText, Printer, Copy, ShieldCheck, FileCheck, Sparkles, Layers } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
+import { downloadDirectPDF } from '../utils/pdfDownloader';
 
 export const exportPresetsList = [
   { id: 'Corporate', label: 'Corporate & Tech', desc: 'Standard A4 PDF with normal margins & clean JSON export' },
@@ -17,16 +18,25 @@ export const ExportCenterModal = () => {
     exportActiveResumeJSON,
     duplicateResume,
     activeResumeId,
-    updateUserPreferences
+    updateUserPreferences,
+    setIsDonationModalOpen
   } = useResume();
 
   const [selectedPreset, setSelectedPreset] = useState('Corporate');
 
   if (!isExportCenterOpen) return null;
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     setIsExportCenterOpen(false);
-    window.print();
+    const candidateName = activeResume?.personal?.fullName || 'OpportunityX';
+
+    // Direct Client PDF Download (No print window)
+    await downloadDirectPDF('resume-a4-preview', candidateName);
+
+    // Trigger Post-Download Support & Donation Pop-up
+    setTimeout(() => {
+      setIsDonationModalOpen(true);
+    }, 400);
   };
 
   const handleExportCleanJSON = () => {
@@ -40,7 +50,7 @@ export const ExportCenterModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn no-print">
       <div className="bg-[#0B0D14] border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-5 relative">
         <button
           onClick={() => setIsExportCenterOpen(false)}

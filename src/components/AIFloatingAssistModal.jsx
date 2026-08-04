@@ -1,186 +1,174 @@
 import React, { useState } from 'react';
-import { Sparkles, X, Check, RefreshCw, Wand2, Copy } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { X, Sparkles, Wand2, RefreshCw, Check, AlertCircle } from 'lucide-react';
+import { useResume } from '../context/ResumeContext';
+import { executeOpenRouterRequest } from '../services/ai/providerManager';
+import { buildMinimalContext } from '../services/ai/contextBuilder';
+import { getPromptTemplate } from '../services/ai/promptLibrary';
+import { injectPromptVariables } from '../services/ai/promptVariableEngine';
+import { getCachedResponse, setCachedResponse } from '../services/ai/responseCache';
+import { AIResponseViewer } from './AIResponseViewer';
 
-export const AIFloatingAssistModal = ({ isOpen, onClose, targetField, initialText, onApply }) => {
+export const AIFloatingAssistModal = ({
+  isOpen,
+  onClose,
+  targetField = 'summary',
+  initialText = '',
+  onApply = () => {}
+}) => {
+  const { activeResume, selectedAIModel, aiCredits, consumeCredit, checkAIAccess, byokKeys } = useResume();
+  const [tone, setTone] = useState('Professional');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(0);
-  const [generatedOptions, setGeneratedOptions] = useState([]);
-  const [copied, setCopied] = useState(false);
+  const [responsePayload, setResponsePayload] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   if (!isOpen) return null;
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    setErrorMsg(null);
+
+    // 1. Check Auth & AI Credits Access
+    if (!checkAIAccess(`AI ${targetField.toUpperCase()}`)) {
+      return;
+    }
+
+    // 2. Check response cache first
+    const cached = getCachedResponse(targetField, initialText, selectedAIModel);
+    if (cached) {
+      setResponsePayload(cached);
+      return;
+    }
+
     setIsGenerating(true);
-    setTimeout(() => {
-      let suggestions = [];
-      if (targetField === 'summary') {
-        suggestions = [
-          `High-performing ${initialText ? 'Software Engineer' : 'Professional'} with expertise in building scalable SaaS platforms, optimizing cloud services, and delivering user-centric products. Proven track record of boosting system efficiency by 40% while reducing latency.`,
-          `Results-driven Developer skilled in full-stack architecture, high-throughput microservices, and modern web frameworks. Passionate about engineering accessible, high-speed applications with 99.99% reliability.`,
-          `Innovative Full-Stack Engineer specializing in React, TypeScript, and cloud-native backends. Experienced in leading agile teams, streamlining CI/CD pipelines, and integrating AI workflows into consumer applications.`
-        ];
-      } else if (targetField === 'experience' || targetField === 'bullet') {
-        suggestions = [
-          `Engineered high-concurrency microservices processing 10M+ daily events, reducing API response times by 42%.`,
-          `Architected scalable React/Tailwind user interfaces, elevating Lighthouse performance scores to 98+.`,
-          `Optimized SQL database query indexing, cutting server execution latency from 450ms down to 85ms.`
-        ];
-      } else if (targetField === 'project') {
-        suggestions = [
-          `Designed and deployed an open-source analytics dashboard utilizing React, Vite, and Tailwind CSS to track live metrics across 100K+ users.`,
-          `Engineered a real-time collaborative workspace platform with WebSocket synchronization and instant cloud backups.`
-        ];
-      } else if (targetField === 'skills') {
-        suggestions = [
-          `TypeScript, React, Next.js, Node.js, Tailwind CSS, PostgreSQL, Docker, AWS, GraphQL, Redis`
-        ];
-      } else {
-        suggestions = [
-          `Enhanced text alignment with action verbs and quantifiable metrics for maximum ATS keyword compliance.`,
-          `Streamlined description to emphasize technical leadership, system architecture, and product impact.`
-        ];
-      }
-      setGeneratedOptions(suggestions);
-      setSelectedOption(0);
+
+    try {
+      // 3. Build minimal context
+      const contextPayload = buildMinimalContext(
+        targetField === 'summary' ? 'summary_generator' : 'experience_rewrite',
+        activeResume,
+        { textToFix: initialText }
+      );
+
+      // 4. Build prompt using template
+      const template = getPromptTemplate(targetField === 'summary' ? 'summary_generator' : 'experience_rewrite');
+      const systemPrompt = template.systemPrompt;
+      const userPrompt = template.userPromptTemplate(initialText || JSON.stringify(contextPayload));
+
+      // 5. Execute OpenRouter Request with 1-time retry
+      const apiKey = byokKeys.openrouter || import.meta.env.VITE_OPENROUTER_API_KEY;
+      const result = await executeOpenRouterRequest({
+        modelId: selectedAIModel || 'google/gemini-2.5-flash:free',
+        systemPrompt,
+        userPrompt: `${userPrompt}\nDesired Tone: ${tone}. Respond with content only.`,
+        apiKey
+      });
+
+      // 6. Deduct credit ONLY on successful response
+      consumeCredit(`AI ${targetField.toUpperCase()}`);
+
+      // 7. Cache response locally
+      setCachedResponse(targetField, initialText, selectedAIModel, result);
+
+      setResponsePayload(result);
+    } catch (err) {
+      console.error("AI Request Failed:", err);
+      setErrorMsg(err.message || "Failed to generate AI content. No credit was deducted.");
+    } finally {
       setIsGenerating(false);
-    }, 600);
+    }
   };
 
-  // Trigger initial generate if options are empty
-  if (generatedOptions.length === 0 && !isGenerating) {
-    handleGenerate();
-  }
-
-  const handleApply = () => {
-    if (generatedOptions[selectedOption]) {
-      onApply(generatedOptions[selectedOption]);
+  const handleApplyResult = () => {
+    if (responsePayload?.generatedContent) {
+      onApply(responsePayload.generatedContent);
       onClose();
     }
   };
 
-  const handleCopy = () => {
-    if (generatedOptions[selectedOption]) {
-      navigator.clipboard.writeText(generatedOptions[selectedOption]);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }
-  };
-
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="w-full max-w-2xl bg-[#0B0D14] border border-orange-500/30 rounded-2xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(249,115,22,0.15)] relative overflow-hidden"
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn no-print">
+      <div className="bg-[#0B0D14] border border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl p-6 space-y-5 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-900 transition-colors"
         >
-          {/* Top Decorative Glow */}
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-orange-500/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-yellow-500/15 rounded-full blur-3xl pointer-events-none" />
+          <X className="w-5 h-5" />
+        </button>
 
-          {/* Header */}
-          <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400">
-                <Sparkles className="w-5 h-5 animate-pulse" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  OpportunityX AI Assistant
-                  <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                    Phase 0 Preview
-                  </span>
-                </h3>
-                <p className="text-xs text-slate-400">
-                  AI-powered professional optimization for {targetField || 'section'}
-                </p>
-              </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400">
+              <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div>
+              <h3 className="text-base font-extrabold text-white">AI Resume Assistant</h3>
+              <p className="text-xs text-slate-400">({aiCredits.remaining} credits remaining)</p>
+            </div>
           </div>
 
-          {/* Body Content */}
-          <div className="space-y-4">
+          {/* AI Branding Badge */}
+          <div className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/30">
+            Powered by AI • Uses 1 AI Credit
+          </div>
+        </div>
+
+        {errorMsg && (
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {/* Tone Selector */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-300">Tone & Output Style</label>
+          <div className="grid grid-cols-4 gap-2">
+            {['Professional', 'Friendly', 'Corporate', 'Technical'].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTone(t)}
+                className={`py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                  tone === t ? 'bg-orange-500/20 text-orange-300 border-orange-500/50' : 'bg-[#10131D] text-slate-400 border-slate-800'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Execution Control */}
+        <div className="pt-2">
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="w-full py-2.5 text-xs font-bold text-black bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+          >
             {isGenerating ? (
-              <div className="py-12 text-center space-y-3">
-                <RefreshCw className="w-8 h-8 text-orange-400 animate-spin mx-auto" />
-                <p className="text-sm font-medium text-slate-300">
-                  OpportunityX AI is generating high-impact enhancements...
-                </p>
-              </div>
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" /> Generating via AI...
+              </>
             ) : (
               <>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-                    <span>Generated Options ({generatedOptions.length})</span>
-                    <button
-                      onClick={handleGenerate}
-                      className="text-orange-400 hover:text-orange-300 flex items-center gap-1 hover:underline"
-                    >
-                      <Wand2 className="w-3.5 h-3.5" /> Regenerate
-                    </button>
-                  </div>
-                  <div className="space-y-2.5">
-                    {generatedOptions.map((option, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => setSelectedOption(idx)}
-                        className={`p-3.5 rounded-xl border text-sm transition-all cursor-pointer ${
-                          selectedOption === idx
-                            ? 'bg-orange-500/10 border-orange-500/60 text-white shadow-[0_0_15px_rgba(249,115,22,0.1)]'
-                            : 'bg-[#10131D] border-slate-800 text-slate-300 hover:border-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <p className="leading-relaxed">{option}</p>
-                          <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                            selectedOption === idx ? 'border-orange-500 bg-orange-500 text-black' : 'border-slate-600'
-                          }`}>
-                            {selectedOption === idx && <Check className="w-3 h-3 stroke-[3]" />}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <Wand2 className="w-4 h-4" /> Run AI Generation (1 Credit)
               </>
             )}
-          </div>
+          </button>
+        </div>
 
-          {/* Footer Actions */}
-          <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
-            <button
-              onClick={handleCopy}
-              className="px-3.5 py-2 text-xs font-medium text-slate-300 bg-slate-800/80 hover:bg-slate-700 rounded-lg flex items-center gap-1.5 transition-colors"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Copied' : 'Copy Text'}
-            </button>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleApply}
-                disabled={isGenerating || generatedOptions.length === 0}
-                className="px-4 py-2 text-xs font-semibold text-black bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-lg shadow-[0_0_15px_rgba(249,115,22,0.3)] transition-all flex items-center gap-1.5 disabled:opacity-50"
-              >
-                <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Apply to Resume
-              </button>
-            </div>
-          </div>
-        </motion.div>
+        {/* Response Viewer */}
+        {responsePayload && (
+          <AIResponseViewer
+            originalText={initialText}
+            improvedText={responsePayload.generatedContent}
+            creditsUsed={responsePayload.creditsConsumed}
+            latencyMs={responsePayload.latencyMs}
+            onAccept={handleApplyResult}
+            onReject={() => setResponsePayload(null)}
+            onRegenerate={handleGenerate}
+          />
+        )}
       </div>
-    </AnimatePresence>
+    </div>
   );
 };
+

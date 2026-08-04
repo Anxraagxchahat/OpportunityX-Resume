@@ -1,9 +1,9 @@
 import React from 'react';
-import { X, Sparkles, ShieldCheck, Key, ArrowRight } from 'lucide-react';
+import { X, Sparkles, ShieldCheck, Zap, ArrowRight, Key } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 
 export const AIUpgradePromptModal = () => {
-  const { isAIUpgradePromptOpen, setIsAIUpgradePromptOpen, setIsBYOKModalOpen, aiCredits } = useResume();
+  const { isAIUpgradePromptOpen, setIsAIUpgradePromptOpen, setIsBuyCreditsModalOpen, setIsBYOKModalOpen } = useResume();
 
   if (!isAIUpgradePromptOpen) return null;
 
@@ -22,41 +22,53 @@ export const AIUpgradePromptModal = () => {
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-lg font-black text-white">Monthly AI Limit Reached</h3>
+          <h3 className="text-lg font-black text-white">Need More AI Credits?</h3>
           <p className="text-xs text-slate-300 leading-relaxed">
-            You've reached your monthly limit of 5 free AI credits. Credits will automatically reset on <strong className="text-orange-400 font-semibold">{aiCredits.resetDate}</strong>.
+            You've used your current AI credits. Top up anytime with flexible credit packs. Credits <strong>never expire</strong>!
           </p>
         </div>
 
-        {/* Free Forever Core Reassurance */}
+        {/* Core Reassurance */}
         <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 space-y-1">
           <div className="flex items-center gap-1.5 font-bold">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span>Resume Builder Remains 100% Free</span>
           </div>
           <p className="text-[11px] text-emerald-300/80">
-            Resume editing, templates, and unlimited PDF downloads are NEVER locked. Only optional AI generation features pause until credit reset.
+            Resume editing, templates, ATS scores, and unlimited PDF downloads are NEVER locked. Only optional AI features require credits.
           </p>
         </div>
 
-        {/* Options */}
+        {/* Action Buttons */}
         <div className="space-y-2">
           <button
             onClick={() => {
               setIsAIUpgradePromptOpen(false);
-              setIsBYOKModalOpen(true);
+              setIsBuyCreditsModalOpen(true);
             }}
             className="w-full p-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs flex items-center justify-between shadow-lg transition-all"
           >
             <span className="flex items-center gap-2">
-              <Key className="w-4 h-4" /> Add Your Own API Key (BYOK)
+              <Zap className="w-4 h-4" /> Buy Credit Pack (From ₹29)
             </span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
           <button
+            onClick={() => {
+              setIsAIUpgradePromptOpen(false);
+              setIsBYOKModalOpen(true);
+            }}
+            className="w-full p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center justify-between transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <Key className="w-3.5 h-3.5 text-amber-400" /> Use Your Own API Key (BYOK)
+            </span>
+          </button>
+
+          <button
             onClick={() => setIsAIUpgradePromptOpen(false)}
-            className="w-full p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 transition-colors"
+            className="w-full p-2 text-center text-xs font-medium text-slate-400 hover:text-white transition-colors"
           >
             Continue Editing Resume Manually
           </button>
@@ -65,3 +77,4 @@ export const AIUpgradePromptModal = () => {
     </div>
   );
 };
+

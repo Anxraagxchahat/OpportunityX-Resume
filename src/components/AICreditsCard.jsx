@@ -1,25 +1,27 @@
 import React, { useState } from 'react';
-import { Sparkles, Calendar, Key, History, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Key, History, ChevronDown, ChevronUp, Zap, ShieldCheck } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 
 export const AICreditsCard = ({ compact = false }) => {
-  const { aiCredits, setIsBYOKModalOpen } = useResume();
+  const { aiCredits, session, setIsAICreditsModalOpen, setIsBuyCreditsModalOpen, setIsUnlockAIModalOpen, setIsBYOKModalOpen } = useResume();
   const [showHistory, setShowHistory] = useState(false);
 
-  const { total, remaining, resetDate, usageHistory } = aiCredits;
+  const { remaining = 0, totalPurchased = 0, usageHistory = [] } = aiCredits;
   const isZero = remaining === 0;
+  const isLoggedIn = session.isAuthenticated && !session.isGuest;
 
   if (compact) {
     return (
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setIsBYOKModalOpen(true)}
-          className="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center gap-1.5 transition-colors"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>{remaining} / {total} AI Credits</span>
-        </button>
-      </div>
+      <button
+        onClick={() => {
+          if (!isLoggedIn) setIsUnlockAIModalOpen(true);
+          else setIsAICreditsModalOpen(true);
+        }}
+        className="px-3 py-1 rounded-full text-xs font-bold bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center gap-1.5 transition-all shadow-sm"
+      >
+        <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+        <span>{isLoggedIn ? `✨ ${remaining} AI Credits` : '✨ Claim 5 Free AI Credits'}</span>
+      </button>
     );
   }
 
@@ -35,8 +37,10 @@ export const AICreditsCard = ({ compact = false }) => {
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white">AI Credits Architecture</h3>
-            <p className="text-[11px] text-slate-400">Monthly Free Allocation</p>
+            <h3 className="text-sm font-bold text-white">✨ AI Credits System</h3>
+            <p className="text-[11px] text-slate-400">
+              {isLoggedIn ? 'Non-expiring Account Credits' : 'Guest Mode — Login to claim 5 free credits'}
+            </p>
           </div>
         </div>
 
@@ -56,28 +60,44 @@ export const AICreditsCard = ({ compact = false }) => {
             <span className={`text-3xl font-black ${isZero ? 'text-red-400' : 'text-orange-400'}`}>
               {remaining}
             </span>
-            <span className="text-xs text-slate-400 font-semibold">/ {total} Credits Left</span>
+            <span className="text-xs text-slate-400 font-semibold">Remaining AI Credits</span>
           </div>
-          <div className="flex items-center gap-1 text-xs text-slate-400">
-            <Calendar className="w-3.5 h-3.5 text-slate-500" />
-            <span>Resets {resetDate}</span>
+          <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Never Expire</span>
           </div>
         </div>
+      </div>
 
-        {/* Progress Bar */}
-        <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-          <div
-            className={`h-full rounded-full transition-all duration-300 ${
-              isZero ? 'bg-red-500' : 'bg-gradient-to-r from-orange-500 to-amber-500'
-            }`}
-            style={{ width: `${(remaining / total) * 100}%` }}
-          />
-        </div>
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        {isLoggedIn ? (
+          <button
+            onClick={() => setIsBuyCreditsModalOpen(true)}
+            className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5"
+          >
+            <Zap className="w-3.5 h-3.5" /> Buy Credit Pack (From ₹29)
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsUnlockAIModalOpen(true)}
+            className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5" /> Login & Claim 5 Free Credits
+          </button>
+        )}
+
+        <button
+          onClick={() => setIsAICreditsModalOpen(true)}
+          className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 rounded-xl transition-colors"
+        >
+          View Details
+        </button>
       </div>
 
       {/* Policy Reminder */}
       <p className="text-[11px] text-slate-400 leading-relaxed">
-        Core resume builder, editing, templates and PDF exports are <strong className="text-emerald-400 font-semibold">100% Free Forever</strong>. AI credits are only consumed by optional AI features.
+        Core resume builder, editing, templates, ATS scores, and PDF exports are <strong className="text-emerald-400 font-semibold">100% Free Forever</strong>. Credits are only required for optional AI generation.
       </p>
 
       {/* Usage History Collapsible */}
@@ -110,3 +130,4 @@ export const AICreditsCard = ({ compact = false }) => {
     </div>
   );
 };
+

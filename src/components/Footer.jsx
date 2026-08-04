@@ -4,7 +4,7 @@ import { Sparkles, Shield, Heart, ExternalLink } from 'lucide-react';
 
 export const Footer = () => {
   return (
-    <footer className="bg-[#05070D] border-t border-slate-800/80 pt-12 pb-8 text-xs text-slate-400">
+    <footer className="bg-[#05070D] border-t border-slate-800/80 pt-12 pb-8 text-xs text-slate-400 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Col 1: Brand Info */}
@@ -68,13 +68,14 @@ export const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px]">
-          <p>© {new Date().getFullYear()} OpportunityX Ecosystem. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} OpportunityX Ecosystem. All rights reserved. Your resume is private. OpportunityX does not sell your personal data.</p>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <Shield className="w-3 h-3 text-emerald-400" /> Privacy First — Client-Side Only Storage
+              <Shield className="w-3 h-3 text-emerald-400" /> Privacy First — Free Forever Resume Builder
             </span>
           </div>
         </div>
+
       </div>
     </footer>
   );

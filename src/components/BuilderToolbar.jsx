@@ -13,7 +13,11 @@ import {
   Copy,
   Eye,
   Keyboard,
-  Key
+  Key,
+  Activity,
+  UserCheck,
+  Palette,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 
@@ -30,14 +34,17 @@ export const BuilderToolbar = ({ onOpenVersionHistory, onTogglePreview, isMobile
     loadDemoResume,
     duplicateResume,
     activeResumeId,
-    exportActiveResumeJSON,
     setIsKeyboardHelpOpen,
-    setIsBYOKModalOpen
+    setIsBYOKModalOpen,
+    setIsInspectorOpen,
+    setIsAssetManagerOpen,
+    setIsExportCenterOpen,
+    setIsThemeCustomizerOpen,
+    setIsProfilePresetsOpen
   } = useResume();
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(activeResume.metadata?.title || 'My Resume');
-  const [showExportMenu, setShowExportMenu] = useState(false);
 
   const handleTitleSubmit = (e) => {
     e.preventDefault();
@@ -47,12 +54,8 @@ export const BuilderToolbar = ({ onOpenVersionHistory, onTogglePreview, isMobile
     setIsEditingTitle(false);
   };
 
-  const handleDownloadPDF = () => {
-    window.print();
-  };
-
   return (
-    <div className="bg-[#0B0D14]/90 backdrop-blur-md border-b border-slate-800 px-4 py-2 sticky top-0 z-30 flex items-center justify-between gap-4">
+    <div className="bg-[#0B0D14]/90 backdrop-blur-md border-b border-slate-800 px-4 py-2 sticky top-0 z-30 flex items-center justify-between gap-4 no-print">
       {/* Left: Title & Auto Save Status */}
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex items-center gap-2">
@@ -92,17 +95,23 @@ export const BuilderToolbar = ({ onOpenVersionHistory, onTogglePreview, isMobile
           <span className="font-medium text-slate-300">{saveStatus}</span>
           <span className="text-[10px] text-slate-500">({lastSavedTimeStr})</span>
         </div>
+
+        {/* Core Guarantee Pill */}
+        <div className="hidden xl:flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400">
+          ✓ Free Forever Builder • Unlimited PDFs • No Watermark
+        </div>
       </div>
 
+
       {/* Center/Right Toolbar Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {/* Undo / Redo */}
-        <div className="flex items-center bg-slate-900/80 border border-slate-800 rounded-lg p-0.5">
+        <div className="flex items-center bg-slate-900/80 border border-slate-800 rounded-lg p-0.5 mr-1">
           <button
             onClick={undo}
             disabled={!canUndo}
             title="Undo (Ctrl+Z)"
-            className="p-1.5 rounded-md text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
           >
             <Undo2 className="w-4 h-4" />
           </button>
@@ -110,56 +119,48 @@ export const BuilderToolbar = ({ onOpenVersionHistory, onTogglePreview, isMobile
             onClick={redo}
             disabled={!canRedo}
             title="Redo (Ctrl+Y)"
-            className="p-1.5 rounded-md text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
           >
             <Redo2 className="w-4 h-4" />
           </button>
         </div>
 
+        {/* Profile / Presets Button */}
+        <button
+          onClick={() => setIsProfilePresetsOpen(true)}
+          className="hidden md:flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-300 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg transition-colors"
+          title="Career Profiles & Presets"
+        >
+          <UserCheck className="w-3.5 h-3.5 text-orange-400" />
+          <span>Presets</span>
+        </button>
+
+        {/* Theme Customizer Button */}
+        <button
+          onClick={() => setIsThemeCustomizerOpen(true)}
+          className="hidden md:flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-300 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg transition-colors"
+          title="Theme Customizer"
+        >
+          <Palette className="w-3.5 h-3.5 text-amber-400" />
+          <span>Theme</span>
+        </button>
+
+        {/* Inspector Button */}
+        <button
+          onClick={() => setIsInspectorOpen(true)}
+          className="p-1.5 text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded-lg transition-colors"
+          title="Resume Inspector (Word count, page count, health)"
+        >
+          <Activity className="w-4 h-4 text-orange-400" />
+        </button>
+
         {/* Keyboard Shortcuts Help */}
         <button
           onClick={() => setIsKeyboardHelpOpen(true)}
-          className="p-1.5 text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded-lg hover:border-slate-700 transition-colors"
+          className="p-1.5 text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded-lg transition-colors"
           title="Keyboard Shortcuts (Ctrl+/)"
         >
-          <Keyboard className="w-4 h-4 text-orange-400" />
-        </button>
-
-        {/* BYOK Settings Key */}
-        <button
-          onClick={() => setIsBYOKModalOpen(true)}
-          className="p-1.5 text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded-lg hover:border-slate-700 transition-colors"
-          title="Bring Your Own API Key"
-        >
-          <Key className="w-4 h-4 text-amber-400" />
-        </button>
-
-        {/* Duplicate Current Resume */}
-        <button
-          onClick={() => duplicateResume(activeResumeId)}
-          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-900 border border-slate-800 hover:border-slate-700 hover:text-white rounded-lg transition-colors"
-          title="Duplicate Resume (Ctrl+D)"
-        >
-          <Copy className="w-3.5 h-3.5 text-slate-400" />
-          <span>Duplicate</span>
-        </button>
-
-        {/* Version History */}
-        <button
-          onClick={onOpenVersionHistory}
-          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-900 border border-slate-800 hover:border-slate-700 hover:text-white rounded-lg transition-colors"
-        >
-          <History className="w-3.5 h-3.5 text-orange-400" />
-          <span>History</span>
-        </button>
-
-        {/* Try Demo Resume Button */}
-        <button
-          onClick={loadDemoResume}
-          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-400 bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 rounded-lg transition-colors"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Sample Resume</span>
+          <Keyboard className="w-4 h-4 text-slate-400" />
         </button>
 
         {/* Mobile Toggle Preview Button */}
@@ -171,16 +172,14 @@ export const BuilderToolbar = ({ onOpenVersionHistory, onTogglePreview, isMobile
           <span>{isMobilePreviewActive ? 'Edit Form' : 'Preview'}</span>
         </button>
 
-        {/* Download PDF & Export Dropdown */}
-        <div className="relative">
-          <button
-            onClick={handleDownloadPDF}
-            className="px-3.5 py-1.5 text-xs font-bold text-black bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-lg shadow-[0_0_15px_rgba(249,115,22,0.3)] transition-all flex items-center gap-1.5"
-          >
-            <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Download PDF</span>
-          </button>
-        </div>
+        {/* Export Center Trigger */}
+        <button
+          onClick={() => setIsExportCenterOpen(true)}
+          className="px-3.5 py-1.5 text-xs font-extrabold text-black bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-lg shadow-[0_0_15px_rgba(249,115,22,0.3)] transition-all flex items-center gap-1.5"
+        >
+          <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Export Center</span>
+        </button>
       </div>
     </div>
   );

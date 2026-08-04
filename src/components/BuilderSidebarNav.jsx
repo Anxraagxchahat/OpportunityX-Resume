@@ -11,7 +11,9 @@ import {
   Languages,
   Share2,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 
@@ -30,31 +32,47 @@ export const builderSections = [
 ];
 
 export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
-  const { resumeHealth } = useResume();
+  const { resumeHealth, activeResume, toggleSectionVisibility } = useResume();
   const { percentage, completedCount, totalCount } = resumeHealth;
+  const hiddenSections = activeResume.metadata?.hiddenSections || [];
 
   return (
     <div className="w-56 bg-[#0B0D14]/90 border-r border-slate-800 p-3 flex flex-col justify-between hidden md:flex flex-shrink-0">
       <div className="space-y-1">
-        <div className="px-3 py-2 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-          Resume Sections
+        <div className="px-3 py-2 text-[10px] uppercase font-bold text-slate-500 tracking-wider flex justify-between items-center">
+          <span>Sections</span>
+          <span className="text-[9px] text-slate-400 font-normal">Click Eye to Hide</span>
         </div>
+
         {builderSections.map((sec) => {
           const Icon = sec.icon;
           const isActive = activeSection === sec.id;
+          const isHidden = hiddenSections.includes(sec.id);
+
           return (
-            <button
-              key={sec.id}
-              onClick={() => onSelectSection(sec.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                isActive
-                  ? 'bg-orange-500/10 text-orange-400 border border-orange-500/30 shadow-[0_0_12px_rgba(249,115,22,0.15)]'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-orange-400' : 'text-slate-400'}`} />
-              <span className="truncate">{sec.label}</span>
-            </button>
+            <div key={sec.id} className="flex items-center group">
+              <button
+                onClick={() => onSelectSection(sec.id)}
+                className={`flex-1 flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                  isActive
+                    ? 'bg-orange-500/10 text-orange-400 border border-orange-500/30 shadow-[0_0_12px_rgba(249,115,22,0.15)]'
+                    : isHidden
+                    ? 'text-slate-600 line-through'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-orange-400' : isHidden ? 'text-slate-600' : 'text-slate-400'}`} />
+                <span className="truncate">{sec.label}</span>
+              </button>
+
+              <button
+                onClick={() => toggleSectionVisibility(sec.id)}
+                className="p-1.5 text-slate-500 hover:text-white opacity-40 group-hover:opacity-100 transition-opacity"
+                title={isHidden ? "Show section in resume" : "Hide section without deleting data"}
+              >
+                {isHidden ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
+              </button>
+            </div>
           );
         })}
       </div>

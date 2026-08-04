@@ -11,24 +11,38 @@ import {
   Menu,
   X,
   PlayCircle,
-  User
+  Globe,
+  User,
+  Share2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResume } from '../context/ResumeContext';
+import { AuthModal } from './AuthModal';
+import { getCurrentUserSession } from '../services/ecosystem/authManager';
 
 export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { loadDemoResume } = useResume();
+  const {
+    session,
+    aiCredits,
+    loadDemoResume,
+    setIsUnlockAIModalOpen,
+    setIsAICreditsModalOpen,
+    isAuthOpen,
+    setIsAuthOpen
+  } = useResume();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
 
   const navItems = [
     { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
     { label: 'Builder', to: '/builder', icon: FileText },
     { label: 'Templates', to: '/templates', icon: Grid },
-    { label: 'ATS Checker', to: '/ats-checker', icon: CheckCircle2 },
-    { label: 'AI Assistant', to: '/ai-assistant', icon: Wand2, hideOnTablet: true },
-    { label: 'Import', to: '/import', icon: Upload },
+    { label: 'ATS Intelligence', to: '/ats-checker', icon: CheckCircle2 },
+    { label: 'AI Suite', to: '/ai-assistant', icon: Wand2 },
+    { label: 'Ecosystem', to: '/ecosystem', icon: Globe },
+    { label: 'Public Link', to: '/u/anurag-verma', icon: Share2 }
   ];
 
   const handleDemoClick = () => {
@@ -37,10 +51,8 @@ export const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#05070D]/90 backdrop-blur-md border-b border-white/[0.06]">
+    <header className="sticky top-0 z-50 w-full bg-[#05070D]/90 backdrop-blur-md border-b border-white/[0.06] no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
-
-        {/* 1. BRAND AREA (DESKTOP & TABLET: LEFT ALIGNED; MOBILE: CENTERED WITH HAMBURGER ON LEFT) */}
 
         {/* Mobile Left Hamburger */}
         <button
@@ -50,16 +62,14 @@ export const Navbar = () => {
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
-        {/* Brand Area: Circular Logo + OpportunityX Text + RESUME Badge Below */}
+        {/* Brand Area */}
         <Link to="/" className="flex items-center gap-3 group flex-shrink-0 mx-auto md:mx-0">
-          {/* Circular Logo Badge */}
           <img
             src="/favicon.png"
             alt="OpportunityX Logo"
             className="w-9 h-9 rounded-full object-cover flex-shrink-0 shadow-[0_0_12px_rgba(249,115,22,0.25)] group-hover:scale-105 transition-transform"
           />
 
-          {/* Vertical Text Column: OpportunityX Top, RESUME Pill Badge Underneath */}
           <div className="flex flex-col justify-center text-left">
             <span className="text-lg font-black tracking-tight text-[#E5E7EB] font-sans leading-none">
               Opportunity<span className="text-[#F97316]">X</span>
@@ -70,24 +80,17 @@ export const Navbar = () => {
           </div>
         </Link>
 
-        {/* 2. NAVIGATION ITEMS (DESKTOP & TABLET CAPSULE CONTAINER WITH SUBTLE ORANGE DOT INDICATOR) */}
+        {/* Navigation Bar */}
         <nav className="hidden md:flex items-center gap-1 bg-[#0B0D14] p-1.5 rounded-[16px] border border-white/[0.06] relative">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.to;
-            if (item.hideOnTablet) {
-              // Hide AI Assistant on tablet viewports if space is constrained
-            }
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`relative flex flex-col items-center justify-center px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-medium transition-all duration-200 ${
-                  item.hideOnTablet ? 'hidden xl:flex' : 'flex'
-                } ${
-                  isActive
-                    ? 'text-white font-semibold'
-                    : 'text-[#E5E7EB]/70 hover:text-white hover:bg-slate-900/60'
+                className={`relative flex flex-col items-center justify-center px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs font-medium transition-all duration-200 ${
+                  isActive ? 'text-white font-semibold' : 'text-[#E5E7EB]/70 hover:text-white hover:bg-slate-900/60'
                 }`}
               >
                 <div className="flex items-center gap-1.5 relative z-10">
@@ -95,7 +98,6 @@ export const Navbar = () => {
                   <span className="whitespace-nowrap">{item.label}</span>
                 </div>
 
-                {/* Subtle Orange Active Dot Indicator underneath (Matching image spec) */}
                 {isActive && (
                   <motion.div
                     layoutId="activeDot"
@@ -108,30 +110,53 @@ export const Navbar = () => {
           })}
         </nav>
 
-        {/* 3. RIGHT ACTIONS (TRY DEMO RESUME + CREATE RESUME PRIMARY CTA) */}
+        {/* Right Actions (AI Credits Pill + Auth User Profile + Create Resume CTA) */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
+          {/* AI Credits Pill Button */}
           <button
-            onClick={handleDemoClick}
-            className="hidden md:flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#F97316] bg-[#F97316]/10 hover:bg-[#F97316]/20 border border-[#F97316]/30 rounded-[12px] transition-all shadow-[0_0_12px_rgba(249,115,22,0.1)] whitespace-nowrap"
+            onClick={() => {
+              if (!session.isAuthenticated || session.isGuest) {
+                setIsUnlockAIModalOpen(true);
+              } else {
+                setIsAICreditsModalOpen(true);
+              }
+            }}
+            className="px-2.5 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+            title="View AI Credits & Packs"
           >
-            <PlayCircle className="w-3.5 h-3.5" />
-            <span>Try Demo Resume</span>
+            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            <span className="hidden sm:inline">
+              {session.isAuthenticated && !session.isGuest ? `${aiCredits.remaining} Credits` : 'Claim 5 Free Credits'}
+            </span>
+            <span className="sm:hidden">{aiCredits.remaining || 5} Cr</span>
+          </button>
+
+          <button
+            onClick={() => setIsAuthOpen(true)}
+            className="p-2 text-slate-300 hover:text-white bg-[#0B0D14] border border-slate-800 rounded-xl flex items-center gap-1.5 transition-colors"
+            title="OpportunityX Account & Session"
+          >
+            <User className="w-4 h-4 text-orange-400" />
+            <span className="hidden lg:inline text-xs font-semibold">
+              {session.isAuthenticated && !session.isGuest ? session.user?.name : 'Guest (Free)'}
+            </span>
           </button>
 
           {/* Primary Create Resume Button */}
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             <Link
               to="/builder"
-              className="px-4 py-2 sm:px-5 sm:py-2.5 text-xs font-bold text-black bg-gradient-to-r from-[#F97316] to-[#F59E0B] hover:from-[#EA580C] hover:to-[#D97706] rounded-[12px] shadow-[0_0_20px_rgba(249,115,22,0.35)] hover:shadow-[0_0_28px_rgba(249,115,22,0.5)] transition-all flex items-center gap-1.5 whitespace-nowrap"
+              className="px-4 py-2 sm:px-5 sm:py-2.5 text-xs font-bold text-black bg-gradient-to-r from-[#F97316] to-[#F59E0B] hover:from-[#EA580C] hover:to-[#D97706] rounded-[12px] shadow-[0_0_20px_rgba(249,115,22,0.35)] transition-all flex items-center gap-1.5 whitespace-nowrap"
             >
               <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Create Resume</span>
             </Link>
           </motion.div>
         </div>
+
       </div>
 
-      {/* 5. RESPONSIVE MOBILE DRAWER */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -155,20 +180,11 @@ export const Navbar = () => {
                 <span>{item.label}</span>
               </Link>
             ))}
-            <div className="pt-2 border-t border-white/[0.06] flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleDemoClick();
-                }}
-                className="w-full py-2.5 text-xs font-semibold text-[#F97316] bg-[#F97316]/10 border border-[#F97316]/30 rounded-xl flex items-center justify-center gap-2"
-              >
-                <PlayCircle className="w-4 h-4" /> Try Demo Resume
-              </button>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </header>
   );
 };
