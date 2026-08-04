@@ -110,28 +110,102 @@ body {
   transform-origin: top center;
 }
 
-/* PDF Print Stylesheet */
+.break-inside-avoid {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.no-print {
+  /* Class to mark non-printable UI elements */
+}
+
+/* PDF Print & Multi-Page A4 Precision Engine */
 @media print {
-  body * {
-    visibility: hidden;
-    background: transparent !important;
-  }
-  #resume-a4-preview, #resume-a4-preview * {
-    visibility: visible;
-  }
-  #resume-a4-preview {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 210mm !important;
-    min-height: 297mm !important;
-    margin: 0 !important;
-    padding: 20mm !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
   @page {
     size: A4 portrait;
     margin: 0;
+  }
+
+  html, body {
+    width: 210mm !important;
+    height: auto !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide all non-printable UI elements cleanly */
+  .no-print,
+  header,
+  nav,
+  aside,
+  footer,
+  button,
+  select,
+  input,
+  textarea,
+  [role="dialog"],
+  .modal-backdrop,
+  .ai-floating-assist,
+  .fixed.inset-0,
+  div[class*="fixed inset-0"],
+  div[class*="backdrop-blur"] {
+    display: none !important;
+  }
+
+  /* Force top-level flex / grid containers to expand in print */
+  #root,
+  main,
+  .flex-1,
+  div {
+    background: transparent !important;
+    box-shadow: none !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Hide preview toolbar and guide lines during print */
+  .preview-toolbar,
+  .page-indicator-banner,
+  .page-break-guide {
+    display: none !important;
+  }
+
+  #resume-a4-preview,
+  .printable-resume-page {
+    position: static !important;
+    width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 10mm 12mm !important;
+    box-shadow: none !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    overflow: visible !important;
+    visibility: visible !important;
+    display: block !important;
+  }
+
+  .a4-paper-container {
+    box-shadow: none !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  /* Section breaking optimizations */
+  h1, h2, h3,
+  .break-inside-avoid,
+  .section-block,
+  .experience-item,
+  .project-item,
+  .education-item {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }
