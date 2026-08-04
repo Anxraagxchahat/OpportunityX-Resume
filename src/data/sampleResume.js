@@ -70,7 +70,8 @@ export const defaultResumeData = {
       startDate: "2017-08",
       endDate: "2021-05",
       gpa: "3.88 / 4.0",
-      description: "Graduated with High Honors. Coursework: Algorithms & Data Structures, Distributed Systems, Database Systems, Artificial Intelligence."
+      relevantCoursework: "Algorithms & Data Structures, Distributed Systems, Database Systems, Computer Networks, Operating Systems, Machine Learning",
+      description: "Graduated with High Honors."
     }
   ],
   projects: [

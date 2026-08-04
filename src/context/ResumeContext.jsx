@@ -1,8 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { defaultResumeData, emptyResumeSchema } from '../data/sampleResume';
 import { calculateResumeHealth } from '../utils/resumeHealth';
+import { calculateATSScore } from '../utils/atsEngine';
+import { validateResumeContent } from '../utils/validationEngine';
+import { analyzeKeywords } from '../utils/keywordEngine';
+import { simulateRecruiterGlance } from '../utils/recruiterSimulation';
 import { trackEvent, AnalyticsEvents } from '../utils/analytics';
 import { stripInternalMetadata } from '../utils/metadata';
+import { getCurrentUserSession, loginUser, logoutUser, hasUserClaimedWelcomeCredits, markWelcomeCreditsClaimed } from '../services/ecosystem/authManager';
 
 const ResumeContext = createContext(null);
 
@@ -11,16 +16,18 @@ const ACTIVE_ID_KEY = 'opportunityx_active_resume_id_v2';
 const RECOVERY_DRAFT_KEY = 'opportunityx_resume_recovery_draft_v1';
 const USER_PREFS_KEY = 'opportunityx_user_preferences_v1';
 const VERSIONS_KEY = 'opportunityx_resume_versions_v2';
+const SCAN_HISTORY_KEY = 'opportunityx_scan_history_v1';
 const AI_CREDITS_KEY = 'opportunityx_ai_credits_v1';
 const BYOK_KEY = 'opportunityx_byok_keys_v1';
+const SELECTED_MODEL_KEY = 'opportunityx_selected_ai_model_v1';
 
-const getNextMonthFirstDay = () => {
-  const now = new Date();
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  return nextMonth.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-};
+// Load OpenRouter key securely from environment configuration (.env)
+const ENV_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 
 export const ResumeProvider = ({ children }) => {
+  // 0. User Auth Session State
+  const [session, setSession] = useState(() => getCurrentUserSession());
+
   // 1. Resumes Collection State
   const [resumes, setResumes] = useState(() => {
     try {
@@ -29,9 +36,7 @@ export const ResumeProvider = ({ children }) => {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch (e) {
-      console.warn("Failed to parse resumes from localStorage:", e);
-    }
+    } catch (e) {}
     return [defaultResumeData];
   });
 
@@ -51,16 +56,70 @@ export const ResumeProvider = ({ children }) => {
     return resumes.find((r) => r.metadata?.id === activeResumeId || r.metadata?.uuid === activeResumeId) || resumes[0] || defaultResumeData;
   }, [resumes, activeResumeId]);
 
-  // Health calculation
-  const resumeHealth = useMemo(() => {
-    return calculateResumeHealth(activeResume);
-  }, [activeResume]);
+  // Dynamic Intelligence Computations
+  const resumeHealth = useMemo(() => calculateResumeHealth(activeResume), [activeResume]);
+  const atsEngineResult = useMemo(() => calculateATSScore(activeResume), [activeResume]);
+  const validationResult = useMemo(() => validateResumeContent(activeResume), [activeResume]);
+  const keywordResult = useMemo(() => analyzeKeywords(activeResume), [activeResume]);
+  const recruiterScanResult = useMemo(() => simulateRecruiterGlance(activeResume, atsEngineResult.overallScore, resumeHealth.percentage), [activeResume, atsEngineResult, resumeHealth]);
 
-  // 3. Session Recovery Draft State
+  // Overall Resume Strength (Weighted Blend)
+  const resumeStrengthScore = useMemo(() => {
+    const atsWeight = (atsEngineResult.overallScore || 0) * 0.4;
+    const healthWeight = (resumeHealth.percentage || 0) * 0.3;
+    const flawDeduction = (validationResult.criticalCount || 0) * 10;
+    const score = Math.max(0, Math.min(100, Math.round(atsWeight + healthWeight + 30 - flawDeduction)));
+    return score;
+  }, [atsEngineResult, resumeHealth, validationResult]);
+
+  const strengthLabel = useMemo(() => {
+    if (resumeStrengthScore >= 85) return 'Excellent';
+    if (resumeStrengthScore >= 70) return 'Good';
+    if (resumeStrengthScore >= 50) return 'Needs Improvement';
+    return 'Weak';
+  }, [resumeStrengthScore]);
+
+  // 3. Scan History State
+  const [scanHistory, setScanHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem(SCAN_HISTORY_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [
+      {
+        id: `scan-1`,
+        timestamp: new Date().toISOString(),
+        resumeTitle: defaultResumeData.metadata.title,
+        overallScore: 92,
+        atsScore: 94,
+        healthScore: 90,
+        version: 1
+      }
+    ];
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(scanHistory)); } catch (e) {}
+  }, [scanHistory]);
+
+  const runResumeScan = useCallback(() => {
+    const scanEntry = {
+      id: `scan-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      resumeTitle: activeResume.metadata?.title || 'Untitled Resume',
+      overallScore: resumeStrengthScore,
+      atsScore: atsEngineResult.overallScore,
+      healthScore: resumeHealth.percentage,
+      version: activeResume.metadata?.version || 1
+    };
+    setScanHistory((prev) => [scanEntry, ...prev]);
+    return scanEntry;
+  }, [activeResume, resumeStrengthScore, atsEngineResult, resumeHealth]);
+
+  // 4. Session Recovery Draft
   const [hasRecoveryDraft, setHasRecoveryDraft] = useState(false);
   const [recoveryDraft, setRecoveryDraft] = useState(null);
 
-  // Check for unsaved recovery draft on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(RECOVERY_DRAFT_KEY);
@@ -74,12 +133,9 @@ export const ResumeProvider = ({ children }) => {
     } catch (e) {}
   }, [activeResumeId]);
 
-  // Save auto-recovery snapshot on activeResume change
   useEffect(() => {
     const timer = setTimeout(() => {
-      try {
-        localStorage.setItem(RECOVERY_DRAFT_KEY, JSON.stringify(activeResume));
-      } catch (e) {}
+      try { localStorage.setItem(RECOVERY_DRAFT_KEY, JSON.stringify(activeResume)); } catch (e) {}
     }, 1000);
     return () => clearTimeout(timer);
   }, [activeResume]);
@@ -99,39 +155,45 @@ export const ResumeProvider = ({ children }) => {
     setRecoveryDraft(null);
   }, []);
 
-  // 4. User Preferences State
+  // 5. User Preferences
   const [userPreferences, setUserPreferences] = useState(() => {
     try {
       const saved = localStorage.getItem(USER_PREFS_KEY);
       if (saved) return JSON.parse(saved);
     } catch (e) {}
-    return {
-      zoom: 85,
-      paperBackground: 'white',
-      defaultTemplate: 'modern',
-      exportPreset: 'Corporate'
-    };
+    return { zoom: 85, paperBackground: 'white', defaultTemplate: 'modern', exportPreset: 'Corporate' };
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(USER_PREFS_KEY, JSON.stringify(userPreferences));
-    } catch (e) {}
+    try { localStorage.setItem(USER_PREFS_KEY, JSON.stringify(userPreferences)); } catch (e) {}
   }, [userPreferences]);
 
   const updateUserPreferences = useCallback((updater) => {
     setUserPreferences((prev) => (typeof updater === 'function' ? updater(prev) : { ...prev, ...updater }));
   }, []);
 
-  // 5. Save Status & Timestamp
+  // Selected AI Model Persistence
+  const [selectedAIModel, setSelectedAIModel] = useState(() => {
+    try {
+      const saved = localStorage.getItem(SELECTED_MODEL_KEY);
+      if (saved) return saved;
+    } catch (e) {}
+    return 'openrouter/auto';
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(SELECTED_MODEL_KEY, selectedAIModel); } catch (e) {}
+  }, [selectedAIModel]);
+
+  // Save Status
   const [saveStatus, setSaveStatus] = useState('Saved to LocalStorage');
   const [lastSavedTimeStr, setLastSavedTimeStr] = useState('Just now');
 
-  // 6. Undo / Redo Stacks
+  // Undo / Redo Stacks
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
 
-  // 7. Version History Snapshots
+  // Version Snapshots
   const [versionMap, setVersionMap] = useState(() => {
     try {
       const saved = localStorage.getItem(VERSIONS_KEY);
@@ -139,57 +201,63 @@ export const ResumeProvider = ({ children }) => {
     } catch (e) {}
     return {
       [defaultResumeData.metadata.id]: [
-        {
-          id: `v1-${Date.now()}`,
-          versionNumber: 1,
-          title: 'Initial Draft',
-          timestamp: new Date().toISOString(),
-          data: defaultResumeData
-        }
+        { id: `v1-${Date.now()}`, versionNumber: 1, title: 'Initial Draft', timestamp: new Date().toISOString(), data: defaultResumeData }
       ]
     };
   });
 
-  // 8. AI Credits Architecture
+  // Non-expiring AI Credits State
   const [aiCredits, setAiCredits] = useState(() => {
     try {
       const saved = localStorage.getItem(AI_CREDITS_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        const now = new Date();
-        const resetTime = new Date(parsed.resetDate || now);
-        if (now >= resetTime) {
-          return { total: 5, remaining: 5, resetDate: getNextMonthFirstDay(), usageHistory: parsed.usageHistory || [] };
-        }
-        return parsed;
+        return {
+          remaining: typeof parsed.remaining === 'number' ? parsed.remaining : 5,
+          totalPurchased: parsed.totalPurchased || 0,
+          usageHistory: Array.isArray(parsed.usageHistory) ? parsed.usageHistory : []
+        };
       }
     } catch (e) {}
     return {
-      total: 5,
       remaining: 5,
-      resetDate: getNextMonthFirstDay(),
-      usageHistory: [{ id: 'use-1', action: 'Monthly Allocation', timestamp: new Date().toISOString(), creditsUsed: 0 }]
+      totalPurchased: 0,
+      usageHistory: [
+        { id: 'use-welcome', action: 'Welcome Credits Granted', timestamp: new Date().toISOString(), creditsUsed: 0 }
+      ]
     };
   });
 
-  // 9. BYOK Keys
+  // BYOK Keys loaded securely from environment (.env) or localStorage
   const [byokKeys, setByokKeys] = useState(() => {
     try {
       const saved = localStorage.getItem(BYOK_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...parsed, openrouter: parsed.openrouter || ENV_OPENROUTER_KEY };
+      }
     } catch (e) {}
-    return { openai: '', gemini: '', openrouter: '', anthropic: '' };
+    return { openai: '', gemini: '', openrouter: ENV_OPENROUTER_KEY, anthropic: '' };
   });
 
   // Modals visibility states
   const [isKeyboardHelpOpen, setIsKeyboardHelpOpen] = useState(false);
   const [isBYOKModalOpen, setIsBYOKModalOpen] = useState(false);
   const [isAIUpgradePromptOpen, setIsAIUpgradePromptOpen] = useState(false);
+  const [isUnlockAIModalOpen, setIsUnlockAIModalOpen] = useState(false);
+  const [isBuyCreditsModalOpen, setIsBuyCreditsModalOpen] = useState(false);
+  const [isAICreditsModalOpen, setIsAICreditsModalOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [isAssetManagerOpen, setIsAssetManagerOpen] = useState(false);
   const [isExportCenterOpen, setIsExportCenterOpen] = useState(false);
   const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
   const [isProfilePresetsOpen, setIsProfilePresetsOpen] = useState(false);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [isScanHistoryOpen, setIsScanHistoryOpen] = useState(false);
+  const [isCompanyMatchOpen, setIsCompanyMatchOpen] = useState(false);
+  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
+
 
   // Auto-Save Effect
   useEffect(() => {
@@ -208,20 +276,11 @@ export const ResumeProvider = ({ children }) => {
     return () => clearTimeout(timer);
   }, [resumes, activeResumeId]);
 
-  // Persist Sub-states
-  useEffect(() => {
-    try { localStorage.setItem(VERSIONS_KEY, JSON.stringify(versionMap)); } catch (e) {}
-  }, [versionMap]);
+  useEffect(() => { try { localStorage.setItem(VERSIONS_KEY, JSON.stringify(versionMap)); } catch (e) {} }, [versionMap]);
+  useEffect(() => { try { localStorage.setItem(AI_CREDITS_KEY, JSON.stringify(aiCredits)); } catch (e) {} }, [aiCredits]);
+  useEffect(() => { try { localStorage.setItem(BYOK_KEY, JSON.stringify(byokKeys)); } catch (e) {} }, [byokKeys]);
 
-  useEffect(() => {
-    try { localStorage.setItem(AI_CREDITS_KEY, JSON.stringify(aiCredits)); } catch (e) {}
-  }, [aiCredits]);
-
-  useEffect(() => {
-    try { localStorage.setItem(BYOK_KEY, JSON.stringify(byokKeys)); } catch (e) {}
-  }, [byokKeys]);
-
-  // Active Resume Mutator
+  // Mutators & Operations
   const updateActiveResume = useCallback((updater) => {
     setResumes((prevResumes) => {
       return prevResumes.map((r) => {
@@ -229,14 +288,7 @@ export const ResumeProvider = ({ children }) => {
           const nextData = typeof updater === 'function' ? updater(r) : updater;
           setPast((p) => [...p.slice(-29), r]);
           setFuture([]);
-          return {
-            ...nextData,
-            metadata: {
-              ...nextData.metadata,
-              lastSaved: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          };
+          return { ...nextData, metadata: { ...nextData.metadata, lastSaved: new Date().toISOString(), updatedAt: new Date().toISOString() } };
         }
         return r;
       });
@@ -251,20 +303,12 @@ export const ResumeProvider = ({ children }) => {
     }
   }, [resumes]);
 
-  // CRUD Operations
   const createNewResume = useCallback((template = 'modern', customTitle = '') => {
     const newId = `ox-resume-${Date.now()}`;
     const title = customTitle || `New ${template.charAt(0).toUpperCase() + template.slice(1)} Resume`;
     const newResume = {
       ...emptyResumeSchema,
-      metadata: {
-        ...emptyResumeSchema.metadata,
-        id: newId,
-        uuid: newId,
-        title,
-        template,
-        lastSaved: new Date().toISOString()
-      }
+      metadata: { ...emptyResumeSchema.metadata, id: newId, uuid: newId, title, template, lastSaved: new Date().toISOString() }
     };
     setResumes((prev) => [newResume, ...prev]);
     setActiveResumeIdState(newId);
@@ -294,10 +338,7 @@ export const ResumeProvider = ({ children }) => {
   const deleteResume = useCallback((idToDelete) => {
     if (resumes.length <= 1) {
       const newId = `ox-resume-${Date.now()}`;
-      const blank = {
-        ...emptyResumeSchema,
-        metadata: { ...emptyResumeSchema.metadata, id: newId, uuid: newId, title: "My Resume" }
-      };
+      const blank = { ...emptyResumeSchema, metadata: { ...emptyResumeSchema.metadata, id: newId, uuid: newId, title: "My Resume" } };
       setResumes([blank]);
       setActiveResumeIdState(newId);
     } else {
@@ -317,108 +358,50 @@ export const ResumeProvider = ({ children }) => {
     setResumes((prev) =>
       prev.map((r) => (r.metadata.id === idToRename || r.metadata.uuid === idToRename ? { ...r, metadata: { ...r.metadata, title: newTitle.trim() } } : r))
     );
-    trackEvent(AnalyticsEvents.RESUME_RENAMED, { id: idToRename, newTitle });
   }, []);
 
   const toggleFavorite = useCallback((idToToggle) => {
-    setResumes((prev) =>
-      prev.map((r) =>
-        r.metadata.id === idToToggle || r.metadata.uuid === idToToggle
-          ? { ...r, metadata: { ...r.metadata, isFavorite: !r.metadata?.isFavorite } }
-          : r
-      )
-    );
+    setResumes((prev) => prev.map((r) => (r.metadata.id === idToToggle || r.metadata.uuid === idToToggle ? { ...r, metadata: { ...r.metadata, isFavorite: !r.metadata?.isFavorite } } : r)));
   }, []);
 
   const toggleArchive = useCallback((idToToggle) => {
-    setResumes((prev) =>
-      prev.map((r) =>
-        r.metadata.id === idToToggle || r.metadata.uuid === idToToggle
-          ? { ...r, metadata: { ...r.metadata, isArchived: !r.metadata?.isArchived } }
-          : r
-      )
-    );
+    setResumes((prev) => prev.map((r) => (r.metadata.id === idToToggle || r.metadata.uuid === idToToggle ? { ...r, metadata: { ...r.metadata, isArchived: !r.metadata?.isArchived } } : r)));
   }, []);
 
-  // Section Visibility Toggle
   const toggleSectionVisibility = useCallback((sectionId) => {
     updateActiveResume((prev) => {
       const currentHidden = prev.metadata?.hiddenSections || [];
       const isCurrentlyHidden = currentHidden.includes(sectionId);
-      const nextHidden = isCurrentlyHidden
-        ? currentHidden.filter((s) => s !== sectionId)
-        : [...currentHidden, sectionId];
-      return {
-        ...prev,
-        metadata: {
-          ...prev.metadata,
-          hiddenSections: nextHidden
-        }
-      };
+      const nextHidden = isCurrentlyHidden ? currentHidden.filter((s) => s !== sectionId) : [...currentHidden, sectionId];
+      return { ...prev, metadata: { ...prev.metadata, hiddenSections: nextHidden } };
     });
   }, [updateActiveResume]);
 
-  // Asset Manager Updater
   const updateAssets = useCallback((assetType, base64Url) => {
-    updateActiveResume((prev) => ({
-      ...prev,
-      assets: {
-        ...(prev.assets || {}),
-        [assetType]: base64Url
-      }
-    }));
+    updateActiveResume((prev) => ({ ...prev, assets: { ...(prev.assets || {}), [assetType]: base64Url } }));
   }, [updateActiveResume]);
 
-  // Style Customizer Updater
   const updateStyle = useCallback((field, value) => {
-    updateActiveResume((prev) => ({
-      ...prev,
-      style: {
-        ...(prev.style || {}),
-        [field]: value
-      }
-    }));
+    updateActiveResume((prev) => ({ ...prev, style: { ...(prev.style || {}), [field]: value } }));
   }, [updateActiveResume]);
 
-  // Apply Resume Preset
   const applyResumePreset = useCallback((presetName) => {
     updateActiveResume((prev) => {
       let targetTemplate = prev.metadata.template || 'modern';
-      let hiddenSecs = [];
       let targetProfile = prev.metadata.targetProfile || 'Software Developer';
+      if (presetName === 'Fresher') { targetTemplate = 'student'; targetProfile = 'Fresher / Entry Level'; }
+      else if (presetName === 'Experienced') { targetTemplate = 'executive'; targetProfile = 'Senior Engineer'; }
+      else if (presetName === 'Student') { targetTemplate = 'student'; targetProfile = 'College Student'; }
+      else if (presetName === 'International Resume') { targetTemplate = 'minimal'; targetProfile = 'Global Applicant'; }
 
-      if (presetName === 'Fresher') {
-        targetTemplate = 'student';
-        targetProfile = 'Fresher / Entry Level';
-      } else if (presetName === 'Experienced') {
-        targetTemplate = 'executive';
-        targetProfile = 'Senior Engineer / Leader';
-      } else if (presetName === 'Student') {
-        targetTemplate = 'student';
-        targetProfile = 'College Student';
-      } else if (presetName === 'International Resume') {
-        targetTemplate = 'minimal';
-        targetProfile = 'Global Applicant';
-      }
-
-      return {
-        ...prev,
-        metadata: {
-          ...prev.metadata,
-          template: targetTemplate,
-          targetProfile,
-          hiddenSections: hiddenSecs
-        }
-      };
+      return { ...prev, metadata: { ...prev.metadata, template: targetTemplate, targetProfile } };
     });
   }, [updateActiveResume]);
 
-  // Undo / Redo
   const undo = useCallback(() => {
     if (past.length === 0) return;
     const previous = past[past.length - 1];
-    const newPast = past.slice(0, past.length - 1);
-    setPast(newPast);
+    setPast(past.slice(0, past.length - 1));
     setFuture((f) => [activeResume, ...f]);
     setResumes((prev) => prev.map((r) => (r.metadata.id === activeResumeId ? previous : r)));
   }, [past, activeResume, activeResumeId]);
@@ -426,33 +409,23 @@ export const ResumeProvider = ({ children }) => {
   const redo = useCallback(() => {
     if (future.length === 0) return;
     const next = future[0];
-    const newFuture = future.slice(1);
     setPast((p) => [...p, activeResume]);
-    setFuture(newFuture);
+    setFuture(future.slice(1));
     setResumes((prev) => prev.map((r) => (r.metadata.id === activeResumeId ? next : r)));
   }, [future, activeResume, activeResumeId]);
 
-  // Demo Resume
   const loadDemoResume = useCallback(() => {
     const newId = `ox-resume-demo-${Date.now()}`;
     const demo = {
       ...defaultResumeData,
-      metadata: {
-        ...defaultResumeData.metadata,
-        id: newId,
-        uuid: newId,
-        title: "Alex Rivera - Full Stack Engineer Resume",
-        lastSaved: new Date().toISOString()
-      }
+      metadata: { ...defaultResumeData.metadata, id: newId, uuid: newId, title: "Alex Rivera - Full Stack Engineer Resume", lastSaved: new Date().toISOString() }
     };
     setResumes((prev) => [demo, ...prev]);
     setActiveResumeIdState(newId);
     setPast([]);
     setFuture([]);
-    trackEvent(AnalyticsEvents.RESUME_CREATED, { id: newId, isDemo: true });
   }, []);
 
-  // Version History
   const activeVersions = versionMap[activeResumeId] || [];
 
   const createVersionSnapshot = useCallback((customTitle = '') => {
@@ -464,10 +437,7 @@ export const ResumeProvider = ({ children }) => {
       timestamp: new Date().toISOString(),
       data: JSON.parse(JSON.stringify(activeResume))
     };
-    setVersionMap((prev) => ({
-      ...prev,
-      [activeResumeId]: [newVersion, ...(prev[activeResumeId] || [])]
-    }));
+    setVersionMap((prev) => ({ ...prev, [activeResumeId]: [newVersion, ...(prev[activeResumeId] || [])] }));
   }, [activeVersions, activeResume, activeResumeId]);
 
   const restoreVersionSnapshot = useCallback((versionId) => {
@@ -475,25 +445,88 @@ export const ResumeProvider = ({ children }) => {
     if (target) updateActiveResume(target.data);
   }, [activeVersions, updateActiveResume]);
 
-  // AI Credits
-  const consumeCredit = useCallback((actionName = 'AI Feature') => {
-    trackEvent(AnalyticsEvents.AI_BUTTON_CLICK, { actionName });
-    if (aiCredits.remaining <= 0) {
-      setIsAIUpgradePromptOpen(true);
+  // Auth Operations with Welcome Credit Handling
+  const handleLogin = useCallback((email, provider = 'Email') => {
+    const newSession = loginUser(email, provider);
+    setSession(newSession);
+
+    // If new user who hasn't claimed welcome credits, grant 5 Welcome AI Credits
+    if (newSession.isFirstClaim) {
+      setAiCredits((prev) => ({
+        ...prev,
+        remaining: (prev.remaining || 0) + 5,
+        usageHistory: [
+          {
+            id: `welcome-${Date.now()}`,
+            action: '5 Welcome AI Credits Granted',
+            timestamp: new Date().toISOString(),
+            creditsUsed: 0
+          },
+          ...prev.usageHistory
+        ]
+      }));
+    }
+    return newSession;
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    const guestSession = logoutUser();
+    setSession(guestSession);
+  }, []);
+
+  // Credit Management Operations
+  const addPurchasedCredits = useCallback((creditsAmount, packDetails = 'Credit Pack') => {
+    const added = Number(creditsAmount) || 0;
+    if (added <= 0) return;
+
+    setAiCredits((prev) => ({
+      remaining: (prev.remaining || 0) + added,
+      totalPurchased: (prev.totalPurchased || 0) + added,
+      usageHistory: [
+        {
+          id: `buy-${Date.now()}`,
+          action: `Purchased ${added} Credits (${packDetails})`,
+          timestamp: new Date().toISOString(),
+          creditsUsed: 0
+        },
+        ...prev.usageHistory
+      ]
+    }));
+  }, []);
+
+  // Gate check before running any AI feature
+  const checkAIAccess = useCallback((featureName = 'AI Feature') => {
+    if (!session || !session.isAuthenticated || session.isGuest) {
+      setIsUnlockAIModalOpen(true);
       return false;
     }
-    setAiCredits((prev) => {
-      const nextRemaining = prev.remaining - 1;
-      const usageEntry = { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: 1 };
-      return { ...prev, remaining: nextRemaining, usageHistory: [usageEntry, ...prev.usageHistory] };
-    });
-    trackEvent(AnalyticsEvents.AI_CREDIT_CONSUMED, { actionName });
+
+    if (aiCredits.remaining <= 0) {
+      setIsBuyCreditsModalOpen(true);
+      return false;
+    }
+
     return true;
-  }, [aiCredits]);
+  }, [session, aiCredits.remaining]);
+
+  const consumeCredit = useCallback((actionName = 'AI Feature') => {
+    if (aiCredits.remaining <= 0) {
+      setIsBuyCreditsModalOpen(true);
+      return false;
+    }
+    setAiCredits((prev) => ({
+      ...prev,
+      remaining: Math.max(0, prev.remaining - 1),
+      usageHistory: [
+        { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: 1 },
+        ...prev.usageHistory
+      ]
+    }));
+    return true;
+  }, [aiCredits.remaining]);
 
   const saveByokKeys = useCallback((newKeys) => setByokKeys(newKeys), []);
 
-  // Export JSON (Clean or Full)
   const exportActiveResumeJSON = useCallback((clean = true) => {
     const dataToExport = clean ? stripInternalMetadata(activeResume) : activeResume;
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
@@ -503,8 +536,7 @@ export const ResumeProvider = ({ children }) => {
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    trackEvent(AnalyticsEvents.JSON_EXPORT, { id: activeResumeId, clean });
-  }, [activeResume, activeResumeId]);
+  }, [activeResume]);
 
   const importResumeJSON = useCallback((jsonContent) => {
     try {
@@ -514,27 +546,17 @@ export const ResumeProvider = ({ children }) => {
       const imported = {
         ...emptyResumeSchema,
         ...parsed,
-        metadata: {
-          ...emptyResumeSchema.metadata,
-          ...(parsed.metadata || {}),
-          id: newId,
-          uuid: newId,
-          title: parsed.metadata?.title ? `${parsed.metadata.title} (Imported)` : "Imported Resume",
-          lastSaved: new Date().toISOString()
-        }
+        metadata: { ...emptyResumeSchema.metadata, ...(parsed.metadata || {}), id: newId, uuid: newId, title: parsed.metadata?.title ? `${parsed.metadata.title} (Imported)` : "Imported Resume", lastSaved: new Date().toISOString() }
       };
       setResumes((prev) => [imported, ...prev]);
       setActiveResumeIdState(newId);
-      trackEvent(AnalyticsEvents.IMPORT_RESUME, { id: newId });
       return true;
     } catch (err) {
-      console.error("Failed to import resume JSON:", err);
-      alert("Failed to import resume JSON file. Please ensure it is a valid OpportunityX JSON Resume.");
+      alert("Failed to import JSON file.");
       return false;
     }
   }, []);
 
-  // Updaters
   const updatePersonal = (field, value) => updateActiveResume((prev) => ({ ...prev, personal: { ...prev.personal, [field]: value } }));
   const updateExperience = (items) => updateActiveResume((prev) => ({ ...prev, experience: items }));
   const updateEducation = (items) => updateActiveResume((prev) => ({ ...prev, education: items }));
@@ -546,17 +568,18 @@ export const ResumeProvider = ({ children }) => {
   const updateSocialLinks = (field, value) => updateActiveResume((prev) => ({ ...prev, socialLinks: { ...prev.socialLinks, [field]: value } }));
   const updateCustomSections = (items) => updateActiveResume((prev) => ({ ...prev, customSections: items }));
 
-  const setTemplate = (templateName) => {
-    updateActiveResume((prev) => ({ ...prev, metadata: { ...prev.metadata, template: templateName } }));
-    trackEvent(AnalyticsEvents.TEMPLATE_SELECTED, { template: templateName });
-  };
-
+  const setTemplate = (templateName) => updateActiveResume((prev) => ({ ...prev, metadata: { ...prev.metadata, template: templateName } }));
   const setFontFamily = (fontName) => updateActiveResume((prev) => ({ ...prev, metadata: { ...prev.metadata, fontFamily: fontName } }));
   const setAccentColor = (colorHex) => updateActiveResume((prev) => ({ ...prev, metadata: { ...prev.metadata, accentColor: colorHex } }));
 
   return (
     <ResumeContext.Provider
       value={{
+        session,
+        handleLogin,
+        handleLogout,
+        checkAIAccess,
+        addPurchasedCredits,
         resumes,
         activeResume,
         activeResumeId,
@@ -576,10 +599,20 @@ export const ResumeProvider = ({ children }) => {
         discardRecoveryDraft,
         userPreferences,
         updateUserPreferences,
+        selectedAIModel,
+        setSelectedAIModel,
         updateActiveResume,
         saveStatus,
         lastSavedTimeStr,
         resumeHealth,
+        atsEngineResult,
+        validationResult,
+        keywordResult,
+        recruiterScanResult,
+        resumeStrengthScore,
+        strengthLabel,
+        scanHistory,
+        runResumeScan,
         past,
         future,
         canUndo: past.length > 0,
@@ -615,6 +648,14 @@ export const ResumeProvider = ({ children }) => {
         setIsBYOKModalOpen,
         isAIUpgradePromptOpen,
         setIsAIUpgradePromptOpen,
+        isUnlockAIModalOpen,
+        setIsUnlockAIModalOpen,
+        isBuyCreditsModalOpen,
+        setIsBuyCreditsModalOpen,
+        isAICreditsModalOpen,
+        setIsAICreditsModalOpen,
+        isAuthOpen,
+        setIsAuthOpen,
         isInspectorOpen,
         setIsInspectorOpen,
         isAssetManagerOpen,
@@ -624,7 +665,15 @@ export const ResumeProvider = ({ children }) => {
         isThemeCustomizerOpen,
         setIsThemeCustomizerOpen,
         isProfilePresetsOpen,
-        setIsProfilePresetsOpen
+        setIsProfilePresetsOpen,
+        isComparisonOpen,
+        setIsComparisonOpen,
+        isScanHistoryOpen,
+        setIsScanHistoryOpen,
+        isCompanyMatchOpen,
+        setIsCompanyMatchOpen,
+        isDonationModalOpen,
+        setIsDonationModalOpen
       }}
     >
       {children}
@@ -637,3 +686,4 @@ export const useResume = () => {
   if (!context) throw new Error('useResume must be used within a ResumeProvider');
   return context;
 };
+
