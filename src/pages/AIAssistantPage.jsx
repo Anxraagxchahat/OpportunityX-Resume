@@ -10,47 +10,93 @@ import {
   Bot,
   FileText,
   Cpu,
-  Layers
+  Lock,
+  Activity,
+  Sliders,
+  DollarSign,
+  Key,
+  Layers,
+  AlertCircle
 } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
+import { useAIInfrastructure } from '../hooks/useAIInfrastructure';
+import { executeOpenRouterRequest } from '../services/ai/providerManager';
+import { buildMinimalContext } from '../services/ai/contextBuilder';
+import { getPromptTemplate } from '../services/ai/promptLibrary';
+import { getCachedResponse, setCachedResponse } from '../services/ai/responseCache';
+import { AISettingsModal } from '../components/AISettingsModal';
+import { AIResponseViewer } from '../components/AIResponseViewer';
+import { AIUsageDashboard } from '../components/AIUsageDashboard';
 
-export const AIAssistantPage = () => {
-  const navigate = useNavigate();
-  const { resumeData, updatePersonal } = useResume();
+  const { activeResume, updatePersonal, setIsBYOKModalOpen, selectedAIModel, setSelectedAIModel, aiCredits, consumeCredit, checkAIAccess, session, setIsUnlockAIModalOpen, byokKeys } = useResume();
+  const { features, models, providerHealthList, estimateCost } = useAIInfrastructure();
+
+  const [selectedFeatureId, setSelectedFeatureId] = useState('summary_generator');
   const [promptInput, setPromptInput] = useState('Senior Full Stack Engineer with expertise in React, Node.js, and cloud architecture...');
-  const [outputResult, setOutputResult] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [tone, setTone] = useState('Professional');
 
-  const aiTools = [
-    { title: 'Summary Generator', desc: 'Creates high-impact executive summaries for software engineering and tech roles.', icon: FileText, sample: 'Generate professional summary for Full Stack Engineer' },
-    { title: 'Experience Bullet Enhancer', desc: 'Rewrites weak experience points using metric-driven XYZ frameworks (Accomplished X by Y resulting in Z).', icon: Wand2, sample: 'Engineered high-concurrency microservices processing 10M+ daily events' },
-    { title: 'Tech Stack Keyword Injector', desc: 'Suggests high-relevance technical skills and frameworks to pass ATS filters.', icon: Cpu, sample: 'Suggest relevant technologies for Backend Engineer' },
-    { title: 'Grammar & Tone Optimizer', desc: 'Fixes passive voice and polishes tone for executive readability.', icon: Bot, sample: 'Fix grammar and polish tone for engineering manager resume' }
-  ];
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionResult, setExecutionResult] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
-  const handleTestGenerate = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setIsGenerating(false);
-      setOutputResult(
-        `Architected distributed microservices and front-end user interfaces processing 15M+ daily API requests with 99.99% uptime. Optimized database query performance to reduce P99 response latency by 45% across 2M+ active users.`
-      );
-    }, 700);
-  };
+  const activeFeature = features[selectedFeatureId.toUpperCase()] || Object.values(features)[0];
+  const costEstimate = estimateCost(promptInput, selectedAIModel, activeFeature.requiredCredits);
+  const isGuest = !session.isAuthenticated || session.isGuest;
 
-  const handleApplyToResume = () => {
-    if (outputResult) {
-      updatePersonal('summary', outputResult);
-      navigate('/builder');
+  const handleRunOpenRouterRequest = async () => {
+    setErrorMsg(null);
+
+    // 1. Gate check for Authentication & Credits
+    if (!checkAIAccess(activeFeature.name)) {
+      return;
+    }
+
+    // 2. Check response cache
+    const cached = getCachedResponse(selectedFeatureId, promptInput, selectedAIModel);
+    if (cached) {
+      setExecutionResult(cached);
+      return;
+    }
+
+    setIsExecuting(true);
+
+    try {
+      // 3. Build minimal context
+      const contextPayload = buildMinimalContext(selectedFeatureId, activeResume, { textToFix: promptInput });
+
+      // 4. Build prompt using template
+      const template = getPromptTemplate(selectedFeatureId);
+      const systemPrompt = template.systemPrompt;
+      const userPrompt = template.userPromptTemplate(promptInput || JSON.stringify(contextPayload));
+
+      // 5. Execute OpenRouter HTTP request (with 1-time retry)
+      const apiKey = byokKeys.openrouter || import.meta.env.VITE_OPENROUTER_API_KEY;
+      const result = await executeOpenRouterRequest({
+        modelId: selectedAIModel || 'google/gemini-2.5-flash:free',
+        systemPrompt,
+        userPrompt: `${userPrompt}\nDesired Tone: ${tone}. Respond with content only.`,
+        apiKey
+      });
+
+      // 6. Deduct credit ONLY on successful response
+      consumeCredit(activeFeature.name);
+
+      // 7. Cache response locally
+      setCachedResponse(selectedFeatureId, promptInput, selectedAIModel, result);
+
+      setExecutionResult(result);
+    } catch (err) {
+      console.error("AI Generation Failed:", err);
+      setErrorMsg(err.message || "Failed to generate AI content. No credit was deducted.");
+    } finally {
+      setIsExecuting(false);
     }
   };
 
-  const handleCopy = () => {
-    if (outputResult) {
-      navigator.clipboard.writeText(outputResult);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+  const handleApplyToResume = () => {
+    if (executionResult?.generatedContent) {
+      updatePersonal('summary', executionResult.generatedContent);
+      navigate('/builder');
     }
   };
 
@@ -58,53 +104,130 @@ export const AIAssistantPage = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header */}
       <div className="space-y-2 text-center max-w-2xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-semibold border border-orange-500/30">
-          <Wand2 className="w-3.5 h-3.5 animate-pulse" /> AI Assistant Playground
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-bold border border-orange-500/30">
+          <Wand2 className="w-3.5 h-3.5 animate-pulse" /> Powered by AI • Uses AI Credits
         </div>
-        <h1 className="text-3xl font-black text-white">AI Writing Assistant & Optimization</h1>
+        <h1 className="text-3xl font-black text-white">AI Resume Assistant Suite</h1>
         <p className="text-sm text-slate-400">
-          Experimental AI playground for generating summaries, polishing experience bullet points, and adding ATS keywords.
+          Smart AI generation for summary, experience, reviews, cover letters, and LinkedIn summaries.
         </p>
       </div>
 
-      {/* Grid of AI Tools */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {aiTools.map((tool, idx) => {
-          const Icon = tool.icon;
-          return (
-            <div
-              key={idx}
-              onClick={() => {
-                setPromptInput(tool.sample);
-                handleTestGenerate();
-              }}
-              className="cyber-glass-card p-5 space-y-3 hover:border-orange-500/50 transition-all cursor-pointer group"
-            >
-              <div className="p-2.5 w-max rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 group-hover:scale-110 transition-transform">
-                <Icon className="w-5 h-5" />
+      {/* Guest Locked Banner */}
+      {isGuest && (
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-orange-500/20 via-amber-500/10 to-slate-900 border border-orange-500/40 text-center space-y-4 shadow-xl">
+          <div className="p-3 rounded-full bg-orange-500/20 text-orange-400 w-fit mx-auto border border-orange-500/30">
+            <Lock className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-black text-white">AI Suite is Locked for Guests</h2>
+            <p className="text-xs text-slate-300 max-w-md mx-auto">
+              Login to claim your <strong className="text-amber-400 font-bold">5 FREE Welcome AI Credits</strong> and unlock all 9 AI capabilities. Core Resume Builder remains 100% Free Forever without login!
+            </p>
+          </div>
+          <button
+            onClick={() => setIsUnlockAIModalOpen(true)}
+            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition-all inline-flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4" /> Unlock AI Features (Claim 5 Free Credits)
+          </button>
+        </div>
+      )}
+
+
+
+      {/* Usage Dashboard */}
+      <AIUsageDashboard />
+
+      {/* Feature Registry Cards Grid */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <Layers className="w-4 h-4 text-orange-400" /> Choose AI Capability ({Object.keys(features).length} Features)
+        </h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {Object.values(features).map((feat) => {
+            const isSel = selectedFeatureId === feat.id;
+            return (
+              <div
+                key={feat.id}
+                onClick={() => setSelectedFeatureId(feat.id)}
+                className={`p-4 rounded-xl border transition-all cursor-pointer space-y-2 ${
+                  isSel
+                    ? 'bg-orange-500/10 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.15)]'
+                    : 'bg-[#10131D] border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white">{feat.name}</span>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-orange-500/20 text-orange-300">
+                    {feat.requiredCredits} Credit{feat.requiredCredits > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">{feat.description}</p>
               </div>
-              <h3 className="text-sm font-bold text-white">{tool.title}</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">{tool.desc}</p>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
-      {/* Interactive AI Test Bench Area */}
+      {/* AI Test Bench */}
       <div className="cyber-glass-card p-6 space-y-6 max-w-4xl mx-auto border-orange-500/30">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <Sparkles className="w-5 h-5 text-orange-400 animate-pulse" />
-            <h3 className="text-base font-bold text-white">AI Generation Playground</h3>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+          <div>
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-orange-400" /> OpenRouter AI Execution Suite
+            </h3>
+            <p className="text-xs text-slate-400">Configure parameters and execute real LLM generation</p>
           </div>
-          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/30">
-            Phase 0 Engine
-          </span>
+
+          <select
+            value={selectedAIModel}
+            onChange={(e) => setSelectedAIModel(e.target.value)}
+            className="bg-[#080B12] border border-slate-800 text-white rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none"
+          >
+            {Object.values(models).map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {errorMsg && (
+          <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {/* Cost Estimator Box */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-[#080B12] border border-slate-800 text-xs">
+          <div><span className="text-slate-400">Est. Tokens:</span> <strong className="text-white block font-mono">{costEstimate.totalTokens}</strong></div>
+          <div><span className="text-slate-400">Est. Cost:</span> <strong className="text-emerald-400 block font-mono">${costEstimate.totalDollarCost}</strong></div>
+          <div><span className="text-slate-400">Required Credits:</span> <strong className="text-orange-400 block font-mono">{activeFeature.requiredCredits} Credit</strong></div>
+          <div><span className="text-slate-400">Status:</span> <strong className="text-amber-400 block font-mono">OpenRouter Ready</strong></div>
+        </div>
+
+        {/* Tone Selector */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-300">Tone & Output Style</label>
+          <div className="grid grid-cols-4 gap-2">
+            {['Professional', 'Friendly', 'Corporate', 'Technical'].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTone(t)}
+                className={`py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                  tone === t ? 'bg-orange-500/20 text-orange-300 border-orange-500/50' : 'bg-[#10131D] text-slate-400 border-slate-800'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Input */}
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-300">Input Prompt / Existing Text</label>
+          <label className="text-xs font-semibold text-slate-300">Input Prompt / Existing Context</label>
           <textarea
             rows={3}
             value={promptInput}
@@ -113,48 +236,38 @@ export const AIAssistantPage = () => {
           />
         </div>
 
-        {/* Action Button */}
+        {/* Execution Button */}
         <button
-          onClick={handleTestGenerate}
-          disabled={isGenerating}
+          onClick={handleRunOpenRouterRequest}
+          disabled={isExecuting}
           className="px-5 py-2.5 text-xs font-bold text-black bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-xl shadow-[0_0_18px_rgba(249,115,22,0.3)] transition-all flex items-center gap-2"
         >
-          {isGenerating ? (
+          {isExecuting ? (
             <>
-              <RefreshCw className="w-4 h-4 animate-spin" /> Generating...
+              <RefreshCw className="w-4 h-4 animate-spin" /> Executing OpenRouter Request...
             </>
           ) : (
             <>
-              <Wand2 className="w-4 h-4" /> Run AI Enhancement
+              <Wand2 className="w-4 h-4" /> Run OpenRouter AI Generation ({activeFeature.requiredCredits} Credit)
             </>
           )}
         </button>
 
-        {/* Output Result */}
-        {outputResult && (
-          <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/30 space-y-3">
-            <div className="flex items-center justify-between text-xs font-bold text-orange-400">
-              <span>AI Optimized Output</span>
-              <button
-                onClick={handleCopy}
-                className="text-slate-400 hover:text-white flex items-center gap-1 font-normal"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-            <p className="text-xs text-slate-200 leading-relaxed font-sans">{outputResult}</p>
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={handleApplyToResume}
-                className="px-4 py-2 text-xs font-bold text-black bg-orange-500 hover:bg-orange-400 rounded-lg flex items-center gap-1.5"
-              >
-                Apply to Active Resume Summary <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
+        {/* Interactive Response Viewer */}
+        {executionResult && (
+          <AIResponseViewer
+            originalText={promptInput}
+            improvedText={executionResult.generatedContent}
+            creditsUsed={executionResult.creditsConsumed}
+            latencyMs={executionResult.latencyMs}
+            onAccept={handleApplyToResume}
+            onReject={() => setExecutionResult(null)}
+            onRegenerate={handleRunOpenRouterRequest}
+          />
         )}
       </div>
+
+      <AISettingsModal />
     </div>
   );
 };

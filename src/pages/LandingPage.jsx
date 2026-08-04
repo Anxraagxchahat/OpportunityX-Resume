@@ -41,11 +41,12 @@ export const LandingPage = () => {
   };
 
   const trustBadges = [
-    { label: "No Watermark", icon: ShieldCheck },
-    { label: "No Hidden Charges", icon: Shuffle },
-    { label: "ATS Friendly", icon: Shield },
-    { label: "Privacy First", icon: Lock }
+    { label: "Free Forever Builder", icon: ShieldCheck },
+    { label: "No Watermark", icon: Shield },
+    { label: "No Ads & No Forced Login", icon: Lock },
+    { label: "Unlimited PDF Exports", icon: Download }
   ];
+
 
   const campusLogos = [
     { name: "IIT Bombay" },
