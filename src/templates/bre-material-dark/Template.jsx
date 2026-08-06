@@ -1,0 +1,77 @@
+import React from 'react';
+import './styles.css';
+
+export const BREMaterialDarkTemplate = ({ resumeData, accentHex, fontFamily }) => {
+  const { personal = {}, experience = [], education = [], projects = [], skills = {} } = resumeData || {};
+
+  const accentColor = accentHex || '#bb86fc';
+
+  return (
+    <div className="bre-material-dark-container" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
+      {/* Header Card */}
+      <div className="bre-material-card">
+        <h1 className="text-2xl font-black text-white">{personal.fullName || 'Your Name'}</h1>
+        <p className="text-xs font-bold mt-0.5" style={{ color: accentColor }}>{personal.jobTitle || 'Job Title'}</p>
+        <div className="mt-2 text-[11px] text-gray-400 flex flex-wrap gap-x-3 gap-y-0.5">
+          {personal.email && <span>{personal.email}</span>}
+          {personal.phone && <span>• {personal.phone}</span>}
+          {personal.location && <span>• {personal.location}</span>}
+          {personal.github && <span>• {personal.github}</span>}
+        </div>
+      </div>
+
+      {personal.summary && (
+        <div className="bre-material-card">
+          <div className="bre-material-heading" style={{ color: accentColor }}>About</div>
+          <p className="text-[11px] leading-relaxed text-gray-300">{personal.summary}</p>
+        </div>
+      )}
+
+      {experience.length > 0 && (
+        <div className="bre-material-card">
+          <div className="bre-material-heading" style={{ color: accentColor }}>Work Experience</div>
+          {experience.map((exp) => (
+            <div key={exp.id} className="mb-3 last:mb-0">
+              <div className="flex justify-between items-baseline text-xs font-bold text-white">
+                <span>{exp.role} @ <span style={{ color: accentColor }}>{exp.company}</span></span>
+                <span className="text-[10px] text-gray-400 font-normal">{exp.startDate} – {exp.endDate || 'Present'}</span>
+              </div>
+              {exp.bullets && (
+                <ul className="list-disc pl-4 text-[11px] text-gray-300 mt-1 space-y-0.5">
+                  {exp.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {skills && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
+        <div className="bre-material-card">
+          <div className="bre-material-heading" style={{ color: accentColor }}>Technical Skills</div>
+          <div className="flex flex-wrap gap-1.5">
+            {[...(skills.languages || []), ...(skills.frameworks || []), ...(skills.tools || [])].map((s, i) => (
+              <span key={i} className="px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-800 text-gray-200 border border-gray-700">
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {education.length > 0 && (
+        <div className="bre-material-card">
+          <div className="bre-material-heading" style={{ color: accentColor }}>Education</div>
+          {education.map((edu) => (
+            <div key={edu.id} className="mb-2 last:mb-0">
+              <div className="flex justify-between items-baseline text-xs font-bold text-white">
+                <span>{edu.degree} — <span className="font-normal text-gray-300">{edu.institution}</span></span>
+                <span className="text-[10px] text-gray-400">{edu.startDate} – {edu.endDate || 'Present'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
