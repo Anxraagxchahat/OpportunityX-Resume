@@ -1,0 +1,44 @@
+/* JSONResume Theme Modern Styles */
+.jsonresume-modern-container {
+  padding: 24px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.jsonresume-modern-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #2563eb;
+  margin-bottom: 20px;
+}
+
+.jsonresume-modern-name {
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.jsonresume-modern-location {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.jsonresume-modern-section {
+  display: flex;
+  margin-bottom: 18px;
+}
+
+.jsonresume-modern-section-label {
+  width: 25%;
+  font-size: 13px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.jsonresume-modern-section-content {
+  width: 75%;
+}
