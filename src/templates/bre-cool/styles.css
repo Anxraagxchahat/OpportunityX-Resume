@@ -1,0 +1,97 @@
+/* BRE Cool Template Styles */
+.bre-cool-container {
+  position: relative;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.bre-cool-banner {
+  padding: 24px 30px;
+  color: #ffffff;
+}
+
+.bre-cool-fullname {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.bre-cool-position {
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 4px;
+  opacity: 0.95;
+}
+
+.bre-cool-content {
+  display: flex;
+  min-height: 100%;
+}
+
+.bre-cool-left {
+  width: 32%;
+  padding: 20px 24px;
+  color: rgba(255, 255, 255, 0.85);
+  background-color: #34495e;
+}
+
+.bre-cool-right {
+  flex: 1;
+  padding: 20px 24px;
+}
+
+.bre-cool-section {
+  margin-bottom: 16px;
+}
+
+.bre-cool-section-headline {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.bre-cool-left .bre-cool-section-headline {
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 4px;
+}
+
+.bre-cool-right .bre-cool-section-headline {
+  border-bottom: 2px solid #34495e;
+  padding-bottom: 4px;
+}
+
+.bre-cool-item {
+  margin-bottom: 12px;
+}
+
+.bre-cool-header {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.bre-cool-subheader {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.bre-cool-date {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.bre-cool-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  margin: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  color: #ffffff;
+}
