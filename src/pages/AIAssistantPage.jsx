@@ -28,7 +28,10 @@ import { AISettingsModal } from '../components/AISettingsModal';
 import { AIResponseViewer } from '../components/AIResponseViewer';
 import { AIUsageDashboard } from '../components/AIUsageDashboard';
 
+export const AIAssistantPage = () => {
+  const navigate = useNavigate();
   const { activeResume, updatePersonal, setIsBYOKModalOpen, selectedAIModel, setSelectedAIModel, aiCredits, consumeCredit, checkAIAccess, session, setIsUnlockAIModalOpen, byokKeys } = useResume();
+
   const { features, models, providerHealthList, estimateCost } = useAIInfrastructure();
 
   const [selectedFeatureId, setSelectedFeatureId] = useState('summary_generator');
