@@ -1,8 +1,25 @@
 import React from 'react';
 
 export const RealTemplateThumbnail = ({ template }) => {
-  const { supportsSidebar, isDoubleColumn, accentColor = '#F97316' } = template;
+  const { supportsSidebar, isDoubleColumn, accentColor = '#F97316', previewImage } = template;
 
+  // If this template has a real preview image (Reactive Resume templates), use it
+  if (previewImage) {
+    return (
+      <div className="w-full h-full rounded border border-slate-700 overflow-hidden relative">
+        <img
+          src={previewImage}
+          alt={`${template.name} preview`}
+          className="w-full h-full object-cover object-top"
+          loading="lazy"
+        />
+        {/* Subtle gradient overlay for better text readability if needed */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+      </div>
+    );
+  }
+
+  // Schematic wireframe fallback for original templates
   if (supportsSidebar) {
     return (
       <div className="w-full h-full bg-white rounded border border-slate-700 overflow-hidden flex text-[6px]">
