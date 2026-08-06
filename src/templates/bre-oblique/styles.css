@@ -1,0 +1,40 @@
+/* BRE Oblique Template Styles */
+.bre-oblique-container {
+  padding: 24px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.bre-oblique-header {
+  position: relative;
+  padding: 20px;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: #ffffff;
+  border-radius: 8px 8px 0 0;
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+  padding-bottom: 35px;
+}
+
+.bre-oblique-name {
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.bre-oblique-title {
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.bre-oblique-heading {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #4f46e5;
+  border-bottom: 2px solid #4f46e5;
+  padding-bottom: 3px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
