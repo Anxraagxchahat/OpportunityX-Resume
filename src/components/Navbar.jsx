@@ -6,19 +6,14 @@ import {
   FileText,
   Grid,
   CheckCircle2,
-  Upload,
   Wand2,
   Menu,
   X,
-  PlayCircle,
-  Globe,
-  User,
-  Share2
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResume } from '../context/ResumeContext';
 import { AuthModal } from './AuthModal';
-import { getCurrentUserSession } from '../services/ecosystem/authManager';
 
 export const Navbar = () => {
   const location = useLocation();
@@ -40,9 +35,7 @@ export const Navbar = () => {
     { label: 'Builder', to: '/builder', icon: FileText },
     { label: 'Templates', to: '/templates', icon: Grid },
     { label: 'ATS Intelligence', to: '/ats-checker', icon: CheckCircle2 },
-    { label: 'AI Suite', to: '/ai-assistant', icon: Wand2 },
-    { label: 'Ecosystem', to: '/ecosystem', icon: Globe },
-    { label: 'Public Link', to: '/u/anurag-verma', icon: Share2 }
+    { label: 'AI Suite', to: '/ai-assistant', icon: Wand2 }
   ];
 
   const handleDemoClick = () => {
@@ -110,7 +103,7 @@ export const Navbar = () => {
           })}
         </nav>
 
-        {/* Right Actions (AI Credits Pill + Auth User Profile + Create Resume CTA) */}
+        {/* Right Actions (AI Credits Pill + Auth User Profile) */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
           {/* AI Credits Pill Button */}
           <button
@@ -141,17 +134,6 @@ export const Navbar = () => {
               {session.isAuthenticated && !session.isGuest ? session.user?.name : 'Guest (Free)'}
             </span>
           </button>
-
-          {/* Primary Create Resume Button */}
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Link
-              to="/builder"
-              className="px-4 py-2 sm:px-5 sm:py-2.5 text-xs font-bold text-black bg-gradient-to-r from-[#F97316] to-[#F59E0B] hover:from-[#EA580C] hover:to-[#D97706] rounded-[12px] shadow-[0_0_20px_rgba(249,115,22,0.35)] transition-all flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Create Resume</span>
-            </Link>
-          </motion.div>
         </div>
 
       </div>
