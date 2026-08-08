@@ -17,16 +17,13 @@ import {
   GithubAuthProvider,
 } from 'firebase/auth';
 
-const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-const isConfigured = Boolean(apiKey && apiKey !== 'your_api_key_here' && apiKey.length > 5);
-
 const firebaseConfig = {
-  apiKey: isConfigured ? apiKey : 'AIzaSyDummyKeyForSetupOnlyToPreventCrash',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'opportunityx-61efd.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'opportunityx-61efd',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'opportunityx-61efd.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '100000000000',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:100000000000:web:abcdef123456',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDOMi5ag1Ru0C1OHd_tpDDZVx41-fzPOzA",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "auth.opportunityx.co.in",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "opportunityx-61efd",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "opportunityx-61efd.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "621904213825",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:621904213825:web:2eaf4884cd39f3de4b93c0",
 };
 
 let appInstance;
@@ -48,7 +45,7 @@ try {
 }
 
 export const auth = authInstance;
-export const isFirebaseConfigured = isConfigured;
+export const isFirebaseConfigured = true;
 
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
