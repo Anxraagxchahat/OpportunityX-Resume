@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any
-from sqlalchemy.orm Session
+from sqlalchemy.orm import Session
 from app.repositories.notification_repository import NotificationRepository
 from app.db.models.models import Notification
 
