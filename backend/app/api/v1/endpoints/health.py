@@ -33,6 +33,11 @@ async def health_check(db: Session = Depends(get_db)):
 
     return HealthStatusResponse(**payload)
 
+@router.get("/health/warmup")
+async def health_warmup():
+    """Lightweight non-DB background warm-up ping for frontend initial load"""
+    return {"status": "ok", "warm": True}
+
 @router.get("/live")
 async def liveness():
     return {"status": "alive"}

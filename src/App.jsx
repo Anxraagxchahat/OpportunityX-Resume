@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { initPaymentPreloader } from './utils/paymentPreloader';
 import { ThemeProvider } from './context/ThemeProvider';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ResumeProvider } from './context/ResumeContext';
@@ -53,6 +55,10 @@ function AuthGate({ children }) {
 function AppContent() {
   const location = useLocation();
   const isWorkspace = location.pathname === '/builder';
+
+  useEffect(() => {
+    initPaymentPreloader();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[var(--ox-bg)] text-[var(--ox-text-primary)] font-sans flex flex-col transition-colors duration-300 selection:bg-orange-500/30 selection:text-slate-950 dark:selection:text-orange-100">

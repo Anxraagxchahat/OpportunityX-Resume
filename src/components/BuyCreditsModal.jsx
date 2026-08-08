@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { X, Sparkles, CheckCircle2, CreditCard, ArrowRight, ShieldCheck, RefreshCw, AlertCircle, Lock } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 import { apiService } from '../services/api';
+import { pingBackendWarmup, preloadCashfreeSDK } from '../utils/paymentPreloader';
 
 const CREDIT_PACKS = [
   { id: 'pack-starter', price: 1, credits: 15, perCredit: '₹0.07/cr', tag: 'Starter Pack', icon: '⚡' },
@@ -40,6 +41,14 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   const [errorMsg, setErrorMsg] = useState('');
 
   const active = isOpen !== undefined ? isOpen : isBuyCreditsModalOpen;
+
+  useEffect(() => {
+    if (active) {
+      pingBackendWarmup();
+      preloadCashfreeSDK();
+    }
+  }, [active]);
+
   const handleClose = () => {
     setPaymentStep('select');
     setIsProcessing(false);
@@ -83,6 +92,8 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   }
 
   const handleInitiateCashfreePayment = async () => {
+    if (isProcessing) return; // Prevent duplicate payment session requests
+
     if (!acceptedTerms) {
       setErrorMsg("You must accept the Terms & Conditions and Refund Policy to proceed.");
       return;
@@ -129,7 +140,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
 
     } catch (err) {
       setIsProcessing(false);
-      setErrorMsg(err.message || "Could not connect to Cashfree payment server.");
+      setErrorMsg(err.message || "We couldn't start the payment securely. Please try again.");
     }
   };
 
@@ -139,7 +150,8 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-900 transition-colors"
+          disabled={isProcessing}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-900 transition-colors disabled:opacity-30"
         >
           <X className="w-5 h-5" />
         </button>
@@ -160,9 +172,18 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
             </div>
 
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{errorMsg}</span>
+              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <p className="font-semibold">{errorMsg}</p>
+                  <button
+                    onClick={handleInitiateCashfreePayment}
+                    disabled={isProcessing}
+                    className="text-[11px] font-bold text-orange-400 underline hover:text-orange-300 disabled:opacity-50"
+                  >
+                    Click to Retry Payment
+                  </button>
+                </div>
               </div>
             )}
 
@@ -173,8 +194,10 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
                 return (
                   <div
                     key={pack.id}
-                    onClick={() => setSelectedPack(pack)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer relative flex flex-col justify-between space-y-3 ${
+                    onClick={() => !isProcessing && setSelectedPack(pack)}
+                    className={`p-4 rounded-xl border transition-all relative flex flex-col justify-between space-y-3 ${
+                      isProcessing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                    } ${
                       isSelected
                         ? 'bg-orange-500/10 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.25)]'
                         : 'bg-[#10131D] border-slate-800 hover:border-slate-700'
@@ -216,11 +239,12 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
                 <input
                   type="checkbox"
                   checked={acceptedTerms}
+                  disabled={isProcessing}
                   onChange={(e) => {
                     setAcceptedTerms(e.target.checked);
                     if (e.target.checked) setErrorMsg('');
                   }}
-                  className="w-4 h-4 mt-0.5 accent-orange-500 shrink-0 cursor-pointer"
+                  className="w-4 h-4 mt-0.5 accent-orange-500 shrink-0 cursor-pointer disabled:opacity-50"
                 />
                 <span>
                   I accept the{' '}
@@ -247,6 +271,16 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
               </p>
             </div>
 
+            {/* Processing Banner */}
+            {isProcessing && (
+              <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-slate-300 text-xs space-y-1 animate-pulse text-center">
+                <p className="font-bold text-orange-400">Preparing secure payment…</p>
+                <p className="text-[11px] text-slate-400">
+                  This may take up to 10–15 seconds on the first request while we securely connect to the payment service.
+                </p>
+              </div>
+            )}
+
             {/* CTA Purchase Button */}
             <button
               onClick={handleInitiateCashfreePayment}
@@ -255,8 +289,8 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
             >
               {isProcessing ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Connecting to Cashfree Payment Gateway...</span>
+                  <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
+                  <span>Preparing secure payment…</span>
                 </>
               ) : (
                 <>

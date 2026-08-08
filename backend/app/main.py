@@ -102,13 +102,18 @@ async def global_exception_handler(request: Request, exc: Exception):
 # 4. Include Central Router
 app.include_router(api_router, prefix="/api/v1")
 
+@app.get("/health")
+async def health_check_root():
+    """Ultra-lightweight root health endpoint for instant Render backend warm-up without DB overhead"""
+    return {"status": "ok"}
+
 @app.get("/")
 async def root():
     return {
         "app": settings.APP_NAME,
         "version": "1.0.0",
         "docs": "/docs" if settings.is_dev else None,
-        "health": "/api/v1/health"
+        "health": "/health"
     }
 
 if __name__ == "__main__":
