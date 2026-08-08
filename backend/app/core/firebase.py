@@ -6,12 +6,14 @@ def init_firebase():
     if not firebase_admin._apps:
         client_email = settings.FIREBASE_CLIENT_EMAIL or "firebase-adminsdk-fbsvc@opportunityx-61efd.iam.gserviceaccount.com"
         raw_key = settings.FIREBASE_PRIVATE_KEY or ""
-        private_key = raw_key.strip().strip('"').strip("'").replace('\\n', '\n')
-        
+        private_key = raw_key.strip().strip('"').strip("'")
+        if "\\n" in private_key:
+            private_key = private_key.replace("\\n", "\n")
+
         if "-----BEGIN PRIVATE KEY-----" not in private_key:
-            # Fallback to central OpportunityX private key string
             from app.core.config import Settings
-            private_key = Settings().FIREBASE_PRIVATE_KEY.replace('\\n', '\n')
+            default_settings = Settings()
+            private_key = default_settings.FIREBASE_PRIVATE_KEY.replace('\\n', '\n')
 
         cred_dict = {
             "type": "service_account",

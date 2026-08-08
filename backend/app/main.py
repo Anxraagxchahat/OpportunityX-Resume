@@ -60,13 +60,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 3. Global Exception Handler (Ensures CORS headers are attached & full stack trace is logged on 500 errors)
+from sqlalchemy.exc import SQLAlchemyError
+import re
+
+def get_cors_headers(request: Request) -> dict:
+    origin = request.headers.get("origin")
+    if not origin:
+        return {}
+    allowed_list = cors_origins
+    is_allowed = origin in allowed_list or bool(
+        re.match(r"^https://.*\.vercel\.app$|^https://.*\.opportunityx\.co\.in$|^http://localhost:\d+$", origin)
+    )
+    if is_allowed:
+        return {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true"
+        }
+    return {}
+
+# 3. Exception Handlers (Ensures CORS headers are attached & correct status code returned)
+@app.exception_handler(SQLAlchemyError)
+async def db_exception_handler(request: Request, exc: SQLAlchemyError):
+    logger.error(f"Database Exception on {request.method} {request.url.path}: {exc}", exc_info=True)
+    headers = get_cors_headers(request)
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={"detail": f"Database service temporarily unavailable: {str(exc)}"},
+        headers=headers
+    )
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled Exception on {request.method} {request.url.path}: {exc}", exc_info=True)
+    headers = get_cors_headers(request)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": f"Internal Server Error: {str(exc)}"}
+        content={"detail": f"Internal Server Error: {str(exc)}"},
+        headers=headers
     )
 
 # 4. Include Central Router

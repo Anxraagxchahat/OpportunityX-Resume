@@ -10,6 +10,8 @@ from app.db.models.models import User, UserSession, Resume
 router = APIRouter(tags=["Health & Monitoring"])
 START_TIME = time.time()
 
+from fastapi.responses import JSONResponse
+
 @router.get("/health", response_model=HealthStatusResponse)
 async def health_check(db: Session = Depends(get_db)):
     db_status = "connected"
@@ -18,13 +20,18 @@ async def health_check(db: Session = Depends(get_db)):
     except Exception:
         db_status = "disconnected"
 
-    return HealthStatusResponse(
-        status="ok" if db_status == "connected" else "degraded",
-        database=db_status,
-        service=settings.APP_NAME,
-        version="1.0.0",
-        environment=settings.APP_ENV
-    )
+    payload = {
+        "status": "ok" if db_status == "connected" else "degraded",
+        "database": db_status,
+        "service": settings.APP_NAME,
+        "version": "1.0.0",
+        "environment": settings.APP_ENV
+    }
+
+    if db_status != "connected":
+        return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=payload)
+
+    return HealthStatusResponse(**payload)
 
 @router.get("/live")
 async def liveness():

@@ -18,9 +18,11 @@ async def get_current_user(
 ) -> AuthenticatedUser:
     token = None
     if auth and auth.credentials:
-        token = auth.credentials
-    elif authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
+        token = auth.credentials.strip()
+    elif authorization:
+        parts = authorization.strip().split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
 
     if not token:
         raise HTTPException(
@@ -40,9 +42,11 @@ async def get_current_user(
         return AuthenticatedUser(
             uid=uid,
             email=decoded.get("email", ""),
-            name=decoded.get("name") or decoded.get("email", "").split("@")[0] or "User",
+            name=decoded.get("name") or (decoded.get("email", "").split("@")[0] if decoded.get("email") else "User"),
             photo_url=decoded.get("picture", "")
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
