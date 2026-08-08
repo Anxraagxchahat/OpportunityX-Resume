@@ -31,9 +31,22 @@ app = FastAPI(
 )
 
 # 1. CORS Middleware
+cors_origins = list(settings.CORS_ORIGINS) if isinstance(settings.CORS_ORIGINS, list) else []
+default_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "https://resume.opportunityx.co.in",
+    "https://opportunityx.co.in",
+]
+for o in default_origins:
+    if o not in cors_origins:
+        cors_origins.append(o)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=cors_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.opportunityx\.co\.in|http://localhost:\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
