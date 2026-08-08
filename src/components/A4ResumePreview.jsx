@@ -108,18 +108,18 @@ export const A4ResumePreview = () => {
   }, [activeResume, template, fontFamily, accentHex]);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#07090F] overflow-hidden relative">
+    <div className="flex-1 flex flex-col h-full bg-[var(--ox-bg)] overflow-hidden relative transition-colors duration-300">
       {/* Top Toolbar (Non-printable) */}
-      <div className="bg-[#0B0D14] border-b border-slate-800 px-4 py-2 flex items-center justify-between gap-3 text-xs z-10 flex-wrap no-print">
+      <div className="bg-[var(--ox-surface-primary)] border-b border-[var(--ox-border)] px-4 py-2 flex items-center justify-between gap-3 text-xs z-10 flex-wrap no-print transition-colors duration-300">
         {/* Template Selector */}
         <div className="flex items-center gap-1.5">
-          <span className="text-slate-400 font-medium flex items-center gap-1">
-            <Layout className="w-3.5 h-3.5 text-orange-400" /> Template:
+          <span className="text-[var(--ox-text-muted)] font-medium flex items-center gap-1">
+            <Layout className="w-3.5 h-3.5 text-orange-500" /> Template:
           </span>
           <select
             value={template}
             onChange={(e) => setTemplate(e.target.value)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-orange-500 font-semibold max-w-xs truncate"
+            className="bg-[var(--ox-card-bg)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-orange-500 font-semibold max-w-xs truncate"
           >
             {TEMPLATE_CATEGORIES.map((cat) => (
               <optgroup key={cat.id} label={cat.categoryName}>
@@ -135,13 +135,13 @@ export const A4ResumePreview = () => {
 
         {/* Font Selector */}
         <div className="flex items-center gap-1.5">
-          <span className="text-slate-400 font-medium flex items-center gap-1">
-            <Type className="w-3.5 h-3.5 text-amber-400" /> Font:
+          <span className="text-[var(--ox-text-muted)] font-medium flex items-center gap-1">
+            <Type className="w-3.5 h-3.5 text-amber-500" /> Font:
           </span>
           <select
             value={fontFamily}
             onChange={(e) => setFontFamily(e.target.value)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-orange-500 font-semibold"
+            className="bg-[var(--ox-card-bg)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-orange-500 font-semibold"
           >
             {fontOptions.map((f) => (
               <option key={f.id} value={f.id}>
@@ -153,14 +153,14 @@ export const A4ResumePreview = () => {
 
         {/* Color Palette */}
         <div className="flex items-center gap-1.5">
-          <Palette className="w-3.5 h-3.5 text-orange-400 mr-1" />
+          <Palette className="w-3.5 h-3.5 text-orange-500 mr-1" />
           {colorOptions.map((c) => (
             <button
               key={c.id}
               onClick={() => setAccentColor(c.id)}
               style={{ backgroundColor: c.id }}
-              className={`w-4 h-4 rounded-full transition-transform ${
-                accentHex === c.id ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-[#0B0D14]' : 'hover:scale-110'
+              className={`w-4 h-4 rounded-full transition-transform cursor-pointer ${
+                accentHex === c.id ? 'scale-125 ring-2 ring-orange-500 ring-offset-2 ring-offset-[var(--ox-bg)]' : 'hover:scale-110'
               }`}
               title={c.name}
             />
@@ -168,11 +168,11 @@ export const A4ResumePreview = () => {
         </div>
 
         {/* View Mode Toggle (Multi-Page A4 Cards vs Continuous) */}
-        <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 text-[11px] font-semibold">
+        <div className="flex items-center bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-lg p-0.5 text-[11px] font-semibold">
           <button
             onClick={() => setViewMode('cards')}
-            className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${
-              viewMode === 'cards' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'text-slate-400 hover:text-slate-200'
+            className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer ${
+              viewMode === 'cards' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' : 'text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)]'
             }`}
             title="View as Multi-Page A4 Cards"
           >
@@ -181,8 +181,8 @@ export const A4ResumePreview = () => {
           </button>
           <button
             onClick={() => setViewMode('continuous')}
-            className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${
-              viewMode === 'continuous' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'text-slate-400 hover:text-slate-200'
+            className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer ${
+              viewMode === 'continuous' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' : 'text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)]'
             }`}
             title="Continuous Canvas with A4 Page Breaks"
           >
@@ -195,34 +195,34 @@ export const A4ResumePreview = () => {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setIsThemeCustomizerOpen(true)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-900 border border-slate-800"
+            className="p-1.5 rounded-lg text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] cursor-pointer"
             title="Theme Customizer"
           >
-            <Sliders className="w-3.5 h-3.5 text-amber-400" />
+            <Sliders className="w-3.5 h-3.5 text-amber-500" />
           </button>
           <button
             onClick={() => setIsAssetManagerOpen(true)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-900 border border-slate-800"
+            className="p-1.5 rounded-lg text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] cursor-pointer"
             title="Asset Manager"
           >
-            <ImageIcon className="w-3.5 h-3.5 text-emerald-400" />
+            <ImageIcon className="w-3.5 h-3.5 text-emerald-500" />
           </button>
           <button
             onClick={() => setIsInspectorOpen(true)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-900 border border-slate-800"
+            className="p-1.5 rounded-lg text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] cursor-pointer"
             title="Resume Inspector"
           >
-            <Activity className="w-3.5 h-3.5 text-orange-400" />
+            <Activity className="w-3.5 h-3.5 text-orange-500" />
           </button>
         </div>
 
         {/* Zoom Controls */}
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
-          <button onClick={handleZoomOut} className="p-1 text-slate-400 hover:text-white" title="Zoom Out">
+        <div className="flex items-center gap-1 bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-lg p-1">
+          <button onClick={handleZoomOut} className="p-1 text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] cursor-pointer" title="Zoom Out">
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
-          <span className="text-[11px] font-semibold text-slate-300 w-9 text-center">{zoomLevel}%</span>
-          <button onClick={handleZoomIn} className="p-1 text-slate-400 hover:text-white" title="Zoom In">
+          <span className="text-[11px] font-semibold text-[var(--ox-text-primary)] w-9 text-center">{zoomLevel}%</span>
+          <button onClick={handleZoomIn} className="p-1 text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] cursor-pointer" title="Zoom In">
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -231,7 +231,7 @@ export const A4ResumePreview = () => {
         <button
           onClick={handleDownloadPDF}
           disabled={isDownloading}
-          className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 disabled:opacity-75 cursor-pointer"
+          className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 disabled:opacity-75 cursor-pointer"
         >
           <Download className={`w-3.5 h-3.5 stroke-[2.5] ${isDownloading ? 'animate-bounce' : ''}`} />
           <span>{isDownloading ? 'Downloading...' : 'Download PDF'}</span>
@@ -264,7 +264,7 @@ export const A4ResumePreview = () => {
       </div>
 
       {/* Screen Interactive Workspace Viewport (Non-printable) */}
-      <div className="flex-1 overflow-auto p-6 flex flex-col items-center bg-[#07090F] custom-scrollbar no-print">
+      <div className="flex-1 overflow-auto p-6 flex flex-col items-center bg-[var(--ox-surface-secondary)] transition-colors duration-300 custom-scrollbar no-print">
         {/* Document Page Status Pill */}
         <div className="mb-4 flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-slate-300 shadow-md">
           {totalPages === 1 ? (
@@ -326,26 +326,35 @@ export const A4ResumePreview = () => {
                       />
                     </Suspense>
 
-                    {/* Signature & Watermark on Last Page */}
-                    {pageIdx === totalPages - 1 && (
-                      <>
-                        {assets?.digitalSignature && (
-                          <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
-                            <div className="text-center">
-                              <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
-                              <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
-                            </div>
+                  {/* Signature & Watermark on Last Page */}
+                  {pageIdx === totalPages - 1 && (
+                    <>
+                      {assets?.digitalSignature && (
+                        <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
+                          <div className="text-center">
+                            <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
+                            <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
                           </div>
-                        )}
-                        <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
-                          <span>OpportunityX Resume Engine</span>
-                          <span>resume.opportunityx.co.in</span>
                         </div>
-                      </>
-                    )}
-                  </div>
+                      )}
+                      <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+                        <span>OpportunityX Resume Engine</span>
+                        <span>resume.opportunityx.co.in</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
+
+              {/* Section-Aware A4 Page Cutoff Marker */}
+              {pageIdx < totalPages - 1 && (
+                <div className="w-[210mm] mt-1 text-center pointer-events-none">
+                  <div className="flex items-center justify-center gap-2 text-[9px] font-bold text-orange-500 bg-orange-500/10 border border-dashed border-orange-500/40 py-1 px-3 rounded-full">
+                    <span>✂️ Section-Aware Page Break — Next section begins cleanly on Page {pageIdx + 2}</span>
+                  </div>
+                </div>
+              )}
+            </div>
             ))}
           </div>
         ) : (

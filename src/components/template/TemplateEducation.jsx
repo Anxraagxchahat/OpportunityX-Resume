@@ -6,7 +6,7 @@ export const TemplateEducation = ({ education = [], accentHex = '#F97316' }) => 
   return (
     <div className="space-y-3">
       {education.map((edu) => (
-        <div key={edu.id} className="space-y-0.5 text-xs break-inside-avoid">
+        <div key={edu.id} className="space-y-0.5 text-xs pdf-block pdf-item pdf-keep-together break-inside-avoid">
           <div className="flex justify-between font-bold text-slate-900">
             <span>{edu.degree} <span className="font-normal text-slate-600">— {edu.institution}</span></span>
             <span className="text-slate-500 font-semibold">{edu.startDate} {edu.endDate ? `– ${edu.endDate}` : ''}</span>

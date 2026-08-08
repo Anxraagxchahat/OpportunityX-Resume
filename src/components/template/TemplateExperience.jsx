@@ -6,7 +6,7 @@ export const TemplateExperience = ({ experience = [] }) => {
   return (
     <div className="space-y-3">
       {experience.map((exp) => (
-        <div key={exp.id} className="space-y-1 text-xs break-inside-avoid">
+        <div key={exp.id} className="space-y-1 text-xs pdf-block pdf-item pdf-keep-together break-inside-avoid">
           <div className="flex justify-between font-bold text-slate-900">
             <span>{exp.role} <span className="font-normal text-slate-600">— {exp.company}</span></span>
             <span className="text-slate-500 font-semibold">{exp.startDate} – {exp.endDate}</span>
