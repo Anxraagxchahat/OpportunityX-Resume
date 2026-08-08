@@ -1,0 +1,36 @@
+/**
+ * OpportunityX Resume — Firebase Configuration
+ *
+ * Connects to the CENTRAL OpportunityX Firebase project for authentication.
+ * All config is loaded from environment variables (.env.local).
+ *
+ * IMPORTANT:
+ * - This is the SAME Firebase project used by the main OpportunityX app.
+ * - Resume only uses Firebase Authentication from this project.
+ * - Resume does NOT read/write the main OpportunityX Firestore database.
+ * - Resume business data stays in localStorage (or a future isolated Resume DB).
+ */
+import { initializeApp } from 'firebase/app';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+} from 'firebase/auth';
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
+
+const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+export const githubProvider = new GithubAuthProvider();
