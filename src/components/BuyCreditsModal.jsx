@@ -321,24 +321,33 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
             )}
 
             {/* CTA Purchase Button */}
-            <button
-              onClick={handleInitiateCashfreePayment}
-              disabled={isProcessing || !acceptedTerms}
-              className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isProcessing ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
-                  <span>Preparing secure payment…</span>
-                </>
-              ) : (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  <span>Pay ₹{selectedPack.price} via Cashfree</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
+            {(() => {
+              const isFormValid = acceptedTerms && validatePhone(customerPhone);
+              return (
+                <button
+                  onClick={handleInitiateCashfreePayment}
+                  disabled={isProcessing || !isFormValid}
+                  className={`w-full py-3.5 font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+                    isFormValid && !isProcessing
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black shadow-orange-500/20'
+                      : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed opacity-75'
+                  }`}
+                >
+                  {isProcessing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin shrink-0 text-orange-400" />
+                      <span className="text-orange-400">Preparing secure payment…</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4" />
+                      <span>Pay ₹{selectedPack.price} via Cashfree</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              );
+            })()}
           </>
         )}
 
