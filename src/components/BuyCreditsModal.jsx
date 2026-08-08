@@ -13,6 +13,41 @@ const CREDIT_PACKS = [
   { id: 'pack-pro', price: 199, credits: 100, perCredit: '₹1.99/cr', tag: 'Pro Pack', icon: '⭐' }
 ];
 
+const COUNTRIES = [
+  { code: 'IN', name: 'India', dial: '+91', flag: '🇮🇳', minDigits: 10, maxDigits: 10 },
+  { code: 'US', name: 'United States', dial: '+1', flag: '🇺🇸', minDigits: 10, maxDigits: 10 },
+  { code: 'GB', name: 'United Kingdom', dial: '+44', flag: '🇬🇧', minDigits: 10, maxDigits: 10 },
+  { code: 'CA', name: 'Canada', dial: '+1', flag: '🇨🇦', minDigits: 10, maxDigits: 10 },
+  { code: 'AU', name: 'Australia', dial: '+61', flag: '🇦🇺', minDigits: 9, maxDigits: 9 },
+  { code: 'AE', name: 'UAE', dial: '+971', flag: '🇦🇪', minDigits: 9, maxDigits: 9 },
+  { code: 'SG', name: 'Singapore', dial: '+65', flag: '🇸🇬', minDigits: 8, maxDigits: 8 },
+  { code: 'SA', name: 'Saudi Arabia', dial: '+966', flag: '🇸🇦', minDigits: 9, maxDigits: 9 },
+  { code: 'DE', name: 'Germany', dial: '+49', flag: '🇩🇪', minDigits: 10, maxDigits: 11 },
+  { code: 'FR', name: 'France', dial: '+33', flag: '🇫🇷', minDigits: 9, maxDigits: 9 },
+  { code: 'JP', name: 'Japan', dial: '+81', flag: '🇯🇵', minDigits: 10, maxDigits: 10 },
+  { code: 'NP', name: 'Nepal', dial: '+977', flag: '🇳🇵', minDigits: 10, maxDigits: 10 },
+  { code: 'BD', name: 'Bangladesh', dial: '+880', flag: '🇧🇩', minDigits: 10, maxDigits: 10 },
+  { code: 'PK', name: 'Pakistan', dial: '+92', flag: '🇵🇰', minDigits: 10, maxDigits: 10 },
+  { code: 'LK', name: 'Sri Lanka', dial: '+94', flag: '🇱🇰', minDigits: 9, maxDigits: 9 },
+  { code: 'MY', name: 'Malaysia', dial: '+60', flag: '🇲🇾', minDigits: 9, maxDigits: 10 },
+  { code: 'NZ', name: 'New Zealand', dial: '+64', flag: '🇳🇿', minDigits: 8, maxDigits: 9 },
+  { code: 'IT', name: 'Italy', dial: '+39', flag: '🇮🇹', minDigits: 10, maxDigits: 10 },
+  { code: 'ES', name: 'Spain', dial: '+34', flag: '🇪🇸', minDigits: 9, maxDigits: 9 },
+  { code: 'BR', name: 'Brazil', dial: '+55', flag: '🇧🇷', minDigits: 11, maxDigits: 11 },
+  { code: 'MX', name: 'Mexico', dial: '+52', flag: '🇲🇽', minDigits: 10, maxDigits: 10 },
+  { code: 'ZA', name: 'South Africa', dial: '+27', flag: '🇿🇦', minDigits: 9, maxDigits: 9 },
+  { code: 'NG', name: 'Nigeria', dial: '+234', flag: '🇳🇬', minDigits: 10, maxDigits: 10 },
+  { code: 'ID', name: 'Indonesia', dial: '+62', flag: '🇮🇩', minDigits: 10, maxDigits: 11 },
+  { code: 'PH', name: 'Philippines', dial: '+63', flag: '🇵🇭', minDigits: 10, maxDigits: 10 },
+  { code: 'VN', name: 'Vietnam', dial: '+84', flag: '🇻🇳', minDigits: 9, maxDigits: 9 },
+  { code: 'TH', name: 'Thailand', dial: '+66', flag: '🇹🇭', minDigits: 9, maxDigits: 9 },
+  { code: 'QA', name: 'Qatar', dial: '+974', flag: '🇶🇦', minDigits: 8, maxDigits: 8 },
+  { code: 'KW', name: 'Kuwait', dial: '+965', flag: '🇰🇼', minDigits: 8, maxDigits: 8 },
+  { code: 'OM', name: 'Oman', dial: '+968', flag: '🇴🇲', minDigits: 8, maxDigits: 8 },
+  { code: 'BH', name: 'Bahrain', dial: '+973', flag: '🇧🇭', minDigits: 8, maxDigits: 8 },
+  { code: 'EG', name: 'Egypt', dial: '+20', flag: '🇪🇬', minDigits: 10, maxDigits: 10 }
+];
+
 const loadCashfreeScript = (env = 'sandbox') => {
   return new Promise((resolve, reject) => {
     if (window.Cashfree) return resolve(window.Cashfree);
@@ -35,6 +70,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   } = useResume();
 
   const [selectedPack, setSelectedPack] = useState(CREDIT_PACKS[1]);
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
   const [paymentStep, setPaymentStep] = useState('select'); // 'select' | 'success'
   const [isProcessing, setIsProcessing] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -50,12 +86,12 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
     }
   }, [active]);
 
-  const validatePhone = (phoneStr) => {
+  const validatePhone = (phoneStr, country = selectedCountry) => {
     const clean = (phoneStr || '').replace(/\D/g, '');
-    if (clean.length !== 10) return false;
-    if (!/^[6-9]\d{9}$/.test(clean)) return false;
-    // Reject dummy repeated digits (e.g. 9999999999, 0000000000, 1111111111)
-    if (/^(.)\1{9}$/.test(clean)) return false;
+    if (!country) return false;
+    if (clean.length < country.minDigits || clean.length > country.maxDigits) return false;
+    if (country.code === 'IN' && !/^[6-9]\d{9}$/.test(clean)) return false;
+    if (/^(.)\1+$/.test(clean) && clean.length >= 6) return false;
     if (clean === '1234567890' || clean === '9876543210') return false;
     return true;
   };
@@ -105,8 +141,11 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   const handleInitiateCashfreePayment = async () => {
     if (isProcessing) return; // Prevent duplicate payment session requests
 
-    if (!customerPhone || !validatePhone(customerPhone)) {
-      setErrorMsg("Please enter a valid 10-digit mobile number (e.g. 9876543210). Dummy or repetitive numbers are not allowed.");
+    if (!customerPhone || !validatePhone(customerPhone, selectedCountry)) {
+      const requiredDigitsText = selectedCountry.minDigits === selectedCountry.maxDigits 
+        ? `${selectedCountry.minDigits} digits` 
+        : `${selectedCountry.minDigits}-${selectedCountry.maxDigits} digits`;
+      setErrorMsg(`Please enter a valid ${requiredDigitsText} mobile number for ${selectedCountry.flag} ${selectedCountry.name}.`);
       return;
     }
 
@@ -118,8 +157,9 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
     setIsProcessing(true);
     setErrorMsg('');
     try {
-      // 1. Create Cashfree Order on Production Backend with real validated mobile number
-      const orderData = await apiService.createCashfreeOrder(selectedPack.id, customerPhone);
+      // Pass full phone string to backend
+      const fullPhone = customerPhone.replace(/\D/g, '');
+      const orderData = await apiService.createCashfreeOrder(selectedPack.id, fullPhone);
 
       if (!orderData || !orderData.payment_session_id) {
         throw new Error("Invalid payment session received from backend.");
@@ -249,16 +289,40 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
               })}
             </div>
 
-            {/* Mandatory Mobile Number Input for Cashfree PG Receipt */}
+            {/* Mandatory Mobile Number Input with Country Flag Dropdown */}
             <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
               <label className="block text-[11px] font-bold text-slate-300">
-                Mobile Number <span className="text-orange-400">*</span> <span className="text-[10px] text-slate-400 font-normal">(Required by Cashfree PG)</span>
+                Mobile Number <span className="text-orange-400">*</span>{' '}
+                <span className="text-[10px] text-slate-400 font-normal">
+                  ({selectedCountry.flag} {selectedCountry.dial} — {selectedCountry.minDigits === selectedCountry.maxDigits ? `${selectedCountry.minDigits} digits` : `${selectedCountry.minDigits}-${selectedCountry.maxDigits} digits`})
+                </span>
               </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-3 text-xs font-bold text-slate-400 select-none">+91</span>
+              <div className="flex items-center gap-2">
+                {/* Country Flag & Code Selector */}
+                <select
+                  value={selectedCountry.code}
+                  disabled={isProcessing}
+                  onChange={(e) => {
+                    const found = COUNTRIES.find((c) => c.code === e.target.value);
+                    if (found) {
+                      setSelectedCountry(found);
+                      setCustomerPhone('');
+                      if (errorMsg) setErrorMsg('');
+                    }
+                  }}
+                  className="bg-[#0B0D14] border border-slate-700 text-xs font-bold text-slate-200 rounded-lg px-2.5 py-2 outline-none cursor-pointer hover:border-orange-500 transition-colors shrink-0 disabled:opacity-50"
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code} className="bg-[#0B0D14] text-white">
+                      {c.flag} {c.dial} ({c.name})
+                    </option>
+                  ))}
+                </select>
+
+                {/* Subscriber Number Input */}
                 <input
                   type="tel"
-                  maxLength={10}
+                  maxLength={selectedCountry.maxDigits}
                   value={customerPhone}
                   disabled={isProcessing}
                   onChange={(e) => {
@@ -266,8 +330,8 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
                     setCustomerPhone(val);
                     if (errorMsg) setErrorMsg('');
                   }}
-                  placeholder="Enter 10-digit mobile number"
-                  className="w-full pl-11 pr-3 py-2 bg-[#0B0D14] border border-slate-700 focus:border-orange-500 rounded-lg text-xs text-white placeholder-slate-500 outline-none transition-colors disabled:opacity-50 font-mono tracking-wider"
+                  placeholder={`Enter ${selectedCountry.minDigits === selectedCountry.maxDigits ? selectedCountry.minDigits : `${selectedCountry.minDigits}-${selectedCountry.maxDigits}`}-digit mobile number`}
+                  className="w-full px-3 py-2 bg-[#0B0D14] border border-slate-700 focus:border-orange-500 rounded-lg text-xs text-white placeholder-slate-500 outline-none transition-colors disabled:opacity-50 font-mono tracking-wider"
                 />
               </div>
             </div>
@@ -322,7 +386,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
 
             {/* CTA Purchase Button */}
             {(() => {
-              const isFormValid = acceptedTerms && validatePhone(customerPhone);
+              const isFormValid = acceptedTerms && validatePhone(customerPhone, selectedCountry);
               return (
                 <button
                   onClick={handleInitiateCashfreePayment}
