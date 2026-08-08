@@ -49,9 +49,9 @@ class Settings(BaseSettings):
     FIREBASE_STORAGE_BUCKET: str = "opportunityx-61efd.appspot.com"
 
     # Cashfree Integration Credentials
-    CASHFREE_APP_ID: str = ""
-    CASHFREE_SECRET_KEY: str = ""
-    CASHFREE_ENV: str = "SANDBOX"  # SANDBOX or PRODUCTION
+    CASHFREE_APP_ID: str = "13180166fd0583932e7551bcc286108131"
+    CASHFREE_SECRET_KEY: str = ""  # Loaded from env variable CASHFREE_SECRET_KEY
+    CASHFREE_ENV: str = "PRODUCTION"  # SANDBOX or PRODUCTION
     CASHFREE_API_VERSION: str = "2023-08-01"
 
     # AI Infrastructure Config (OpenRouter Multi-Model Priority Waterfall)
