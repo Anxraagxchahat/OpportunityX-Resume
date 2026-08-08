@@ -1,6 +1,11 @@
 import { auth } from '../firebase';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL =
+  import.meta.env.VITE_BACKEND_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD
+    ? 'https://opportunityx-resume.onrender.com/api/v1'
+    : 'http://localhost:8000/api/v1');
 
 async function getAuthToken() {
   try {
@@ -25,10 +30,21 @@ async function request(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers
+    });
+  } catch (netErr) {
+    if (endpoint.includes('/auth')) {
+      throw new Error('Unable to connect to OpportunityX authentication service. Please check your network and try again.');
+    }
+    if (endpoint.includes('/payments')) {
+      throw new Error('Payment service is temporarily unreachable. Your account has not been charged.');
+    }
+    throw new Error('Network connection issue. Please verify your internet connection and retry.');
+  }
 
   if (!response.ok) {
     let errorDetail = 'API request failed';

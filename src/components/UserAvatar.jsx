@@ -26,7 +26,6 @@ export const UserAvatar = ({ user, size = "w-8 h-8", className = "" }) => {
         src={photoUrl}
         alt={name}
         referrerPolicy="no-referrer"
-        crossOrigin="anonymous"
         onError={() => setHasError(true)}
         className={`${size} rounded-full object-cover border border-orange-500/40 shadow-sm flex-shrink-0 ${className}`}
       />

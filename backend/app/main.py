@@ -30,30 +30,33 @@ app = FastAPI(
     redoc_url="/redoc" if settings.is_dev else None
 )
 
-# 1. CORS Middleware
-cors_origins = list(settings.CORS_ORIGINS) if isinstance(settings.CORS_ORIGINS, list) else []
+# 1. Structured JSON Logging Middleware
+app.add_middleware(StructuredLoggingMiddleware)
+
+# 2. CORS Middleware (Added last to be the outermost wrapper for all HTTP responses)
+cors_origins = [o for o in (settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else []) if o != "*"]
 default_origins = [
+    "https://resume.opportunityx.co.in",
+    "https://opportunityx.co.in",
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
-    "https://resume.opportunityx.co.in",
-    "https://opportunityx.co.in",
 ]
 for o in default_origins:
     if o not in cors_origins:
         cors_origins.append(o)
+
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in cors_origins and settings.FRONTEND_URL != "*":
+    cors_origins.append(settings.FRONTEND_URL)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.opportunityx\.co\.in|http://localhost:\d+",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
-
-# 2. Structured JSON Logging Middleware
-app.add_middleware(StructuredLoggingMiddleware)
 
 # 3. Include Central Router
 app.include_router(api_router, prefix="/api/v1")

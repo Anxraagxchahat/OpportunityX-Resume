@@ -11,9 +11,16 @@ router = APIRouter(tags=["Health & Monitoring"])
 START_TIME = time.time()
 
 @router.get("/health", response_model=HealthStatusResponse)
-async def health_check():
+async def health_check(db: Session = Depends(get_db)):
+    db_status = "connected"
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        db_status = "disconnected"
+
     return HealthStatusResponse(
-        status="healthy",
+        status="ok" if db_status == "connected" else "degraded",
+        database=db_status,
         service=settings.APP_NAME,
         version="1.0.0",
         environment=settings.APP_ENV

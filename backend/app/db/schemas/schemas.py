@@ -179,6 +179,7 @@ class AIResponse(BaseModel):
 # Health & Metrics Schemas
 class HealthStatusResponse(BaseModel):
     status: str
+    database: str = "connected"
     service: str
     version: str
     environment: str
