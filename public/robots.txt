@@ -1,0 +1,15 @@
+# OpportunityX Resume — Robots.txt
+User-agent: *
+Allow: /
+Allow: /legal/
+Allow: /templates
+Allow: /ats-checker
+Allow: /import
+Allow: /dashboard
+Allow: /builder
+
+Disallow: /api/
+Disallow: /backend/
+Disallow: /u/*
+
+Sitemap: https://resume.opportunityx.co.in/sitemap.xml
