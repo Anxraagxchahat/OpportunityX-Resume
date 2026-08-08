@@ -14,6 +14,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResume } from '../context/ResumeContext';
 import { AuthModal } from './AuthModal';
+import { ThemeTogglePill } from './ThemeTogglePill';
+import { UserAvatar } from './UserAvatar';
 
 export const Navbar = () => {
   const location = useLocation();
@@ -29,7 +31,6 @@ export const Navbar = () => {
   } = useResume();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-
   const navItems = [
     { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
     { label: 'Builder', to: '/builder', icon: FileText },
@@ -38,19 +39,14 @@ export const Navbar = () => {
     { label: 'AI Suite', to: '/ai-assistant', icon: Wand2 }
   ];
 
-  const handleDemoClick = () => {
-    loadDemoResume();
-    navigate('/builder');
-  };
-
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#05070D]/90 backdrop-blur-md border-b border-white/[0.06] no-print">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full bg-[var(--ox-surface-primary)] backdrop-blur-md border-b border-[var(--ox-border)] transition-colors duration-300 no-print">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-3">
 
         {/* Mobile Left Hamburger */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-xl text-slate-300 hover:text-white bg-[#0B0D14] border border-white/[0.06] flex-shrink-0"
+          className="md:hidden p-2 rounded-xl text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] flex-shrink-0"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -64,7 +60,7 @@ export const Navbar = () => {
           />
 
           <div className="flex flex-col justify-center text-left">
-            <span className="text-lg font-black tracking-tight text-[#E5E7EB] font-sans leading-none">
+            <span className="text-lg font-black tracking-tight text-[var(--ox-text-primary)] font-sans leading-none">
               Opportunity<span className="text-[#F97316]">X</span>
             </span>
             <span className="text-[9px] uppercase tracking-widest font-extrabold px-1.5 py-0.5 rounded-full bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30 w-max mt-1 leading-none shadow-[0_0_8px_rgba(249,115,22,0.12)]">
@@ -74,7 +70,7 @@ export const Navbar = () => {
         </Link>
 
         {/* Navigation Bar */}
-        <nav className="hidden md:flex items-center gap-1 bg-[#0B0D14] p-1.5 rounded-[16px] border border-white/[0.06] relative">
+        <nav className="hidden md:flex items-center gap-1 bg-[var(--ox-surface-secondary)] p-1.5 rounded-[16px] border border-[var(--ox-border)] relative transition-colors duration-300">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.to;
@@ -83,7 +79,7 @@ export const Navbar = () => {
                 key={item.to}
                 to={item.to}
                 className={`relative flex flex-col items-center justify-center px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs font-medium transition-all duration-200 ${
-                  isActive ? 'text-white font-semibold' : 'text-[#E5E7EB]/70 hover:text-white hover:bg-slate-900/60'
+                  isActive ? 'text-[var(--ox-text-primary)] font-semibold' : 'text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)]'
                 }`}
               >
                 <div className="flex items-center gap-1.5 relative z-10">
@@ -103,8 +99,11 @@ export const Navbar = () => {
           })}
         </nav>
 
-        {/* Right Actions (AI Credits Pill + Auth User Profile) */}
+        {/* Right Actions: Theme Toggle + AI Credits Pill + Auth User Profile */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
+          {/* Theme Toggle Pill Switch */}
+          <ThemeTogglePill />
+
           {/* AI Credits Pill Button */}
           <button
             onClick={() => {
@@ -126,10 +125,14 @@ export const Navbar = () => {
 
           <button
             onClick={() => setIsAuthOpen(true)}
-            className="p-2 text-slate-300 hover:text-white bg-[#0B0D14] border border-slate-800 rounded-xl flex items-center gap-1.5 transition-colors"
+            className="p-1.5 px-2.5 text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
             title="OpportunityX Account & Session"
           >
-            <User className="w-4 h-4 text-orange-400" />
+            {session.isAuthenticated && !session.isGuest && session.user ? (
+              <UserAvatar user={session.user} size="w-5 h-5" />
+            ) : (
+              <User className="w-4 h-4 text-orange-400" />
+            )}
             <span className="hidden lg:inline text-xs font-semibold">
               {session.isAuthenticated && !session.isGuest ? session.user?.name : 'Guest (Free)'}
             </span>
@@ -145,7 +148,7 @@ export const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#0B0D14] border-b border-white/[0.06] px-4 py-4 space-y-2"
+            className="md:hidden bg-[var(--ox-surface-secondary)] border-b border-[var(--ox-border)] px-4 py-4 space-y-3"
           >
             {navItems.map((item) => (
               <Link
@@ -155,13 +158,18 @@ export const Navbar = () => {
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-colors ${
                   location.pathname === item.to
                     ? 'bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30'
-                    : 'text-[#E5E7EB] hover:bg-slate-900'
+                    : 'text-[var(--ox-text-primary)] hover:bg-slate-900/40'
                 }`}
               >
                 <item.icon className="w-4 h-4 text-[#F97316]" />
                 <span>{item.label}</span>
               </Link>
             ))}
+
+            <div className="pt-2 border-t border-[var(--ox-border)] flex items-center justify-between">
+              <span className="text-xs text-[var(--ox-text-secondary)] font-semibold">App Theme:</span>
+              <ThemeTogglePill />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
