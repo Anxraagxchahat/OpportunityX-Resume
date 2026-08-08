@@ -24,9 +24,10 @@ async def sync_user_profile(
     notification_service = NotificationService(db)
 
     # 1. Sync User Cache (Firebase UID is immutable PK)
+    user_email = user.email or f"{user.uid}@opportunityx.co.in"
     db_user = user_repo.sync_user(
         uid=user.uid,
-        email=user.email,
+        email=user_email,
         display_name=user.name,
         photo_url=user.photo_url
     )
