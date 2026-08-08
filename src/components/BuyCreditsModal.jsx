@@ -6,7 +6,7 @@ import { useResume } from '../context/ResumeContext';
 import { apiService } from '../services/api';
 
 const CREDIT_PACKS = [
-  { id: 'pack-starter', price: 29, credits: 15, perCredit: '₹1.93/cr', tag: 'Starter Pack', icon: '⚡' },
+  { id: 'pack-starter', price: 1, credits: 15, perCredit: '₹0.07/cr', tag: 'Starter Pack', icon: '⚡' },
   { id: 'pack-popular', price: 49, credits: 25, perCredit: '₹1.96/cr', tag: 'Most Popular', popular: true, icon: '🚀' },
   { id: 'pack-best', price: 99, credits: 50, perCredit: '₹1.98/cr', tag: 'Best Value', icon: '💎' },
   { id: 'pack-pro', price: 199, credits: 100, perCredit: '₹1.99/cr', tag: 'Pro Pack', icon: '⭐' }

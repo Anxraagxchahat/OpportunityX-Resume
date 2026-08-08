@@ -20,7 +20,7 @@ from app.db.schemas.schemas import (
 router = APIRouter(prefix="/payments", tags=["Cashfree Payment Gateway & Credit Top-ups"])
 
 CREDIT_PACK_PRICING = {
-    "pack-starter": {"price": 29.00, "credits": 15},
+    "pack-starter": {"price": 1.00, "credits": 15},
     "pack-popular": {"price": 49.00, "credits": 25},
     "pack-best": {"price": 99.00, "credits": 50},
     "pack-pro": {"price": 199.00, "credits": 100}
