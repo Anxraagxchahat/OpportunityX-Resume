@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user, AuthenticatedUser
+from app.repositories.user_repository import UserRepository
 from app.repositories.payment_repository import PaymentRepository
 from app.repositories.credit_repository import CreditRepository
 from app.repositories.activity_repository import ActivityRepository
@@ -33,6 +34,15 @@ async def create_payment_order(
 ):
     if req.pack_id not in CREDIT_PACK_PRICING:
         raise HTTPException(status_code=400, detail=f"Invalid credit pack identifier: {req.pack_id}")
+
+    # Ensure user identity exists in users table before referencing foreign key
+    user_repo = UserRepository(db)
+    user_repo.sync_user(
+        uid=user.uid,
+        email=user.email or f"{user.uid}@opportunityx.co.in",
+        display_name=user.name,
+        photo_url=user.photo_url
+    )
 
     pack = CREDIT_PACK_PRICING[req.pack_id]
     order_id = f"OX_RESUME_{int(time.time())}_{str(uuid.uuid4())[:6]}"

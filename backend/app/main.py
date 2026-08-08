@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import logger, StructuredLoggingMiddleware
@@ -59,7 +60,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 3. Include Central Router
+# 3. Global Exception Handler (Ensures CORS headers are attached & full stack trace is logged on 500 errors)
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled Exception on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": f"Internal Server Error: {str(exc)}"}
+    )
+
+# 4. Include Central Router
 app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/")
