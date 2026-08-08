@@ -25,11 +25,11 @@ export const TemplateSkills = ({ skills, accentHex = '#F97316' }) => {
       return null;
     }).filter(Boolean);
   } else if (typeof skills === 'object') {
-    const { languages = [], frameworks = [], tools = [], programming = [], database = [], cloud = [] } = skills;
+    const { languages = [], frameworks = [], tools = [], programming = [], database = [], cloud = [], backend = [] } = skills;
     if (programming.length > 0) categories.push({ name: 'Programming Languages', items: programming });
     if (languages.length > 0) categories.push({ name: 'Languages & Core', items: languages });
     if (frameworks.length > 0) categories.push({ name: 'Frameworks & Libraries', items: frameworks });
-    if (backend?.length > 0) categories.push({ name: 'Backend', items: backend });
+    if (backend.length > 0) categories.push({ name: 'Backend', items: backend });
     if (database.length > 0) categories.push({ name: 'Databases', items: database });
     if (tools.length > 0) categories.push({ name: 'Tools & Technologies', items: tools });
     if (cloud.length > 0) categories.push({ name: 'Cloud & Infrastructure', items: cloud });
