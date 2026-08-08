@@ -10,11 +10,14 @@ from app.api.v1.api import api_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} in environment '{settings.APP_ENV}'...")
-    db = SessionLocal()
     try:
-        init_db(db)
-    finally:
-        db.close()
+        db = SessionLocal()
+        try:
+            init_db(db)
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Database initialization deferred/failed on startup: {e}")
     yield
     logger.info(f"Shutting down {settings.APP_NAME}...")
 
