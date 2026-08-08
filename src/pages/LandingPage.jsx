@@ -47,7 +47,6 @@ export const LandingPage = () => {
     { label: "Unlimited PDF Exports", icon: Download }
   ];
 
-
   const campusLogos = [
     { name: "IIT Bombay" },
     { name: "IIT Delhi" },
@@ -87,7 +86,7 @@ export const LandingPage = () => {
   ];
 
   return (
-    <div className="space-y-24 pb-20 overflow-x-hidden bg-[#05070D] text-slate-100">
+    <div className="space-y-24 pb-20 overflow-x-hidden bg-[var(--ox-bg)] text-[var(--ox-text-primary)] transition-colors duration-300">
       {/* 1. HERO SECTION */}
       <section className="relative pt-10 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
         {/* Ambient Orange Glow behind Pedestal & Grid Background */}
@@ -112,7 +111,7 @@ export const LandingPage = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-[1.1]"
+              className="text-4xl sm:text-6xl font-black text-[var(--ox-text-primary)] tracking-tight leading-[1.1]"
             >
               Build a Professional <br className="hidden sm:inline" />
               Resume That <span className="text-gradient-primary">Gets <br className="hidden sm:inline" />Interviews.</span>
@@ -123,7 +122,7 @@ export const LandingPage = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="text-base sm:text-lg text-slate-300 max-w-xl leading-relaxed font-normal"
+              className="text-base sm:text-lg text-[var(--ox-text-secondary)] max-w-xl leading-relaxed font-normal"
             >
               Create ATS-friendly resumes in minutes with beautiful templates, AI writing assistant, and smart optimization — completely free.
             </motion.p>
@@ -140,7 +139,7 @@ export const LandingPage = () => {
                 return (
                   <div
                     key={idx}
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#0B0D14]/90 border border-slate-800 text-xs text-slate-200 font-medium shadow-sm hover:border-[#F97316]/40 transition-colors"
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-xs text-[var(--ox-text-primary)] font-medium shadow-sm hover:border-[#F97316]/40 transition-colors"
                   >
                     <Icon className="w-3.5 h-3.5 text-[#F97316]" />
                     <span>{badge.label}</span>
@@ -160,7 +159,7 @@ export const LandingPage = () => {
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                 <Link
                   to="/builder"
-                  className="px-6 py-3.5 text-sm font-bold text-black bg-gradient-to-r from-[#F97316] to-[#F59E0B] hover:from-[#EA580C] hover:to-[#D97706] rounded-xl shadow-[0_0_25px_rgba(249,115,22,0.4)] hover:shadow-[0_0_35px_rgba(249,115,22,0.6)] transition-all flex items-center gap-2"
+                  className="px-6 py-3.5 text-sm font-bold text-white bg-gradient-to-r from-[#F97316] to-[#F59E0B] hover:from-[#EA580C] hover:to-[#D97706] rounded-xl shadow-[0_0_25px_rgba(249,115,22,0.4)] hover:shadow-[0_0_35px_rgba(249,115,22,0.6)] transition-all flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4 stroke-[2.5]" /> Create Resume
                 </Link>
@@ -169,7 +168,7 @@ export const LandingPage = () => {
               {/* Try Demo Resume Button */}
               <button
                 onClick={handleDemo}
-                className="px-5 py-3.5 text-xs sm:text-sm font-semibold text-[#F97316] bg-[#F97316]/10 hover:bg-[#F97316]/20 border border-[#F97316]/30 rounded-xl transition-all flex items-center gap-2"
+                className="px-5 py-3.5 text-xs sm:text-sm font-semibold text-[#F97316] bg-[#F97316]/10 hover:bg-[#F97316]/20 border border-[#F97316]/30 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
               >
                 <PlayCircle className="w-4 h-4" /> Try Demo Resume
               </button>
@@ -177,15 +176,15 @@ export const LandingPage = () => {
               {/* Import Resume Button */}
               <Link
                 to="/import"
-                className="px-4 py-3.5 text-xs sm:text-sm font-semibold text-slate-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 rounded-xl transition-colors flex items-center gap-1.5"
+                className="px-4 py-3.5 text-xs sm:text-sm font-semibold text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] hover:bg-[var(--ox-card-hover)] border border-[var(--ox-border)] rounded-xl transition-colors flex items-center gap-1.5"
               >
-                <Upload className="w-4 h-4 text-slate-400" /> Import Resume
+                <Upload className="w-4 h-4 text-[#F97316]" /> Import Resume
               </Link>
 
               {/* Check ATS Score Button */}
               <Link
                 to="/ats-checker"
-                className="px-4 py-3.5 text-xs sm:text-sm font-semibold text-slate-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 rounded-xl transition-colors flex items-center gap-1.5"
+                className="px-4 py-3.5 text-xs sm:text-sm font-semibold text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] hover:bg-[var(--ox-card-hover)] border border-[var(--ox-border)] rounded-xl transition-colors flex items-center gap-1.5"
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Check ATS Score
               </Link>
@@ -200,13 +199,13 @@ export const LandingPage = () => {
             >
               {/* Stacked Avatar Circles */}
               <div className="flex -space-x-2 overflow-hidden">
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[#05070D] object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="User 1" />
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[#05070D] object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="User 2" />
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[#05070D] object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" alt="User 3" />
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[#05070D] object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" alt="User 4" />
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[var(--ox-bg)] object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="User 1" />
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[var(--ox-bg)] object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="User 2" />
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[var(--ox-bg)] object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" alt="User 3" />
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-[var(--ox-bg)] object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" alt="User 4" />
               </div>
-              <p className="text-xs text-slate-400">
-                Loved by <strong className="text-slate-200">10,000+ students & professionals</strong> across 50+ colleges & companies
+              <p className="text-xs text-[var(--ox-text-secondary)]">
+                Loved by <strong className="text-[var(--ox-text-primary)]">10,000+ students & professionals</strong> across 50+ colleges & companies
               </p>
             </motion.div>
           </div>
@@ -217,7 +216,7 @@ export const LandingPage = () => {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] bg-[#F97316]/10 rounded-full blur-[80px] pointer-events-none" />
 
             {/* Glowing 3D Pedestal Base */}
-            <div className="absolute -bottom-4 w-96 h-24 rounded-full bg-gradient-to-b from-[#10131D] to-[#05070D] border-2 border-[#F97316]/30 shadow-[0_0_45px_rgba(249,115,22,0.3)] transform rotate-X-60 pointer-events-none flex items-center justify-center">
+            <div className="absolute -bottom-4 w-96 h-24 rounded-full bg-gradient-to-b from-[var(--ox-card-bg)] to-[var(--ox-bg)] border-2 border-[var(--ox-border-highlight)] shadow-[0_0_45px_rgba(249,115,22,0.2)] transform rotate-X-60 pointer-events-none flex items-center justify-center">
               <div className="w-80 h-16 rounded-full border border-[#F97316]/50 shadow-[inset_0_0_25px_rgba(249,115,22,0.4)]" />
             </div>
 
@@ -225,7 +224,7 @@ export const LandingPage = () => {
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="relative z-10 w-full max-w-[460px] bg-[#F7F6F2] rounded-2xl border border-[#E2DFD8] p-6 text-[#374151] font-sans shadow-[0_20px_50px_rgba(0,0,0,0.55),0_0_25px_rgba(249,115,22,0.12)] space-y-3 text-xs transform rotate-2 hover:rotate-0 transition-transform duration-500 select-none overflow-hidden"
+              className="relative z-10 w-full max-w-[460px] bg-[#F7F6F2] rounded-2xl border border-[#E2DFD8] p-6 text-[#374151] font-sans shadow-[0_20px_50px_rgba(0,0,0,0.18),0_0_25px_rgba(249,115,22,0.12)] space-y-3 text-xs transform rotate-2 hover:rotate-0 transition-transform duration-500 select-none overflow-hidden"
             >
               {/* Thin Accent Bar */}
               <div className="h-[3px] w-full bg-gradient-to-r from-[#F97316] to-amber-500 rounded-t-2xl -mt-6 -mx-6 mb-4 px-6" />
@@ -303,54 +302,54 @@ export const LandingPage = () => {
             <motion.div
               animate={{ y: [-4, 4, -4] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-3 -right-2 z-20 hidden xl:flex items-center gap-2 px-3 py-1.5 bg-[#0B0D14]/90 backdrop-blur-md border border-emerald-500/40 rounded-full shadow-lg"
+              className="absolute -top-3 -right-2 z-20 hidden xl:flex items-center gap-2 px-3.5 py-1.5 bg-[var(--ox-card-bg)] backdrop-blur-md border border-emerald-500/40 rounded-full shadow-lg transition-colors"
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-[10px] font-bold text-white">ATS Score: 94/100</span>
+              <span className="text-[10px] font-bold text-[var(--ox-text-primary)]">ATS Score: 94/100</span>
             </motion.div>
 
             {/* Widget 2: Top Left - AI Optimized */}
             <motion.div
               animate={{ y: [4, -4, 4] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-12 -left-4 z-20 hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-[#0B0D14]/90 backdrop-blur-md border border-[#F97316]/40 rounded-full shadow-lg"
+              className="absolute top-12 -left-4 z-20 hidden xl:flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--ox-card-bg)] backdrop-blur-md border border-[#F97316]/40 rounded-full shadow-lg transition-colors"
             >
               <Wand2 className="w-3.5 h-3.5 text-[#F97316]" />
-              <span className="text-[10px] font-bold text-orange-300">AI Optimized</span>
+              <span className="text-[10px] font-bold text-[#F97316]">AI Optimized</span>
             </motion.div>
 
             {/* Widget 3: Bottom Left - No Watermark */}
             <motion.div
               animate={{ y: [-5, 5, -5] }}
               transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute bottom-12 -left-2 z-20 hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-[#0B0D14]/90 backdrop-blur-md border border-slate-700 rounded-full shadow-lg"
+              className="absolute bottom-12 -left-2 z-20 hidden xl:flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--ox-card-bg)] backdrop-blur-md border border-[var(--ox-border)] rounded-full shadow-lg transition-colors"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-              <span className="text-[10px] font-semibold text-slate-200">No Watermark</span>
+              <span className="text-[10px] font-semibold text-[var(--ox-text-primary)]">No Watermark</span>
             </motion.div>
 
             {/* Widget 4: Bottom Right - Modern Template */}
             <motion.div
               animate={{ y: [5, -5, 5] }}
               transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -bottom-2 -right-2 z-20 hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-[#0B0D14]/90 backdrop-blur-md border border-slate-700 rounded-full shadow-lg"
+              className="absolute -bottom-2 -right-2 z-20 hidden xl:flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--ox-card-bg)] backdrop-blur-md border border-[var(--ox-border)] rounded-full shadow-lg transition-colors"
             >
               <Layout className="w-3.5 h-3.5 text-purple-400" />
-              <span className="text-[10px] font-semibold text-slate-200">Modern Template</span>
+              <span className="text-[10px] font-semibold text-[var(--ox-text-primary)]">Modern Template</span>
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* 2. TRUSTED BY STUDENTS CAMPUS LOGOS BANNER */}
-      <section className="border-y border-slate-800/80 bg-[#070A12]/80 py-8 px-4">
+      <section className="border-y border-[var(--ox-border)] bg-[var(--ox-surface-primary)] py-8 px-4 transition-colors duration-300">
         <div className="max-w-7xl mx-auto space-y-4 text-center">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--ox-text-secondary)]">
             TRUSTED BY STUDENTS FROM
           </h3>
-          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 text-sm font-bold text-slate-400 opacity-80">
+          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 text-sm font-bold text-[var(--ox-text-secondary)]">
             {campusLogos.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer">
+              <div key={idx} className="flex items-center gap-2 hover:text-[var(--ox-text-primary)] transition-colors cursor-pointer">
                 <GraduationCap className="w-4 h-4 text-[#F97316]" />
                 <span>{item.name}</span>
               </div>
@@ -365,10 +364,10 @@ export const LandingPage = () => {
           <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#F97316] uppercase tracking-wider">
             <span>⚡ POWERFUL FEATURES</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--ox-text-primary)]">
             Everything You Need to Build the Perfect Resume
           </h2>
-          <p className="text-sm text-slate-400 max-w-xl mx-auto">
+          <p className="text-sm text-[var(--ox-text-secondary)] max-w-xl mx-auto">
             Powerful tools to help you create, optimize, and land your dream job.
           </p>
         </div>
@@ -384,8 +383,8 @@ export const LandingPage = () => {
                 <div className="p-3 w-max rounded-xl bg-[#F97316]/10 border border-[#F97316]/30 text-[#F97316] group-hover:scale-110 transition-transform">
                   <Icon className="w-5 h-5" />
                 </div>
-                <h4 className="text-base font-bold text-white">{feat.title}</h4>
-                <p className="text-xs text-slate-400 leading-relaxed">{feat.desc}</p>
+                <h4 className="text-base font-bold text-[var(--ox-text-primary)]">{feat.title}</h4>
+                <p className="text-xs text-[var(--ox-text-secondary)] leading-relaxed">{feat.desc}</p>
               </div>
             );
           })}
@@ -396,12 +395,12 @@ export const LandingPage = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-extrabold text-white">Professional Templates</h2>
-            <p className="text-sm text-slate-400">Clean, ATS-ready formats tagged for every career level.</p>
+            <h2 className="text-3xl font-extrabold text-[var(--ox-text-primary)]">Professional Templates</h2>
+            <p className="text-sm text-[var(--ox-text-secondary)]">Clean, ATS-ready formats tagged for every career level.</p>
           </div>
           <Link
             to="/templates"
-            className="text-xs font-semibold text-[#F97316] hover:text-orange-300 flex items-center gap-1 hover:underline"
+            className="text-xs font-semibold text-[#F97316] hover:text-orange-400 flex items-center gap-1 hover:underline"
           >
             View All Templates <ArrowRight className="w-4 h-4" />
           </Link>
@@ -410,32 +409,32 @@ export const LandingPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {templatesGallery.map((tmpl, idx) => (
             <div key={idx} className="cyber-glass-card p-5 space-y-4 hover:border-[#F97316]/50 transition-all group">
-              <div className="h-44 rounded-xl bg-slate-900/90 border border-slate-800 p-4 relative overflow-hidden flex flex-col justify-between">
+              <div className="h-44 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] p-4 relative overflow-hidden flex flex-col justify-between transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30">
                     {tmpl.tag}
                   </span>
-                  <span className="text-[10px] text-slate-500 font-semibold">{tmpl.category}</span>
+                  <span className="text-[10px] text-[var(--ox-text-secondary)] font-semibold">{tmpl.category}</span>
                 </div>
-                <div className="space-y-1">
-                  <div className="h-3 w-1/2 rounded bg-slate-700" />
-                  <div className="h-2 w-3/4 rounded bg-slate-800" />
-                  <div className="h-2 w-full rounded bg-slate-800" />
+                <div className="space-y-1.5">
+                  <div className="h-3 w-1/2 rounded bg-[#F97316]/30" />
+                  <div className="h-2 w-3/4 rounded bg-[var(--ox-border)]" />
+                  <div className="h-2 w-full rounded bg-[var(--ox-border)]" />
                 </div>
                 <div className="pt-2 flex gap-1">
-                  <div className="h-2 w-12 rounded bg-[#F97316]/40" />
-                  <div className="h-2 w-8 rounded bg-slate-800" />
+                  <div className="h-2 w-12 rounded bg-[#F97316]/50" />
+                  <div className="h-2 w-8 rounded bg-[var(--ox-border)]" />
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-bold text-white">{tmpl.name}</h4>
-                  <p className="text-[11px] text-slate-400">{tmpl.category} Format</p>
+                  <h4 className="text-sm font-bold text-[var(--ox-text-primary)]">{tmpl.name}</h4>
+                  <p className="text-[11px] text-[var(--ox-text-secondary)]">{tmpl.category} Format</p>
                 </div>
                 <button
                   onClick={() => navigate('/builder')}
-                  className="px-3 py-1.5 text-xs font-semibold text-black bg-[#F97316] hover:bg-orange-400 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#F97316] hover:bg-orange-600 rounded-lg transition-colors cursor-pointer"
                 >
                   Use Template
                 </button>
@@ -451,40 +450,12 @@ export const LandingPage = () => {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F97316]/10 border border-[#F97316]/30 text-[#F97316] text-xs font-semibold">
             <Heart className="w-3.5 h-3.5 fill-[#F97316]" /> Community Driven Open Source
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--ox-text-primary)] max-w-2xl mx-auto">
             Built for Students & Professionals by OpportunityX
           </h2>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-[var(--ox-text-secondary)] max-w-xl mx-auto leading-relaxed">
             We believe career tools should be accessible to everyone. No hidden fees, subscription traps, or forced paywalls. Join thousands using OpportunityX ecosystem tools.
           </p>
-        </div>
-      </section>
-
-      {/* 6. FAQ SECTION */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-extrabold text-white">Frequently Asked Questions</h2>
-          <p className="text-sm text-slate-400">Everything you need to know about OpportunityX Resume.</p>
-        </div>
-
-        <div className="space-y-3">
-          {faqs.map((faq, idx) => (
-            <div
-              key={idx}
-              className="cyber-glass-card p-4 rounded-xl cursor-pointer transition-colors"
-              onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-            >
-              <div className="flex items-center justify-between font-bold text-sm text-white">
-                <span>{faq.q}</span>
-                <ChevronDown className={`w-4 h-4 text-[#F97316] transition-transform ${openFaq === idx ? 'rotate-180' : ''}`} />
-              </div>
-              {openFaq === idx && (
-                <p className="mt-2 text-xs text-slate-300 leading-relaxed pt-2 border-t border-slate-800">
-                  {faq.a}
-                </p>
-              )}
-            </div>
-          ))}
         </div>
       </section>
     </div>

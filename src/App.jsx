@@ -1,13 +1,28 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeProvider';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ResumeProvider } from './context/ResumeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { AuthLoadingScreen } from './components/AuthLoadingScreen';
 import { DonationSupportModal } from './components/DonationSupportModal';
 import { UnlockAIModal } from './components/UnlockAIModal';
 import { BuyCreditsModal } from './components/BuyCreditsModal';
 import { AICreditsModal } from './components/AICreditsModal';
 import { AIUpgradePromptModal } from './components/AIUpgradePromptModal';
+import { GitHubImportModal } from './components/GitHubImportModal';
+import { OpportunityXImportModal } from './components/OpportunityXImportModal';
+import { CookieConsentBanner } from './components/CookieConsentBanner';
+
+import { ScrollToTop } from './components/ScrollToTop';
+
+import {
+  NotFoundPage,
+  UnauthorizedPage,
+  ForbiddenPage,
+  ServerErrorPage,
+  MaintenancePage
+} from './pages/ErrorPages';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
@@ -19,37 +34,77 @@ import { ATSCheckerPage } from './pages/ATSCheckerPage';
 import { AIAssistantPage } from './pages/AIAssistantPage';
 import { EcosystemDashboardPage } from './pages/EcosystemDashboardPage';
 import { PublicRecruiterViewPage } from './pages/PublicRecruiterViewPage';
+import { LegalPage } from './pages/LegalPage';
+
+/**
+ * AuthGate — Prevents rendering the app until Firebase resolves initial auth state.
+ * Shows a branded loading screen to prevent UI flickering.
+ */
+function AuthGate({ children }) {
+  const { authLoading } = useAuth();
+
+  if (authLoading) {
+    return <AuthLoadingScreen />;
+  }
+
+  return children;
+}
+
+function AppContent() {
+  const location = useLocation();
+  const isWorkspace = location.pathname === '/builder';
+
+  return (
+    <div className="min-h-screen bg-[var(--ox-bg)] text-[var(--ox-text-primary)] font-sans flex flex-col transition-colors duration-300 selection:bg-orange-500/30 selection:text-slate-950 dark:selection:text-orange-100">
+      <Navbar />
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/builder" element={<ResumeBuilderPage />} />
+          <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/import" element={<ImportResumePage />} />
+          <Route path="/ats-checker" element={<ATSCheckerPage />} />
+          <Route path="/ai-assistant" element={<AIAssistantPage />} />
+          <Route path="/ecosystem" element={<EcosystemDashboardPage />} />
+          <Route path="/u/:slug" element={<PublicRecruiterViewPage />} />
+          <Route path="/legal" element={<LegalPage />} />
+          <Route path="/legal/:slug" element={<LegalPage />} />
+          <Route path="/401" element={<UnauthorizedPage />} />
+          <Route path="/403" element={<ForbiddenPage />} />
+          <Route path="/500" element={<ServerErrorPage />} />
+          <Route path="/maintenance" element={<MaintenancePage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </main>
+      {!isWorkspace && <Footer />}
+      <CookieConsentBanner />
+    </div>
+  );
+}
 
 export function App() {
   return (
-    <ResumeProvider>
-      <Router>
-        <div className="min-h-screen bg-[#05070D] text-slate-100 font-sans flex flex-col selection:bg-orange-500/30 selection:text-orange-200">
-          <Navbar />
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/builder" element={<ResumeBuilderPage />} />
-              <Route path="/templates" element={<TemplatesPage />} />
-              <Route path="/import" element={<ImportResumePage />} />
-              <Route path="/ats-checker" element={<ATSCheckerPage />} />
-              <Route path="/ai-assistant" element={<AIAssistantPage />} />
-              <Route path="/ecosystem" element={<EcosystemDashboardPage />} />
-              <Route path="/u/:slug" element={<PublicRecruiterViewPage />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-        <DonationSupportModal />
-        <UnlockAIModal />
-        <BuyCreditsModal />
-        <AICreditsModal />
-        <AIUpgradePromptModal />
-      </Router>
-    </ResumeProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AuthGate>
+          <ResumeProvider>
+            <Router>
+              <ScrollToTop />
+              <AppContent />
+              <DonationSupportModal />
+              <UnlockAIModal />
+              <BuyCreditsModal />
+              <AICreditsModal />
+              <AIUpgradePromptModal />
+              <GitHubImportModal />
+              <OpportunityXImportModal />
+            </Router>
+          </ResumeProvider>
+        </AuthGate>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
 export default App;
-

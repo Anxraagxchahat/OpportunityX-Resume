@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useResume } from '../context/ResumeContext';
 import { BuilderToolbar } from '../components/BuilderToolbar';
 import { BuilderSidebarNav } from '../components/BuilderSidebarNav';
@@ -15,11 +15,14 @@ import { AssetManagerModal } from '../components/AssetManagerModal';
 import { ExportCenterModal } from '../components/ExportCenterModal';
 import { ProfilePresetsModal } from '../components/ProfilePresetsModal';
 import { ThemeCustomizerModal } from '../components/ThemeCustomizerModal';
+import { PhotoCropModal } from '../components/PhotoCropModal';
+import { DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS, isPhotoTemplate } from '../utils/photoDefaults';
+import { getTemplateCapabilities } from '../templates';
 
 import {
   Plus, Trash2, ChevronDown, ChevronUp, MoveUp, MoveDown, User, FileText,
   Briefcase, GraduationCap, FolderGit2, Cpu, Award, Trophy, Languages, Share2,
-  Layers, X, Eye, EyeOff
+  Layers, X, Eye, EyeOff, Camera, Upload, Image as ImageIcon, Sparkles, Crop, MoveVertical
 } from 'lucide-react';
 
 export const ResumeBuilderPage = () => {
@@ -35,6 +38,7 @@ export const ResumeBuilderPage = () => {
     updateLanguages,
     updateSocialLinks,
     updateCustomSections,
+    updateAssets,
     versions,
     restoreVersionSnapshot,
     createVersionSnapshot,
@@ -43,6 +47,113 @@ export const ResumeBuilderPage = () => {
   } = useResume();
 
   const [activeSection, setActiveSection] = useState('personal');
+  const [isPhotoCropOpen, setIsPhotoCropOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  // Resizable Split Panel State (Default 42% Preview, persisted in localStorage)
+  const [previewWidth, setPreviewWidth] = useState(() => {
+    const saved = localStorage.getItem('ox_builder_preview_width');
+    return saved ? Math.min(Math.max(parseFloat(saved), 35), 60) : 42;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const containerRef = useRef(null);
+
+  const handleResizeStart = (e) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMove = (clientX) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const relativeX = clientX - rect.left;
+      const totalWidth = rect.width;
+      const editorWidth = relativeX;
+      const previewPercent = ((totalWidth - editorWidth) / totalWidth) * 100;
+      
+      const clamped = Math.min(Math.max(previewPercent, 32), 62);
+      setPreviewWidth(clamped);
+      localStorage.setItem('ox_builder_preview_width', String(clamped));
+    };
+
+    const onMouseMove = (e) => handleMove(e.clientX);
+    const onTouchMove = (e) => {
+      if (e.touches && e.touches[0]) handleMove(e.touches[0].clientX);
+    };
+
+    const onEnd = () => setIsResizing(false);
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchmove', onTouchMove);
+    window.addEventListener('touchend', onEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onEnd);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onEnd);
+    };
+  }, [isResizing]);
+
+  // 1. Toast Notification Handler
+  useEffect(() => {
+    const pendingToast = sessionStorage.getItem('ox_import_success_toast');
+    if (pendingToast) {
+      setToastMessage(pendingToast);
+      sessionStorage.removeItem('ox_import_success_toast');
+      const timer = setTimeout(() => setToastMessage(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // 2. Auto-Focus First Incomplete Section
+  useEffect(() => {
+    if (!activeResume) return;
+
+    const p = activeResume.personal || {};
+    const exp = activeResume.experience || [];
+    const proj = activeResume.projects || [];
+    const sk = activeResume.skills || {};
+    const edu = activeResume.education || [];
+
+    if (!p.fullName || !p.email) {
+      setActiveSection('personal');
+    } else if (!p.summary || p.summary.trim().length < 20) {
+      setActiveSection('summary');
+    } else if (!Array.isArray(exp) || exp.length === 0) {
+      setActiveSection('experience');
+    } else if (!Array.isArray(proj) || proj.length === 0) {
+      setActiveSection('projects');
+    } else if (!sk || (Array.isArray(sk) ? sk.length === 0 : (!sk.languages?.length && !sk.frameworks?.length && !sk.tools?.length))) {
+      setActiveSection('skills');
+    } else if (!Array.isArray(edu) || edu.length === 0) {
+      setActiveSection('education');
+    }
+  }, [activeResume?.metadata?.id]);
+
+  // Auto-enable photo & visible position when active template supports photo
+  useEffect(() => {
+    const currentTemplate = activeResume?.metadata?.template;
+    const caps = getTemplateCapabilities(currentTemplate);
+
+    if (caps.supportsPhoto) {
+      if (!activeResume?.assets?.photoPosition || activeResume?.assets?.photoPosition === 'hidden') {
+        const defaultPos = caps.supportedPhotoPositions?.find(p => p !== 'hidden') || 'sidebar';
+        updateAssets('photoPosition', defaultPos);
+      }
+      if (!activeResume?.assets?.profilePhoto) {
+        updateAssets('profilePhoto', DEFAULT_PROFILE_PHOTO);
+      }
+    } else {
+      if (activeSection === 'photo') {
+        setActiveSection('personal');
+      }
+    }
+  }, [activeResume?.metadata?.template, activeSection]);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
   const [isMobilePreviewActive, setIsMobilePreviewActive] = useState(false);
 
@@ -78,7 +189,7 @@ export const ResumeBuilderPage = () => {
     setAiModalConfig((prev) => ({ ...prev, isOpen: false }));
   };
 
-  const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [], socialLinks = {}, customSections = [], metadata = {} } = activeResume;
+  const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [], socialLinks = {}, customSections = [], metadata = {}, assets = {} } = activeResume;
   const hiddenSections = metadata.hiddenSections || [];
 
   // ================= EXPERIENCE =================
@@ -175,7 +286,7 @@ export const ResumeBuilderPage = () => {
   const isEmailValid = !personal.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal.email);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden bg-[#05070D]">
+    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden bg-[var(--ox-bg)] text-[var(--ox-text-primary)] transition-colors duration-300">
       {/* Recovery Banner */}
       <ResumeRecoveryBanner />
 
@@ -186,13 +297,32 @@ export const ResumeBuilderPage = () => {
         isMobilePreviewActive={isMobilePreviewActive}
       />
 
-      {/* Main Split Screen Area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Form Editor & Persistent Sidebar */}
-        <div className={`flex-1 lg:flex flex flex-row overflow-hidden no-print ${isMobilePreviewActive ? 'hidden lg:flex' : 'flex'}`}>
-          <BuilderSidebarNav activeSection={activeSection} onSelectSection={(secId) => setActiveSection(secId)} />
+      {/* Success Toast Banner */}
+      {toastMessage && (
+        <div className="px-4 py-2 bg-emerald-500/15 border-b border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center justify-between animate-fadeIn z-20">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
+          <button onClick={() => setToastMessage('')} className="p-1 text-emerald-400 hover:text-white">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#080B12]">
+      {/* Main Split Screen Workspace (Tablet & Desktop 3-Panel Resizable Layout) */}
+      <div ref={containerRef} className={`flex-1 flex overflow-hidden ${isResizing ? 'select-none cursor-col-resize' : ''}`}>
+        {/* Left Persistent Collapsible Sidebar */}
+        <BuilderSidebarNav activeSection={activeSection} onSelectSection={(secId) => setActiveSection(secId)} />
+
+        {/* Center Form Editor Panel */}
+        <div
+          style={{ width: isMobilePreviewActive ? '0%' : `calc(100% - ${previewWidth}%)` }}
+          className={`flex-1 overflow-y-auto p-4 md:p-6 space-y-6 custom-scrollbar bg-[var(--ox-surface-primary)] transition-colors duration-300 ${
+            isMobilePreviewActive ? 'hidden md:flex flex-col' : 'flex flex-col'
+          }`}
+        >
+          <div className="max-w-2xl mx-auto w-full space-y-6">
             {/* 1. PERSONAL INFO */}
             {activeSection === 'personal' && (
               <div className="space-y-4 max-w-2xl">
@@ -209,7 +339,34 @@ export const ResumeBuilderPage = () => {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Profile Photo Quick Card (Only for photo templates) */}
+                {isPhotoTemplate(metadata.template) && (
+                  <div className="p-3.5 rounded-xl bg-[#10131D] border border-slate-800 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-full bg-slate-900 border border-orange-500/40 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md">
+                        {assets?.profilePhoto ? (
+                          <img src={assets.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <Camera className="w-5 h-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-white">Profile Photo</div>
+                        <div className="text-[10px] text-slate-400">
+                          {assets?.profilePhoto ? 'Photo is active on photo templates' : 'No photo uploaded yet'}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveSection('photo')}
+                      className="px-3.5 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
+                    >
+                      <Camera className="w-3.5 h-3.5" /> Manage Photo
+                    </button>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-300">Full Name *</label>
                     <input
@@ -217,7 +374,7 @@ export const ResumeBuilderPage = () => {
                       value={personal.fullName || ''}
                       onChange={(e) => updatePersonal('fullName', e.target.value)}
                       placeholder="Alex Rivera"
-                      className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
+                      className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
                     />
                   </div>
                   <div className="space-y-1">
@@ -227,7 +384,7 @@ export const ResumeBuilderPage = () => {
                       value={personal.jobTitle || ''}
                       onChange={(e) => updatePersonal('jobTitle', e.target.value)}
                       placeholder="Senior Full Stack Software Engineer"
-                      className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
+                      className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
                     />
                   </div>
                   <div className="space-y-1">
@@ -240,7 +397,7 @@ export const ResumeBuilderPage = () => {
                       value={personal.email || ''}
                       onChange={(e) => updatePersonal('email', e.target.value)}
                       placeholder="alex.rivera@opportunityx.dev"
-                      className={`w-full bg-[#10131D] border rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:outline-none ${
+                      className={`w-full min-h-[44px] bg-[#10131D] border rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:outline-none ${
                         !isEmailValid ? 'border-red-500/80 text-red-200' : 'border-slate-800 focus:border-orange-500'
                       }`}
                     />
@@ -252,10 +409,10 @@ export const ResumeBuilderPage = () => {
                       value={personal.phone || ''}
                       onChange={(e) => updatePersonal('phone', e.target.value)}
                       placeholder="+1 (555) 234-5678"
-                      className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
+                      className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-1 sm:col-span-2">
+                  <div className="space-y-1 lg:col-span-2">
                     <label className="text-xs font-semibold text-slate-300">Location</label>
                     <input
                       type="text"
@@ -264,6 +421,279 @@ export const ResumeBuilderPage = () => {
                       placeholder="San Francisco, CA / Remote"
                       className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
                     />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 1.5 PROFILE PHOTO */}
+            {isPhotoTemplate(metadata.template) && activeSection === 'photo' && (
+              <div className="space-y-6 max-w-2xl">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div>
+                    <h2 className="text-base font-bold text-white flex items-center gap-2">
+                      <Camera className="w-4 h-4 text-orange-400" /> Profile Photo & Avatar
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Upload or customize your profile photo for photo-enabled resume templates.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => toggleSectionVisibility('photo')}
+                    className="text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1"
+                  >
+                    {hiddenSections.includes('photo') ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-slate-400" />}
+                    <span>{hiddenSections.includes('photo') ? 'Hidden in PDF' : 'Visible in PDF'}</span>
+                  </button>
+                </div>
+
+                {/* Active Template Status Badge */}
+                <div className={`p-3.5 rounded-xl border text-xs flex items-start gap-3 ${
+                  isPhotoTemplate(metadata.template)
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                    : 'bg-orange-500/10 border-orange-500/30 text-orange-300'
+                }`}>
+                  <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold">
+                      {isPhotoTemplate(metadata.template)
+                        ? `Active Template (${metadata.template}) Features Profile Photo!`
+                        : `Current Template (${metadata.template || 'Modern ATS'}) does not display photos.`}
+                    </div>
+                    <div className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                      {isPhotoTemplate(metadata.template)
+                        ? 'Your photo will be rendered cleanly on the header or sidebar of your resume.'
+                        : 'Switch to a photo template (such as Marketing Accent, Creative Sidebar, Accent Column, Healthcare Calm, or Best Resume Ever series) in Templates page to display your photo.'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Photo Upload & Preview Card */}
+                <div className="p-5 rounded-2xl bg-[#10131D] border border-slate-800 space-y-5 shadow-xl">
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    {/* Current Photo Preview Circle */}
+                    <div className="relative group">
+                      <div className={`w-24 h-24 overflow-hidden border-2 border-orange-500/60 bg-slate-900 shadow-2xl flex items-center justify-center ${
+                        assets?.photoShape === 'square' ? 'rounded-md' : assets?.photoShape === 'rounded' ? 'rounded-2xl' : 'rounded-full'
+                      }`}>
+                        {assets?.profilePhoto ? (
+                          <img
+                            src={assets.profilePhoto}
+                            alt="Profile Preview"
+                            className="w-full h-full object-cover transition-transform duration-100 ease-out"
+                            style={{
+                              transform: `translateY(${((50 - (assets?.photoOffsetY ?? 50)) / 50) * (96 * 0.45 * ((assets?.photoZoom || 100) / 100))}px) scale(${(assets?.photoZoom || 100) / 100})`,
+                              transformOrigin: 'center center'
+                            }}
+                          />
+                        ) : (
+                          <div className="text-center p-2">
+                            <Camera className="w-8 h-8 text-slate-500 mx-auto" />
+                            <span className="text-[9px] text-slate-500 font-semibold block mt-1">No Photo</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex-1 space-y-3 w-full text-center sm:text-left">
+                      <div className="text-xs font-bold text-[var(--ox-text-primary)]">Upload & Position Photo</div>
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                        <label className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all cursor-pointer flex items-center gap-2 shadow-sm">
+                          <Upload className="w-3.5 h-3.5 stroke-[2.5]" />
+                          <span>Choose Photo File</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (evt) => {
+                                  if (evt.target?.result) {
+                                    updateAssets('profilePhoto', evt.target.result);
+                                    setIsPhotoCropOpen(true);
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                        </label>
+
+                        {assets?.profilePhoto && (
+                          <button
+                            type="button"
+                            onClick={() => setIsPhotoCropOpen(true)}
+                            className="px-3.5 py-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                          >
+                            <Crop className="w-3.5 h-3.5" /> Crop & Adjust Position
+                          </button>
+                        )}
+
+                        {assets?.profilePhoto && (
+                          <button
+                            type="button"
+                            onClick={() => updateAssets('profilePhoto', null)}
+                            className="px-3.5 py-2 bg-[var(--ox-surface-secondary)] hover:bg-red-500/10 text-[var(--ox-text-secondary)] hover:text-red-500 border border-[var(--ox-border)] rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Remove
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-[var(--ox-text-muted)] font-medium">Supports JPG, PNG, WEBP. Transformed on-device into Base64 format.</p>
+                    </div>
+                  </div>
+
+                  {/* Vertical Shift (Up / Down Offset Y) & Zoom Sliders */}
+                  <div className="pt-4 border-t border-[var(--ox-border)] space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold text-[var(--ox-text-primary)]">
+                        <span className="flex items-center gap-1">
+                          <MoveVertical className="w-3.5 h-3.5 text-orange-500" /> Vertical Photo Alignment (Up / Down Shift)
+                        </span>
+                        <span className="text-orange-500">{assets?.photoOffsetY ?? 50}%</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 text-[11px] font-bold">
+                          {[
+                            { label: 'Top (10%)', val: 10 },
+                            { label: 'Center (50%)', val: 50 },
+                            { label: 'Bottom (90%)', val: 90 }
+                          ].map((item) => (
+                            <button
+                              key={item.val}
+                              type="button"
+                              onClick={() => updateAssets('photoOffsetY', item.val)}
+                              className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all cursor-pointer ${
+                                (assets?.photoOffsetY ?? 50) === item.val
+                                  ? 'bg-orange-500/20 text-orange-500 border-orange-500/50'
+                                  : 'bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] border-[var(--ox-border)]'
+                              }`}
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          value={assets?.photoOffsetY ?? 50}
+                          onChange={(e) => updateAssets('photoOffsetY', Number(e.target.value))}
+                          className="flex-1 accent-orange-500 cursor-pointer h-2 bg-[var(--ox-surface-secondary)] rounded-lg"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-300">Photo Display Size</label>
+                        <div className="flex items-center gap-2">
+                          {[
+                            { id: 'sm', label: 'Small (64px)' },
+                            { id: 'md', label: 'Medium (80px)' },
+                            { id: 'lg', label: 'Large (96px)' }
+                          ].map((sz) => (
+                            <button
+                              key={sz.id}
+                              type="button"
+                              onClick={() => updateAssets('photoSize', sz.id)}
+                              className={`flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                                (assets?.photoSize || 'md') === sz.id
+                                  ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+                                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
+                              }`}
+                            >
+                              {sz.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-300">Photo Display Shape</label>
+                        <div className="flex items-center gap-2">
+                          {[
+                            { id: 'circle', label: 'Circle' },
+                            { id: 'rounded', label: 'Rounded' },
+                            { id: 'square', label: 'Square' }
+                          ].map((shp) => (
+                            <button
+                              key={shp.id}
+                              type="button"
+                              onClick={() => updateAssets('photoShape', shp.id)}
+                              className={`flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                                (assets?.photoShape || 'circle') === shp.id
+                                  ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+                                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
+                              }`}
+                            >
+                              {shp.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Capability-Driven Photo Position Selector */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                        <span>Photo Layout Position</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Controlled by Template Capabilities</span>
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {[
+                          { id: 'top-left', label: 'Top Left' },
+                          { id: 'top-right', label: 'Top Right' },
+                          { id: 'center', label: 'Center' },
+                          { id: 'sidebar', label: 'Sidebar' },
+                          { id: 'hidden', label: 'Hidden' }
+                        ]
+                          .filter((pos) => {
+                            const caps = getTemplateCapabilities(metadata?.template);
+                            return caps.supportedPhotoPositions?.includes(pos.id);
+                          })
+                          .map((pos) => (
+                            <button
+                              key={pos.id}
+                              type="button"
+                              onClick={() => updateAssets('photoPosition', pos.id)}
+                              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                                (assets?.photoPosition || 'top-left') === pos.id
+                                  ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 shadow-sm'
+                                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
+                              }`}
+                            >
+                              {pos.label}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preset Sample Avatars */}
+                  <div className="pt-4 border-t border-slate-800/80 space-y-3">
+                    <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-orange-400" /> Or Choose Preset Professional Headshot
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {SAMPLE_AVATARS.map((av) => (
+                        <button
+                          key={av.id}
+                          onClick={() => updateAssets('profilePhoto', av.url)}
+                          className={`p-2 rounded-xl border flex items-center gap-2.5 transition-all text-left group ${
+                            assets?.profilePhoto === av.url
+                              ? 'bg-orange-500/10 border-orange-500 text-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.15)]'
+                              : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
+                          }`}
+                        >
+                          <img src={av.url} alt={av.label} className="w-9 h-9 rounded-full object-cover border border-slate-700 flex-shrink-0" />
+                          <span className="text-[11px] font-semibold truncate leading-snug">{av.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -571,9 +1001,9 @@ export const ResumeBuilderPage = () => {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <h2 className="text-base font-bold text-white flex items-center gap-2"><Share2 className="w-4 h-4 text-orange-400" /> Social Links</h2>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input type="text" value={personal.github || ''} onChange={(e) => updatePersonal('github', e.target.value)} placeholder="github.com/alex" className="bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white" />
-                  <input type="text" value={personal.linkedin || ''} onChange={(e) => updatePersonal('linkedin', e.target.value)} placeholder="linkedin.com/in/alex" className="bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  <input type="text" value={personal.github || ''} onChange={(e) => updatePersonal('github', e.target.value)} placeholder="github.com/alex" className="min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none" />
+                  <input type="text" value={personal.linkedin || ''} onChange={(e) => updatePersonal('linkedin', e.target.value)} placeholder="linkedin.com/in/alex" className="min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none" />
                 </div>
               </div>
             )}
@@ -595,8 +1025,23 @@ export const ResumeBuilderPage = () => {
           </div>
         </div>
 
-        {/* Right Sticky A4 Live Preview */}
-        <div className={`w-full lg:w-[48%] h-full flex flex-col print:w-full print:block print:h-auto print:static ${isMobilePreviewActive ? 'flex' : 'hidden lg:flex'}`}>
+        {/* Resizable Divider Drag Handle (Hidden on Mobile) */}
+        <div
+          onMouseDown={handleResizeStart}
+          onTouchStart={handleResizeStart}
+          className="hidden md:flex w-2.5 hover:w-3 bg-[var(--ox-border)] hover:bg-orange-500/40 cursor-col-resize items-center justify-center shrink-0 z-20 transition-all group"
+          title="Drag to resize Editor / Live Preview"
+        >
+          <div className="w-1 h-10 rounded-full bg-[var(--ox-text-muted)] group-hover:bg-orange-500 transition-colors" />
+        </div>
+
+        {/* Right Resizable Live Preview Panel */}
+        <div
+          style={{ width: isMobilePreviewActive ? '100%' : `${previewWidth}%` }}
+          className={`h-full flex flex-col overflow-hidden bg-[var(--ox-bg)] print:w-full print:block print:h-auto print:static ${
+            isMobilePreviewActive ? 'flex' : 'hidden md:flex'
+          }`}
+        >
           <A4ResumePreview />
         </div>
       </div>
@@ -612,6 +1057,11 @@ export const ResumeBuilderPage = () => {
       <ExportCenterModal />
       <ProfilePresetsModal />
       <ThemeCustomizerModal />
+      <PhotoCropModal
+        isOpen={isPhotoCropOpen}
+        onClose={() => setIsPhotoCropOpen(false)}
+        photoSrc={assets?.profilePhoto || DEFAULT_PROFILE_PHOTO}
+      />
     </div>
   );
 };

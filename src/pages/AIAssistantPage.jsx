@@ -118,19 +118,19 @@ export const AIAssistantPage = () => {
 
       {/* Guest Locked Banner */}
       {isGuest && (
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-orange-500/20 via-amber-500/10 to-slate-900 border border-orange-500/40 text-center space-y-4 shadow-xl">
-          <div className="p-3 rounded-full bg-orange-500/20 text-orange-400 w-fit mx-auto border border-orange-500/30">
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-[var(--ox-surface-secondary)] border border-orange-500/40 text-center space-y-4 shadow-xl transition-colors duration-300">
+          <div className="p-3 rounded-full bg-orange-500/20 text-orange-500 w-fit mx-auto border border-orange-500/30">
             <Lock className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-black text-white">AI Suite is Locked for Guests</h2>
-            <p className="text-xs text-slate-300 max-w-md mx-auto">
-              Login to claim your <strong className="text-amber-400 font-bold">5 FREE Welcome AI Credits</strong> and unlock all 9 AI capabilities. Core Resume Builder remains 100% Free Forever without login!
+            <h2 className="text-xl font-extrabold text-[var(--ox-text-primary)]">AI Suite is Locked for Guests</h2>
+            <p className="text-xs text-[var(--ox-text-secondary)] font-medium max-w-md mx-auto">
+              Login to claim your <strong className="text-orange-500 font-bold">5 FREE Welcome AI Credits</strong> and unlock all 9 AI capabilities. Core Resume Builder remains 100% Free Forever without login!
             </p>
           </div>
           <button
             onClick={() => setIsUnlockAIModalOpen(true)}
-            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition-all inline-flex items-center gap-2"
+            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all inline-flex items-center gap-2 cursor-pointer"
           >
             <Sparkles className="w-4 h-4" /> Unlock AI Features (Claim 5 Free Credits)
           </button>
