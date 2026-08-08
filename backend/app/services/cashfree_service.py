@@ -14,11 +14,11 @@ class CashfreeService:
         self.base_url = settings.cashfree_base_url
         self.api_version = settings.CASHFREE_API_VERSION
 
-    def _get_headers() -> Dict[str, str]:
+    def _get_headers(self) -> Dict[str, str]:
         return {
-            "x-client-id": settings.CASHFREE_APP_ID,
-            "x-client-secret": settings.CASHFREE_SECRET_KEY,
-            "x-api-version": settings.CASHFREE_API_VERSION,
+            "x-client-id": self.app_id,
+            "x-client-secret": self.secret_key,
+            "x-api-version": self.api_version,
             "Content-Type": "application/json",
             "Accept": "application/json"
         }

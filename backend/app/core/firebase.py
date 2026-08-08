@@ -11,6 +11,8 @@ def init_firebase():
                 "project_id": settings.FIREBASE_PROJECT_ID,
                 "private_key": private_key,
                 "client_email": settings.FIREBASE_CLIENT_EMAIL,
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             })
             firebase_admin.initialize_app(cred)
         else:
