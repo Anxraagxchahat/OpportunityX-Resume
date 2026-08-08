@@ -36,11 +36,11 @@ class Settings(BaseSettings):
     
     # Database (Supabase PostgreSQL)
     DATABASE_URL: str = Field(
-        default="postgresql://postgres:Anurag%401239574680@db.sbjvxgszsxrrrjxdkegb.supabase.co:5432/postgres",
+        default="postgresql://postgres:Anurag1239574680@db.dnmzeqpkscdacrkroams.supabase.co:5432/postgres",
         description="Supabase PostgreSQL Connection String"
     )
-    SUPABASE_URL: str = "https://sbjvxgszsxrrrjxdkegb.supabase.co"
-    SUPABASE_SERVICE_ROLE_KEY: str = "sb_publishable_U24KE_PDFxqmE06TaBeo5A_ZHgajn1q"
+    SUPABASE_URL: str = "https://dnmzeqpkscdacrkroams.supabase.co"
+    SUPABASE_SERVICE_ROLE_KEY: str = "sb_publishable_iPwgGjvYXyIjyRYhuvWDYQ_1HDqajwo"
 
     # Firebase Auth & Storage (Central OpportunityX Project)
     FIREBASE_PROJECT_ID: str = "opportunityx-61efd"
