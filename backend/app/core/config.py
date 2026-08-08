@@ -10,13 +10,28 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "opportunityx-resume-super-secret-key-change-in-prod"
     
     # CORS
-    CORS_ORIGINS: List[str] = [
+    CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "https://resume.opportunityx.co.in",
         "https://opportunityx.co.in"
     ]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                import json
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, list):
+            return v
+        return []
     
     # Database (Supabase PostgreSQL)
     DATABASE_URL: str = Field(
