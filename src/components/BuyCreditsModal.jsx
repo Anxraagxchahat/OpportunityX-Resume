@@ -1,14 +1,27 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Sparkles, CheckCircle2, CreditCard, QrCode, ArrowRight, ShieldCheck, Zap, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { X, Sparkles, CheckCircle2, CreditCard, ArrowRight, ShieldCheck, RefreshCw, AlertCircle, Lock } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
+import { apiService } from '../services/api';
 
 const CREDIT_PACKS = [
-  { id: 'pack-starter', price: 29, credits: 15, perCredit: '₹1.93/cr', tag: 'Starter Pack' },
-  { id: 'pack-popular', price: 49, credits: 30, perCredit: '₹1.63/cr', tag: 'Most Popular', popular: true },
-  { id: 'pack-best', price: 99, credits: 70, perCredit: '₹1.41/cr', tag: 'Best Value' },
-  { id: 'pack-pro', price: 199, credits: 160, perCredit: '₹1.24/cr', tag: 'Pro Pack' }
+  { id: 'pack-starter', price: 29, credits: 15, perCredit: '₹1.93/cr', tag: 'Starter Pack', icon: '⚡' },
+  { id: 'pack-popular', price: 49, credits: 25, perCredit: '₹1.96/cr', tag: 'Most Popular', popular: true, icon: '🚀' },
+  { id: 'pack-best', price: 99, credits: 50, perCredit: '₹1.98/cr', tag: 'Best Value', icon: '💎' },
+  { id: 'pack-pro', price: 199, credits: 100, perCredit: '₹1.99/cr', tag: 'Pro Pack', icon: '⭐' }
 ];
+
+const loadCashfreeScript = (env = 'sandbox') => {
+  return new Promise((resolve, reject) => {
+    if (window.Cashfree) return resolve(window.Cashfree);
+    const script = document.createElement('script');
+    script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+    script.onload = () => resolve(window.Cashfree);
+    script.onerror = () => reject(new Error('Failed to load Cashfree Payment SDK'));
+    document.body.appendChild(script);
+  });
+};
 
 export const BuyCreditsModal = ({ isOpen, onClose }) => {
   const {
@@ -21,22 +34,23 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   } = useResume();
 
   const [selectedPack, setSelectedPack] = useState(CREDIT_PACKS[1]);
-  const [paymentStep, setPaymentStep] = useState('select'); // 'select' | 'upi' | 'success'
-  const [upiMethod, setUpiMethod] = useState('gpay'); // 'gpay' | 'phonepe' | 'paytm' | 'bhim' | 'custom'
-  const [customUpiId, setCustomUpiId] = useState('');
+  const [paymentStep, setPaymentStep] = useState('select'); // 'select' | 'success'
   const [isProcessing, setIsProcessing] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const active = isOpen !== undefined ? isOpen : isBuyCreditsModalOpen;
   const handleClose = () => {
     setPaymentStep('select');
     setIsProcessing(false);
+    setErrorMsg('');
     if (onClose) onClose();
     else setIsBuyCreditsModalOpen(false);
   };
 
   if (!active) return null;
 
-  // Check if guest - prompt login first
+  // Guest Mode Guard
   if (!session || !session.isAuthenticated || session.isGuest) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
@@ -68,13 +82,62 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
     );
   }
 
-  const handleSimulatePayment = () => {
+  const handleInitiateCashfreePayment = async () => {
+    if (!acceptedTerms) {
+      setErrorMsg("You must accept the Terms & Conditions and Refund Policy to proceed.");
+      return;
+    }
+
     setIsProcessing(true);
-    setTimeout(() => {
+    setErrorMsg('');
+    try {
+      // 1. Create Cashfree Order on Production Backend
+      const orderData = await apiService.createCashfreeOrder(selectedPack.id);
+      
+      // 2. Sandbox / Mock Execution Fallback
+      if (orderData.is_mock) {
+        setTimeout(async () => {
+          try {
+            const verifyRes = await apiService.verifyCashfreeOrder(orderData.order_id);
+            if (verifyRes.ok) {
+              addPurchasedCredits(selectedPack.credits, `₹${selectedPack.price} Pack (Cashfree)`);
+              setPaymentStep('success');
+            } else {
+              setErrorMsg(verifyRes.message || "Payment verification failed.");
+            }
+          } catch (err) {
+            setErrorMsg(err.message || "Verification error.");
+          }
+          setIsProcessing(false);
+        }, 1200);
+        return;
+      }
+
+      // 3. Live Cashfree Web SDK Payment Modal Checkout
+      await loadCashfreeScript(orderData.environment);
+      const cashfree = window.Cashfree({ mode: orderData.environment === 'production' ? 'production' : 'sandbox' });
+      
+      cashfree.checkout({
+        paymentSessionId: orderData.payment_session_id,
+        redirectTarget: '_modal'
+      }).then(async () => {
+        const verifyRes = await apiService.verifyCashfreeOrder(orderData.order_id);
+        if (verifyRes.ok) {
+          addPurchasedCredits(selectedPack.credits, `₹${selectedPack.price} Pack (Cashfree)`);
+          setPaymentStep('success');
+        } else {
+          setErrorMsg(verifyRes.message || "Payment verification returned pending/failed status.");
+        }
+        setIsProcessing(false);
+      }).catch((err) => {
+        setIsProcessing(false);
+        setErrorMsg(err.message || "Cashfree payment modal dismissed or failed.");
+      });
+
+    } catch (err) {
       setIsProcessing(false);
-      addPurchasedCredits(selectedPack.credits, `₹${selectedPack.price} Pack`);
-      setPaymentStep('success');
-    }, 1200);
+      setErrorMsg(err.message || "Could not connect to Cashfree payment server.");
+    }
   };
 
   return createPortal(
@@ -96,22 +159,19 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
                 <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-white">Need More AI Credits?</h3>
+                <h3 className="text-xl font-black text-white">Buy OpportunityX AI Credits</h3>
                 <p className="text-xs text-slate-400">
                   Current Balance: <strong className="text-orange-400 font-bold">{aiCredits.remaining} Credits</strong>
                 </p>
               </div>
             </div>
 
-            {/* Reassurance Banner */}
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-1">
-              <div className="flex items-center gap-2 font-bold text-emerald-400">
-                <ShieldCheck className="w-4 h-4" /> Zero Subscription Commitment
+            {errorMsg && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMsg}</span>
               </div>
-              <p className="text-[11px] text-slate-400">
-                No monthly recurring charges. Only buy credit packs when you need them. Credits <strong>never expire</strong>.
-              </p>
-            </div>
+            )}
 
             {/* Pack Grid */}
             <div className="grid grid-cols-2 gap-3">
@@ -134,9 +194,12 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
                     )}
 
                     <div className="space-y-1">
-                      <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
-                        {!pack.popular && pack.tag}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+                          {!pack.popular && pack.tag}
+                        </span>
+                        <span className="text-base">{pack.icon}</span>
+                      </div>
                       <div className="flex items-baseline gap-1">
                         <span className="text-2xl font-black text-white">₹{pack.price}</span>
                         <span className="text-[10px] text-slate-400">{pack.perCredit}</span>
@@ -154,92 +217,59 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
               })}
             </div>
 
-            {/* CTA Button */}
-            <button
-              onClick={() => setPaymentStep('upi')}
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
-            >
-              <span>Pay ₹{selectedPack.price} via UPI for {selectedPack.credits} Credits</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </>
-        )}
-
-        {paymentStep === 'upi' && (
-          <>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setPaymentStep('select')}
-                className="text-xs font-semibold text-slate-400 hover:text-white"
-              >
-                ← Back
-              </button>
-              <div>
-                <h3 className="text-base font-extrabold text-white">Instant UPI Payment</h3>
-                <p className="text-xs text-slate-400">Selected: {selectedPack.credits} Credits (₹{selectedPack.price})</p>
-              </div>
+            {/* Mandatory Terms & Policy Checkbox */}
+            <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+              <label className="flex items-start gap-2.5 text-[11px] text-slate-300 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => {
+                    setAcceptedTerms(e.target.checked);
+                    if (e.target.checked) setErrorMsg('');
+                  }}
+                  className="w-4 h-4 mt-0.5 accent-orange-500 shrink-0 cursor-pointer"
+                />
+                <span>
+                  I accept the{' '}
+                  <Link to="/legal/terms-and-conditions" target="_blank" className="text-orange-400 underline hover:text-orange-300">
+                    Terms & Conditions
+                  </Link>,{' '}
+                  <Link to="/legal/refund-policy" target="_blank" className="text-orange-400 underline hover:text-orange-300">
+                    Refund & Cancellation Policy
+                  </Link>, and{' '}
+                  <Link to="/legal/privacy-policy" target="_blank" className="text-orange-400 underline hover:text-orange-300">
+                    Privacy Policy
+                  </Link>.
+                </span>
+              </label>
             </div>
 
-            {/* Payment App Selection */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-300">Choose UPI App / Method</label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: 'gpay', name: 'Google Pay', icon: '⚡' },
-                  { id: 'phonepe', name: 'PhonePe', icon: '🟣' },
-                  { id: 'paytm', name: 'Paytm', icon: '🔵' },
-                  { id: 'bhim', name: 'BHIM UPI', icon: '🟠' }
-                ].map((app) => (
-                  <button
-                    key={app.id}
-                    onClick={() => setUpiMethod(app.id)}
-                    className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all ${
-                      upiMethod === app.id
-                        ? 'bg-orange-500/20 text-white border-orange-500'
-                        : 'bg-[#10131D] text-slate-300 border-slate-800'
-                    }`}
-                  >
-                    <span>{app.icon}</span> {app.name}
-                  </button>
-                ))}
+            {/* Cashfree Payment Gateway Badge & Compliance Footer */}
+            <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center space-y-1">
+              <div className="flex items-center justify-center gap-1.5 text-xs font-extrabold text-emerald-400">
+                <Lock className="w-3.5 h-3.5" /> Secure Payments via Cashfree Payment Gateway
               </div>
-            </div>
-
-            {/* Custom UPI ID */}
-            <div className="space-y-1.5 pt-2">
-              <label className="text-xs font-semibold text-slate-400">Or enter UPI ID</label>
-              <input
-                type="text"
-                value={customUpiId}
-                onChange={(e) => setCustomUpiId(e.target.value)}
-                placeholder="yourname@upi"
-                className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
-              />
-            </div>
-
-            {/* Simulated UPI QR / Auto Pay Notice */}
-            <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center space-y-2">
-              <div className="inline-flex p-2 bg-white rounded-lg">
-                <QrCode className="w-16 h-16 text-black" />
-              </div>
-              <p className="text-[11px] text-slate-400">
-                UPI Merchant: <strong className="text-white">opportunityx@upi</strong>
+              <p className="text-[10px] text-slate-400">
+                Supports UPI (GPay, PhonePe, Paytm, BHIM), NetBanking, & Cards. Credits delivered instantly upon verification.
               </p>
             </div>
 
-            {/* Action */}
+            {/* CTA Purchase Button */}
             <button
-              onClick={handleSimulatePayment}
-              disabled={isProcessing}
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+              onClick={handleInitiateCashfreePayment}
+              disabled={isProcessing || !acceptedTerms}
+              className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isProcessing ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" /> Verifying UPI Payment...
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Connecting to Cashfree Payment Gateway...</span>
                 </>
               ) : (
                 <>
-                  <Zap className="w-4 h-4" /> Confirm UPI Payment of ₹{selectedPack.price}
+                  <CreditCard className="w-4 h-4" />
+                  <span>Pay ₹{selectedPack.price} via Cashfree</span>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
@@ -254,7 +284,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
             <div>
               <h3 className="text-xl font-black text-white">Payment Successful!</h3>
               <p className="text-xs text-slate-300 mt-1">
-                <strong className="text-emerald-400 font-bold">+{selectedPack.credits} AI Credits</strong> added to your account.
+                <strong className="text-emerald-400 font-bold">+{selectedPack.credits} AI Credits</strong> added to your account via Cashfree PG.
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5">
                 New Balance: <strong className="text-white">{aiCredits.remaining} Credits</strong>
