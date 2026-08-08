@@ -46,8 +46,9 @@ for o in default_origins:
     if o not in cors_origins:
         cors_origins.append(o)
 
-if settings.FRONTEND_URL and settings.FRONTEND_URL not in cors_origins and settings.FRONTEND_URL != "*":
-    cors_origins.append(settings.FRONTEND_URL)
+frontend_url = getattr(settings, "FRONTEND_URL", "https://resume.opportunityx.co.in")
+if frontend_url and frontend_url not in cors_origins and frontend_url != "*":
+    cors_origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,

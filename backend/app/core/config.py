@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     PORT: int = 8000
     SECRET_KEY: str = "opportunityx-resume-super-secret-key-change-in-prod"
+    FRONTEND_URL: str = "https://resume.opportunityx.co.in"
     
     # CORS
     CORS_ORIGINS: Union[List[str], str] = [
