@@ -34,10 +34,10 @@ class Settings(BaseSettings):
             return v
         return []
     
-    # Database (Supabase PostgreSQL)
+    # Database (Supabase PostgreSQL - Pooler Port 6543 for IPv4 Render Compatibility)
     DATABASE_URL: str = Field(
-        default="postgresql://postgres:Anurag1239574680@db.dnmzeqpkscdacrkroams.supabase.co:5432/postgres",
-        description="Supabase PostgreSQL Connection String"
+        default="postgresql://postgres.dnmzeqpkscdacrkroams:Anurag1239574680@aws-0-ap-south-1.pooler.supabase.com:6543/postgres",
+        description="Supabase PostgreSQL Connection String (Pooler Port 6543)"
     )
     SUPABASE_URL: str = "https://dnmzeqpkscdacrkroams.supabase.co"
     SUPABASE_SERVICE_ROLE_KEY: str = "sb_publishable_iPwgGjvYXyIjyRYhuvWDYQ_1HDqajwo"
