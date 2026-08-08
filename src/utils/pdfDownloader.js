@@ -23,7 +23,7 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   const filename = `${safeName}_Resume.pdf`;
 
   const opt = {
-    margin: 0,
+    margin: [10, 10, 12, 10], // Safe printable margins [top, left, bottom, right] in mm
     filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: {
@@ -38,7 +38,20 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
       format: 'a4',
       orientation: 'portrait'
     },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    pagebreak: {
+      mode: ['avoid-all', 'css', 'legacy'],
+      before: '.pdf-page-break-before',
+      after: '.pdf-page-break-after',
+      avoid: [
+        '.pdf-block',
+        '.pdf-item',
+        '.pdf-section-header',
+        '.pdf-skills-group',
+        '.pdf-keep-together',
+        '.break-inside-avoid',
+        'h1', 'h2', 'h3', 'h4'
+      ]
+    }
   };
 
   try {
