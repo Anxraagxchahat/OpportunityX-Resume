@@ -1,10 +1,12 @@
 import React from 'react';
 import './styles.css';
+import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 export const BRESidebarTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {} } = resumeData || {};
+  const { personal = {}, experience = [], education = [], projects = [], skills = {}, assets = {} } = resumeData || {};
 
   const headerBg = accentHex || '#0f172a';
+  const photoSrc = assets?.profilePhoto || DEFAULT_PROFILE_PHOTO;
 
   return (
     <div className="bre-sidebar-container" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
@@ -18,6 +20,10 @@ export const BRESidebarTemplate = ({ resumeData, accentHex, fontFamily }) => {
       <div className="bre-sidebar-body">
         {/* Left Column */}
         <div className="bre-sidebar-left">
+          <div className="flex justify-center mb-4">
+            <img src={photoSrc} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 shadow-sm" style={{ borderColor: accentHex }} />
+          </div>
+
           <div className="mb-4">
             <div className="bre-sidebar-heading" style={{ borderColor: accentHex }}>Contact</div>
             <div className="space-y-1 text-[11px] text-slate-600">

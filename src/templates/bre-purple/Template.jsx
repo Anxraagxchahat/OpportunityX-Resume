@@ -1,20 +1,25 @@
 import React from 'react';
 import './styles.css';
+import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 export const BREPurpleTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {} } = resumeData || {};
+  const { personal = {}, experience = [], education = [], projects = [], skills = {}, assets = {} } = resumeData || {};
 
   const accentColor = accentHex || '#7c3aed';
+  const photoSrc = assets?.profilePhoto || DEFAULT_PROFILE_PHOTO;
 
   return (
     <div className="bre-purple-container" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
       {/* Header */}
-      <div className="bre-purple-header" style={{ borderColor: accentColor }}>
-        <div className="bre-purple-name">{personal.fullName || 'Your Name'}</div>
-        <div className="bre-purple-title" style={{ color: accentColor }}>{personal.jobTitle || 'Job Title'}</div>
-        <div className="mt-1 text-[11px] text-slate-500 font-mono">
-          {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' | ')}
+      <div className="bre-purple-header flex items-center justify-between" style={{ borderColor: accentColor }}>
+        <div>
+          <div className="bre-purple-name">{personal.fullName || 'Your Name'}</div>
+          <div className="bre-purple-title" style={{ color: accentColor }}>{personal.jobTitle || 'Job Title'}</div>
+          <div className="mt-1 text-[11px] text-slate-500 font-mono">
+            {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' | ')}
+          </div>
         </div>
+        <img src={photoSrc} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 shadow-sm flex-shrink-0" style={{ borderColor: accentColor }} />
       </div>
 
       {personal.summary && (

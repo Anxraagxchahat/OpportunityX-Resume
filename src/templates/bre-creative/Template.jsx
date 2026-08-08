@@ -1,15 +1,20 @@
 import React from 'react';
 import './styles.css';
+import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 export const BRECreativeTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {} } = resumeData || {};
+  const { personal = {}, experience = [], education = [], projects = [], skills = {}, assets = {} } = resumeData || {};
 
   const leftBg = accentHex || '#2c3e50';
+  const photoSrc = assets?.profilePhoto || DEFAULT_PROFILE_PHOTO;
 
   return (
     <div className="bre-creative-container" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
       {/* Left Column */}
       <div className="bre-creative-left" style={{ backgroundColor: leftBg }}>
+        <div className="flex justify-center mb-3">
+          <img src={photoSrc} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-white/30 shadow-md" />
+        </div>
         <div className="bre-creative-name">{personal.fullName || 'Your Name'}</div>
         <div className="bre-creative-title">{personal.jobTitle || 'Job Title'}</div>
 

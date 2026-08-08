@@ -1,22 +1,27 @@
 import React from 'react';
 import './styles.css';
+import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 export const BREObliqueTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {} } = resumeData || {};
+  const { personal = {}, experience = [], education = [], projects = [], skills = {}, assets = {} } = resumeData || {};
 
   const accentColor = accentHex || '#4f46e5';
+  const photoSrc = assets?.profilePhoto || DEFAULT_PROFILE_PHOTO;
 
   return (
     <div className="bre-oblique-container" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
       {/* Oblique Slanted Header */}
-      <div className="bre-oblique-header" style={{ background: `linear-gradient(135deg, ${accentColor} 0%, #1e1b4b 100%)` }}>
-        <div className="bre-oblique-name">{personal.fullName || 'Your Name'}</div>
-        <div className="bre-oblique-title">{personal.jobTitle || 'Job Title'}</div>
-        <div className="mt-2 text-[11px] text-white/80 flex flex-wrap gap-x-3 gap-y-0.5">
-          {personal.email && <span>{personal.email}</span>}
-          {personal.phone && <span>• {personal.phone}</span>}
-          {personal.location && <span>• {personal.location}</span>}
+      <div className="bre-oblique-header flex items-center justify-between" style={{ background: `linear-gradient(135deg, ${accentColor} 0%, #1e1b4b 100%)` }}>
+        <div>
+          <div className="bre-oblique-name">{personal.fullName || 'Your Name'}</div>
+          <div className="bre-oblique-title">{personal.jobTitle || 'Job Title'}</div>
+          <div className="mt-2 text-[11px] text-white/80 flex flex-wrap gap-x-3 gap-y-0.5">
+            {personal.email && <span>{personal.email}</span>}
+            {personal.phone && <span>• {personal.phone}</span>}
+            {personal.location && <span>• {personal.location}</span>}
+          </div>
         </div>
+        <img src={photoSrc} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-white/40 shadow-lg flex-shrink-0" />
       </div>
 
       <div className="pt-2">

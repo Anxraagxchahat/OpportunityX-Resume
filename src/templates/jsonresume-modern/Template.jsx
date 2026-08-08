@@ -1,10 +1,12 @@
 import React from 'react';
 import './styles.css';
+import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 export const JSONResumeModernTemplate = ({ resumeData, accentHex, fontFamily }) => {
   const { personal = {}, experience = [], education = [], projects = [], skills = {}, assets = {} } = resumeData || {};
 
   const accentColor = accentHex || '#2563eb';
+  const photoSrc = assets?.profilePhoto || DEFAULT_PROFILE_PHOTO;
 
   return (
     <div className="jsonresume-modern-container" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
@@ -14,9 +16,7 @@ export const JSONResumeModernTemplate = ({ resumeData, accentHex, fontFamily }) 
           <div className="jsonresume-modern-name">{personal.fullName || 'Your Name'}</div>
           <div className="jsonresume-modern-location">{personal.location || personal.jobTitle}</div>
         </div>
-        {assets?.profilePhoto && (
-          <img src={assets.profilePhoto} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2" style={{ borderColor: accentColor }} />
-        )}
+        <img src={photoSrc} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2" style={{ borderColor: accentColor }} />
       </div>
 
       {/* About Section */}

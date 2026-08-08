@@ -1,50 +1,152 @@
 import React from 'react';
+import { TemplateSkills } from '../../components/template/TemplateSkills';
 
-export const ExecutiveATSTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {} } = resumeData || {};
+export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFamily = 'Inter' }) => {
+  const {
+    personal = {},
+    experience = [],
+    projects = [],
+    skills = {},
+    education = [],
+    certificates = [],
+    achievements = [],
+    languages = []
+  } = resumeData || {};
 
   return (
-    <div className="space-y-5 text-slate-800" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
-      <div className="text-center pb-4 border-b-2 border-double" style={{ borderColor: accentHex }}>
+    <div className="space-y-4 text-slate-800 leading-normal" style={{ fontFamily: `'${fontFamily}', sans-serif` }}>
+      
+      {/* 1. HEADER */}
+      <div className="text-center pb-3 border-b-2 border-double" style={{ borderColor: accentHex }}>
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">{personal.fullName || 'Executive Name'}</h1>
-        <p className="text-sm font-bold uppercase tracking-widest mt-1" style={{ color: accentHex }}>{personal.jobTitle || 'Executive Vice President'}</p>
+        {personal.jobTitle && <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: accentHex }}>{personal.jobTitle}</p>}
         <p className="text-xs text-slate-600 font-medium mt-1">
-          {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' • ')}
+          {[personal.email, personal.phone, personal.location, personal.website, personal.github, personal.linkedin].filter(Boolean).join(' • ')}
         </p>
       </div>
 
+      {/* 2. SUMMARY */}
       {personal.summary && (
         <div className="space-y-1">
-          <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-900 border-b pb-1" style={{ borderColor: accentHex }}>Executive Summary</h2>
-          <p className="text-xs leading-relaxed text-slate-700 italic">{personal.summary}</p>
+          <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+            Executive Summary
+          </h2>
+          <p className="text-xs leading-relaxed text-slate-700 font-medium">{personal.summary}</p>
         </div>
       )}
 
+      {/* 3. EXPERIENCE */}
       {experience.length > 0 && (
-        <div className="space-y-3.5">
-          <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-900 border-b pb-1" style={{ borderColor: accentHex }}>Leadership & Executive Experience</h2>
+        <div className="space-y-3">
+          <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+            Leadership & Professional Experience
+          </h2>
           {experience.map((exp) => (
-            <div key={exp.id} className="space-y-1 text-xs">
+            <div key={exp.id || exp.role} className="space-y-1 text-xs">
               <div className="flex justify-between font-extrabold text-slate-900">
-                <span>{exp.role} <span className="font-normal text-slate-600">— {exp.company}</span></span>
-                <span className="text-slate-500 font-medium">{exp.startDate} – {exp.endDate}</span>
+                <span>{exp.role} <span className="font-semibold text-slate-600">— {exp.company}</span></span>
+                <span className="text-slate-500 font-medium text-[11px]">{exp.period || `${exp.startDate || ''} ${exp.endDate ? `– ${exp.endDate}` : ''}`}</span>
               </div>
-              {exp.bullets && (
+              {Array.isArray(exp.bullets) && exp.bullets.length > 0 ? (
                 <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
-                  {exp.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                  {exp.bullets.map((b, i) => <li key={i} className="leading-relaxed">{b}</li>)}
                 </ul>
-              )}
+              ) : exp.description ? (
+                <p className="text-slate-700 leading-relaxed">{exp.description}</p>
+              ) : null}
             </div>
           ))}
         </div>
       )}
 
-      {skills && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
+      {/* 4. PROJECTS */}
+      {projects.length > 0 && (
+        <div className="space-y-2 text-xs">
+          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+            Key Initiatives & Projects
+          </h2>
+          {projects.map((p) => (
+            <div key={p.id || p.title} className="space-y-0.5">
+              <div className="flex justify-between font-bold text-slate-900">
+                <span>{p.title || p.name}</span>
+                {p.link && <span className="font-mono text-slate-500 text-[10px]">{p.link}</span>}
+              </div>
+              {Array.isArray(p.bullets) && p.bullets.length > 0 ? (
+                <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
+                  {p.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                </ul>
+              ) : p.description ? (
+                <p className="text-slate-700">{p.description}</p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 5. SKILLS */}
+      {skills && (
         <div className="space-y-1 text-xs">
-          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-1" style={{ borderColor: accentHex }}>Core Competencies</h2>
-          <p className="text-slate-700 font-medium">
-            {[...(skills.languages || []), ...(skills.frameworks || []), ...(skills.tools || [])].join(' • ')}
-          </p>
+          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+            Core Competencies & Skills
+          </h2>
+          <TemplateSkills skills={skills} accentHex={accentHex} />
+        </div>
+      )}
+
+      {/* 6. EDUCATION */}
+      {education.length > 0 && (
+        <div className="space-y-2 text-xs">
+          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+            Education
+          </h2>
+          {education.map((edu) => (
+            <div key={edu.id || edu.degree} className="space-y-0.5">
+              <div className="flex justify-between">
+                <div><strong className="text-slate-900">{edu.degree}</strong> — {edu.institution || edu.college}</div>
+                <span className="text-slate-500 text-[11px]">{edu.period || `${edu.startDate || ''} ${edu.endDate ? `– ${edu.endDate}` : ''}`}</span>
+              </div>
+              {edu.gpa && <div className="text-[11px] text-slate-600 font-medium">GPA: {edu.gpa}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 7. CERTIFICATES */}
+      {certificates.length > 0 && (
+        <div className="space-y-1 text-xs">
+          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+            Executive Certifications
+          </h2>
+          {certificates.map((cert) => (
+            <div key={cert.id || cert.name} className="flex justify-between text-slate-700 font-medium">
+              <span><strong className="text-slate-900">{cert.name}</strong> — {cert.issuer}</span>
+              <span className="text-slate-500 text-[11px]">{cert.date}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 8. ACHIEVEMENTS */}
+      {achievements.length > 0 && (
+        <div className="space-y-1 text-xs">
+          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+            Honors & Board Positions
+          </h2>
+          <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
+            {achievements.map((a) => (
+              <li key={a.id || a.title}><strong>{a.title}: </strong><span>{a.description}</span></li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 9. LANGUAGES */}
+      {languages.length > 0 && (
+        <div className="space-y-1 text-xs">
+          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+            Languages
+          </h2>
+          <p className="text-slate-700 font-medium">{languages.join(' • ')}</p>
         </div>
       )}
     </div>

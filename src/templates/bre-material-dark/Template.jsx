@@ -1,23 +1,28 @@
 import React from 'react';
 import './styles.css';
+import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 export const BREMaterialDarkTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {} } = resumeData || {};
+  const { personal = {}, experience = [], education = [], projects = [], skills = {}, assets = {} } = resumeData || {};
 
   const accentColor = accentHex || '#bb86fc';
+  const photoSrc = assets?.profilePhoto || DEFAULT_PROFILE_PHOTO;
 
   return (
     <div className="bre-material-dark-container" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
       {/* Header Card */}
-      <div className="bre-material-card">
-        <h1 className="text-2xl font-black text-white">{personal.fullName || 'Your Name'}</h1>
-        <p className="text-xs font-bold mt-0.5" style={{ color: accentColor }}>{personal.jobTitle || 'Job Title'}</p>
-        <div className="mt-2 text-[11px] text-gray-400 flex flex-wrap gap-x-3 gap-y-0.5">
-          {personal.email && <span>{personal.email}</span>}
-          {personal.phone && <span>• {personal.phone}</span>}
-          {personal.location && <span>• {personal.location}</span>}
-          {personal.github && <span>• {personal.github}</span>}
+      <div className="bre-material-card flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-white">{personal.fullName || 'Your Name'}</h1>
+          <p className="text-xs font-bold mt-0.5" style={{ color: accentColor }}>{personal.jobTitle || 'Job Title'}</p>
+          <div className="mt-2 text-[11px] text-gray-400 flex flex-wrap gap-x-3 gap-y-0.5">
+            {personal.email && <span>{personal.email}</span>}
+            {personal.phone && <span>• {personal.phone}</span>}
+            {personal.location && <span>• {personal.location}</span>}
+            {personal.github && <span>• {personal.github}</span>}
+          </div>
         </div>
+        <img src={photoSrc} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 shadow-md flex-shrink-0" style={{ borderColor: accentColor }} />
       </div>
 
       {personal.summary && (

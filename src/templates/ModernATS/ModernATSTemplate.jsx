@@ -1,89 +1,168 @@
 import React from 'react';
-import { Mail, Phone, MapPin, Globe } from 'lucide-react';
+import { TemplateSkills } from '../../components/template/TemplateSkills';
 
-export const ModernATSTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {} } = resumeData || {};
+export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamily = 'Inter' }) => {
+  const {
+    personal = {},
+    experience = [],
+    projects = [],
+    skills = {},
+    education = [],
+    certificates = [],
+    achievements = [],
+    languages = [],
+    socialLinks = {}
+  } = resumeData || {};
 
   return (
-    <div className="space-y-5 text-slate-800" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
-      <div className="pb-4 border-b-2" style={{ borderColor: accentHex }}>
-        <h1 className="text-3xl font-black text-slate-900 mb-1">{personal.fullName || 'Your Name'}</h1>
-        <p className="text-base font-bold mb-2" style={{ color: accentHex }}>{personal.jobTitle || 'Job Title'}</p>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 font-medium">
+    <div className="space-y-4 text-slate-800 leading-normal" style={{ fontFamily: `'${fontFamily}', sans-serif` }}>
+      
+      {/* 1. HEADER */}
+      <div className="pb-3 border-b-2" style={{ borderColor: accentHex }}>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">{personal.fullName || 'Your Name'}</h1>
+        {personal.jobTitle && <p className="text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: accentHex }}>{personal.jobTitle}</p>}
+        <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-600 font-medium">
           {personal.email && <span>{personal.email}</span>}
           {personal.phone && <span>• {personal.phone}</span>}
           {personal.location && <span>• {personal.location}</span>}
+          {personal.website && <span>• {personal.website}</span>}
+          {personal.github && <span>• {personal.github}</span>}
           {personal.linkedin && <span>• {personal.linkedin}</span>}
         </div>
       </div>
 
+      {/* 2. SUMMARY */}
       {personal.summary && (
-        <div>
-          <h2 className="text-xs font-black uppercase tracking-wider mb-1" style={{ color: accentHex }}>Professional Summary</h2>
-          <p className="text-xs leading-relaxed text-slate-700">{personal.summary}</p>
+        <div className="space-y-1 pdf-block pdf-keep-together">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b pdf-section-header" style={{ borderColor: `${accentHex}40` }}>
+            Professional Summary
+          </h2>
+          <p className="text-xs leading-relaxed text-slate-700 font-medium">{personal.summary}</p>
         </div>
       )}
 
+      {/* 3. EXPERIENCE */}
       {experience.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xs font-black uppercase tracking-wider pb-1 border-b" style={{ color: accentHex, borderColor: accentHex }}>Work Experience</h2>
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b pdf-section-header" style={{ borderColor: accentHex }}>
+            Work Experience
+          </h2>
           {experience.map((exp) => (
-            <div key={exp.id} className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-slate-900">
-                <span>{exp.role} — {exp.company}</span>
-                <span className="text-slate-500 font-normal">{exp.startDate} {exp.endDate ? `– ${exp.endDate}` : ''}</span>
+            <div key={exp.id || exp.role} className="space-y-1 pdf-block pdf-item pdf-keep-together break-inside-avoid">
+              <div className="flex justify-between items-baseline text-xs font-bold text-slate-900">
+                <span>{exp.role} <span className="font-semibold text-slate-600">— {exp.company}</span></span>
+                <span className="text-slate-500 font-medium text-[11px]">{exp.period || `${exp.startDate || ''} ${exp.endDate ? `– ${exp.endDate}` : ''}`}</span>
               </div>
-              {exp.bullets && (
-                <ul className="list-disc pl-4 text-xs text-slate-700 space-y-0.5">
-                  {exp.bullets.map((b, i) => <li key={i}>{b}</li>)}
+              {Array.isArray(exp.bullets) && exp.bullets.length > 0 ? (
+                <ul className="list-disc pl-4 text-xs text-slate-700 space-y-1">
+                  {exp.bullets.map((b, i) => <li key={i} className="leading-relaxed">{b}</li>)}
                 </ul>
-              )}
+              ) : exp.description ? (
+                <p className="text-xs text-slate-700 leading-relaxed">{exp.description}</p>
+              ) : null}
             </div>
           ))}
         </div>
       )}
 
+      {/* 4. PROJECTS */}
       {projects.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-xs font-black uppercase tracking-wider pb-1 border-b" style={{ color: accentHex, borderColor: accentHex }}>Technical Projects</h2>
+        <div className="space-y-2.5">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b pdf-section-header" style={{ borderColor: accentHex }}>
+            Technical Projects
+          </h2>
           {projects.map((p) => (
-            <div key={p.id} className="text-xs space-y-0.5">
-              <div className="font-bold text-slate-900">{p.name} {p.techStack && <span className="text-slate-500 font-normal">({p.techStack})</span>}</div>
-              <p className="text-slate-700">{p.description}</p>
+            <div key={p.id || p.title} className="text-xs space-y-1 pdf-block pdf-item pdf-keep-together break-inside-avoid">
+              <div className="flex justify-between items-baseline font-bold text-slate-900">
+                <span>
+                  {p.title || p.name}
+                  {p.technologies && Array.isArray(p.technologies) && p.technologies.length > 0 && (
+                    <span className="text-slate-500 font-normal ml-1">({p.technologies.join(', ')})</span>
+                  )}
+                </span>
+                {p.link && <span className="text-[10px] text-slate-500 font-mono">{p.link}</span>}
+              </div>
+              {Array.isArray(p.bullets) && p.bullets.length > 0 ? (
+                <ul className="list-disc pl-4 text-xs text-slate-700 space-y-0.5">
+                  {p.bullets.map((b, idx) => <li key={idx} className="leading-relaxed">{b}</li>)}
+                </ul>
+              ) : p.description ? (
+                <p className="text-slate-700 leading-relaxed">{p.description}</p>
+              ) : null}
             </div>
           ))}
         </div>
       )}
 
+      {/* 5. SKILLS */}
+      {skills && (
+        <div className="space-y-1 pdf-block pdf-skills-group pdf-keep-together">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b mb-1.5 pdf-section-header" style={{ borderColor: accentHex }}>
+            Skills & Competencies
+          </h2>
+          <TemplateSkills skills={skills} accentHex={accentHex} />
+        </div>
+      )}
+
+      {/* 6. EDUCATION */}
       {education.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-xs font-black uppercase tracking-wider pb-1 border-b" style={{ color: accentHex, borderColor: accentHex }}>Education</h2>
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b pdf-section-header" style={{ borderColor: accentHex }}>
+            Education
+          </h2>
           {education.map((edu) => (
-            <div key={edu.id} className="text-xs space-y-0.5">
-              <div className="flex justify-between font-bold text-slate-900">
-                <span>{edu.degree} — <span className="font-normal text-slate-600">{edu.institution}</span></span>
-                <span className="text-slate-500 font-semibold">{edu.startDate} {edu.endDate ? `– ${edu.endDate}` : ''}</span>
+            <div key={edu.id || edu.degree} className="text-xs space-y-0.5 pdf-block pdf-item pdf-keep-together break-inside-avoid">
+              <div className="flex justify-between items-baseline font-bold text-slate-900">
+                <span>{edu.degree} — <span className="font-semibold text-slate-600">{edu.institution || edu.college}</span></span>
+                <span className="text-slate-500 font-medium text-[11px]">{edu.period || `${edu.startDate || ''} ${edu.endDate ? `– ${edu.endDate}` : ''}`}</span>
               </div>
-              {edu.gpa && <div className="text-[11px] font-semibold text-slate-600">GPA / Score: {edu.gpa}</div>}
-              {edu.relevantCoursework && (
-                <div className="text-[11px] text-slate-700">
-                  <strong className="text-slate-900">Relevant Coursework: </strong>
-                  <span>{edu.relevantCoursework}</span>
-                </div>
-              )}
+              {edu.gpa && <div className="text-[11px] font-semibold text-slate-600">CGPA / Score: {edu.gpa}</div>}
             </div>
           ))}
         </div>
       )}
 
-      {skills && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
-        <div>
-          <h2 className="text-xs font-black uppercase tracking-wider pb-1 border-b mb-1.5" style={{ color: accentHex, borderColor: accentHex }}>Skills</h2>
-          <div className="text-xs space-y-1">
-            {skills.languages?.length > 0 && <div><strong className="text-slate-900">Languages:</strong> {skills.languages.join(', ')}</div>}
-            {skills.frameworks?.length > 0 && <div><strong className="text-slate-900">Frameworks:</strong> {skills.frameworks.join(', ')}</div>}
-            {skills.tools?.length > 0 && <div><strong className="text-slate-900">Tools & Technologies:</strong> {skills.tools.join(', ')}</div>}
+      {/* 7. CERTIFICATES */}
+      {certificates.length > 0 && (
+        <div className="space-y-1.5">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b" style={{ borderColor: accentHex }}>
+            Certifications
+          </h2>
+          <div className="space-y-1 text-xs">
+            {certificates.map((cert) => (
+              <div key={cert.id || cert.name} className="flex justify-between text-slate-700 font-medium">
+                <span><strong className="text-slate-900">{cert.name}</strong> — {cert.issuer}</span>
+                <span className="text-slate-500 text-[11px]">{cert.date}</span>
+              </div>
+            ))}
           </div>
+        </div>
+      )}
+
+      {/* 8. ACHIEVEMENTS */}
+      {achievements.length > 0 && (
+        <div className="space-y-1.5">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b" style={{ borderColor: accentHex }}>
+            Honors & Achievements
+          </h2>
+          <ul className="list-disc pl-4 text-xs text-slate-700 space-y-1">
+            {achievements.map((ach) => (
+              <li key={ach.id || ach.title}>
+                <strong className="text-slate-900">{ach.title}: </strong>
+                <span>{ach.description}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 9. LANGUAGES */}
+      {languages.length > 0 && (
+        <div className="space-y-1">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b mb-1" style={{ borderColor: accentHex }}>
+            Languages
+          </h2>
+          <p className="text-xs text-slate-700 font-medium">{languages.join(' • ')}</p>
         </div>
       )}
     </div>
