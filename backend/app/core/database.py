@@ -7,6 +7,17 @@ DATABASE_URL = settings.DATABASE_URL
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Handle unencoded '@' inside password string if passed directly in DATABASE_URL
+if DATABASE_URL.count("@") > 1 and "postgresql://" in DATABASE_URL:
+    prefix, rest = DATABASE_URL.split("://", 1)
+    last_at_idx = rest.rfind("@")
+    user_pass = rest[:last_at_idx]
+    host_db = rest[last_at_idx + 1:]
+    if ":" in user_pass:
+        user, password = user_pass.split(":", 1)
+        password_encoded = password.replace("@", "%40")
+        DATABASE_URL = f"{prefix}://{user}:{password_encoded}@{host_db}"
+
 connect_args = {}
 if DATABASE_URL.startswith("postgresql"):
     if "sslmode" not in DATABASE_URL.lower():
