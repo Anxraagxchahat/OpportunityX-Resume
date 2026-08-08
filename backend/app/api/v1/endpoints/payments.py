@@ -151,11 +151,18 @@ async def verify_payment_order(
             event_type="PAYMENT_FAILED",
             details={"order_id": req.order_id, "status": cf_status}
         )
+
+        friendly_msg = "Payment was cancelled or closed before completion. No charges were made."
+        if cf_status == "FAILED":
+            friendly_msg = "Payment failed at bank or gateway. No credits were added."
+        elif cf_status == "PENDING":
+            friendly_msg = "Payment is pending confirmation. Credits will be added automatically once confirmed."
+
         return CashfreeVerifyResponse(
             ok=False,
             order_id=req.order_id,
             status=cf_status,
-            message=f"Payment verification returned status: {cf_status}",
+            message=friendly_msg,
             credits_added=0,
             new_balance=wallet.remaining_credits
         )

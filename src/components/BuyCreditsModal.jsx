@@ -151,7 +151,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
         setIsProcessing(false);
       }).catch((err) => {
         setIsProcessing(false);
-        setErrorMsg(err.message || "Cashfree payment modal dismissed or failed.");
+        setErrorMsg("Payment was cancelled or closed. No charges were made to your account.");
       });
 
     } catch (err) {
