@@ -43,14 +43,6 @@ export const AICreditsCard = ({ compact = false }) => {
             </p>
           </div>
         </div>
-
-        <button
-          onClick={() => setIsBYOKModalOpen(true)}
-          className="px-2.5 py-1 text-xs font-medium text-slate-300 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg flex items-center gap-1 transition-colors"
-          title="Bring Your Own API Key"
-        >
-          <Key className="w-3.5 h-3.5 text-amber-400" /> BYOK Key
-        </button>
       </div>
 
       {/* Main Credit Counter */}

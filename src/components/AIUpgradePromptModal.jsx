@@ -55,18 +55,6 @@ export const AIUpgradePromptModal = () => {
           </button>
 
           <button
-            onClick={() => {
-              setIsAIUpgradePromptOpen(false);
-              setIsBYOKModalOpen(true);
-            }}
-            className="w-full p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center justify-between transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <Key className="w-3.5 h-3.5 text-amber-400" /> Use Your Own API Key (BYOK)
-            </span>
-          </button>
-
-          <button
             onClick={() => setIsAIUpgradePromptOpen(false)}
             className="w-full p-2 text-center text-xs font-medium text-slate-400 hover:text-white transition-colors"
           >

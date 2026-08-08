@@ -19,7 +19,7 @@ const GoogleIcon = ({ className = "w-4 h-4" }) => (
 );
 
 export const UnlockAIModal = ({ isOpen, onClose }) => {
-  const { isUnlockAIModalOpen, setIsUnlockAIModalOpen, handleLogin } = useResume();
+  const { isUnlockAIModalOpen, setIsUnlockAIModalOpen, setIsAuthOpen } = useResume();
   const [emailInput, setEmailInput] = useState('');
   const [showEmailForm, setShowEmailForm] = useState(false);
 
@@ -28,17 +28,18 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
 
   if (!active) return null;
 
-  const handleOAuthLogin = (provider, defaultEmail) => {
-    handleLogin(defaultEmail, provider);
+  const openRealAuth = () => {
     handleClose();
+    setIsAuthOpen(true);
+  };
+
+  const handleOAuthLogin = () => {
+    openRealAuth();
   };
 
   const handleEmailSubmit = (e) => {
     e.preventDefault();
-    if (emailInput.trim()) {
-      handleLogin(emailInput.trim(), 'Email');
-      handleClose();
-    }
+    openRealAuth();
   };
 
   return createPortal(
@@ -111,14 +112,14 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
         {/* Login Buttons */}
         <div className="space-y-2.5 pt-1">
           <button
-            onClick={() => handleOAuthLogin('Google', 'google.user@opportunityx.dev')}
+            onClick={() => openRealAuth()}
             className="w-full py-3 px-4 rounded-xl bg-[#141824] hover:bg-slate-800 border border-slate-700 text-xs font-bold text-white flex items-center justify-center gap-2.5 transition-all shadow-sm"
           >
             <GoogleIcon className="w-4 h-4" /> Continue with Google
           </button>
 
           <button
-            onClick={() => handleOAuthLogin('GitHub', 'github.user@opportunityx.dev')}
+            onClick={() => openRealAuth()}
             className="w-full py-3 px-4 rounded-xl bg-[#141824] hover:bg-slate-800 border border-slate-700 text-xs font-bold text-white flex items-center justify-center gap-2.5 transition-all shadow-sm"
           >
             <GithubIcon className="w-4 h-4" /> Continue with GitHub
