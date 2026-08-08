@@ -7,12 +7,25 @@ from typing import Dict, Any, Optional
 from app.core.config import settings
 from app.core.logging import logger
 
+import re
+
 class CashfreeService:
     def __init__(self):
-        self.app_id = settings.CASHFREE_APP_ID
-        self.secret_key = settings.CASHFREE_SECRET_KEY
-        self.base_url = settings.cashfree_base_url
-        self.api_version = settings.CASHFREE_API_VERSION
+        self.app_id = settings.CASHFREE_APP_ID or ""
+        self.secret_key = settings.CASHFREE_SECRET_KEY or ""
+        self.api_version = settings.CASHFREE_API_VERSION or "2023-08-01"
+
+    @property
+    def is_sandbox(self) -> bool:
+        if self.app_id.startswith("TEST") or self.app_id.startswith("TEST_") or settings.CASHFREE_ENV.upper() == "SANDBOX":
+            return True
+        return False
+
+    @property
+    def base_url(self) -> str:
+        if self.is_sandbox:
+            return "https://sandbox.cashfree.com/pg"
+        return "https://api.cashfree.com/pg"
 
     def _get_headers(self) -> Dict[str, str]:
         return {
@@ -31,10 +44,19 @@ class CashfreeService:
         customer_email: str,
         customer_phone: str = "9999999999"
     ) -> Dict[str, Any]:
-        # Reject order creation if Cashfree API credentials are not configured
         if not self.app_id or not self.secret_key or "your_" in self.app_id:
             logger.error("Cashfree API credentials missing or unconfigured.")
-            raise ValueError("Cashfree Payment Gateway is not configured on the backend server. CASHFREE_APP_ID and CASHFREE_SECRET_KEY are required.")
+            raise ValueError("Cashfree Payment Gateway is not configured on the backend server. CASHFREE_APP_ID and CASHFREE_SECRET_KEY environment variables are required.")
+
+        # Sanitize customer_id (Cashfree requires regex ^[a-zA-Z0-9_-]+$, max 50 chars)
+        clean_customer_id = re.sub(r'[^a-zA-Z0-9_-]', '_', customer_id or "user_guest")[:50]
+        if not clean_customer_id:
+            clean_customer_id = "user_guest"
+
+        # Sanitize customer_phone (Cashfree requires 10 digits)
+        phone_digits = re.sub(r'\D', '', customer_phone or "")
+        if len(phone_digits) != 10:
+            phone_digits = "9999999999"
 
         url = f"{self.base_url}/orders"
         payload = {
@@ -42,28 +64,37 @@ class CashfreeService:
             "order_amount": float(amount),
             "order_currency": "INR",
             "customer_details": {
-                "customer_id": customer_id,
+                "customer_id": clean_customer_id,
                 "customer_email": customer_email or "user@opportunityx.co.in",
-                "customer_phone": customer_phone or "9999999999"
+                "customer_phone": phone_digits
             },
             "order_meta": {
                 "return_url": f"https://resume.opportunityx.co.in/dashboard?order_id={{order_id}}"
             }
         }
 
+        env_name = "sandbox" if self.is_sandbox else "production"
+        logger.info(f"Creating Cashfree PG order {order_id} in mode '{env_name}' at {url}")
+
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(url, json=payload, headers=self._get_headers())
             if response.status_code not in (200, 201):
-                logger.error(f"Cashfree Create Order Error: {response.text}")
-                raise ValueError(f"Cashfree Order Creation Failed: {response.text}")
+                logger.error(f"Cashfree Create Order Error ({response.status_code}): {response.text}")
+                raise ValueError(f"Cashfree Order Creation Failed ({response.status_code}): {response.text}")
+
             data = response.json()
+            session_id = data.get("payment_session_id")
+            if not session_id:
+                logger.error(f"Cashfree response missing payment_session_id: {data}")
+                raise ValueError(f"Cashfree API response missing payment_session_id: {response.text}")
+
             return {
                 "order_id": data.get("order_id", order_id),
-                "payment_session_id": data.get("payment_session_id"),
+                "payment_session_id": session_id,
                 "cf_order_id": str(data.get("cf_order_id", "")),
                 "amount": amount,
                 "is_mock": False,
-                "environment": settings.CASHFREE_ENV.lower()
+                "environment": env_name
             }
 
     async def verify_order(self, order_id: str) -> Dict[str, Any]:
