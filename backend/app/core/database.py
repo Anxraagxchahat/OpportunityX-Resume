@@ -2,10 +2,23 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from app.core.config import settings
 
+import re
+
 # Engine configuration with connection pooling for Supabase PostgreSQL
 DATABASE_URL = settings.DATABASE_URL
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Automatic conversion of direct Supabase 5432 URLs (IPv6-only) to IPv4 Pooler 6543 URLs for Render compatibility
+direct_supabase_match = re.search(r"postgresql://([^:]+):([^@]+)@db\.([a-z0-9]+)\.supabase\.co:5432/(.+)", DATABASE_URL)
+if direct_supabase_match:
+    user = direct_supabase_match.group(1)
+    pwd = direct_supabase_match.group(2)
+    project_ref = direct_supabase_match.group(3)
+    db_name = direct_supabase_match.group(4)
+    if "." not in user:
+        user = f"{user}.{project_ref}"
+    DATABASE_URL = f"postgresql://{user}:{pwd}@aws-0-ap-south-1.pooler.supabase.com:6543/{db_name}"
 
 # Handle unencoded '@' inside password string if passed directly in DATABASE_URL
 if DATABASE_URL.count("@") > 1 and "postgresql://" in DATABASE_URL:
