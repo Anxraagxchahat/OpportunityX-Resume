@@ -7,7 +7,12 @@ import { analyzeKeywords } from '../utils/keywordEngine';
 import { simulateRecruiterGlance } from '../utils/recruiterSimulation';
 import { trackEvent, AnalyticsEvents } from '../utils/analytics';
 import { stripInternalMetadata } from '../utils/metadata';
-import { getCurrentUserSession, loginUser, logoutUser, hasUserClaimedWelcomeCredits, markWelcomeCreditsClaimed } from '../services/ecosystem/authManager';
+import { mapFirebaseUserToSession, cacheSession, logoutUser, hasUserClaimedWelcomeCredits, markWelcomeCreditsClaimed } from '../services/ecosystem/authManager';
+import { useAuth } from './AuthContext';
+import { DEFAULT_PROFILE_PHOTO, isPhotoTemplate } from '../utils/photoDefaults';
+import { getTemplateCapabilities } from '../utils/templateCapabilities';
+
+import { apiService } from '../services/api';
 
 const ResumeContext = createContext(null);
 
@@ -25,8 +30,97 @@ const SELECTED_MODEL_KEY = 'opportunityx_selected_ai_model_v1';
 const ENV_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 
 export const ResumeProvider = ({ children }) => {
-  // 0. User Auth Session State
-  const [session, setSession] = useState(() => getCurrentUserSession());
+  // 0. Firebase Auth Integration
+  const { user: firebaseUser, isAuthenticated: fbIsAuth, logout: fbLogout } = useAuth();
+
+  // Derive session from Firebase auth state (backward-compatible shape)
+  const [session, setSession] = useState(() => mapFirebaseUserToSession(null));
+
+  // Non-expiring AI Credits State (0 for guests; loaded per UID on login)
+  const [aiCredits, setAiCredits] = useState({
+    remaining: 0,
+    totalPurchased: 0,
+    usageHistory: []
+  });
+
+  // Sync session & AI credits whenever Firebase auth state changes
+  useEffect(() => {
+    const newSession = mapFirebaseUserToSession(firebaseUser);
+    setSession(newSession);
+    cacheSession(newSession);
+
+    if (firebaseUser) {
+      const userCreditsKey = `${AI_CREDITS_KEY}_${firebaseUser.uid}`;
+
+      // Trigger background sync with production FastAPI backend
+      apiService.syncAuth().then(async () => {
+        try {
+          const walletData = await apiService.getCreditBalance();
+          if (walletData && typeof walletData.remaining_credits === 'number') {
+            setAiCredits({
+              remaining: walletData.remaining_credits,
+              totalPurchased: walletData.total_purchased || 0,
+              usageHistory: []
+            });
+            return;
+          }
+        } catch (e) {}
+      }).catch((err) => {
+        console.warn("Backend auth sync offline or unavailable, falling back to local cache:", err.message);
+      });
+
+      try {
+        const saved = localStorage.getItem(userCreditsKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.remaining === 'number') {
+            setAiCredits({
+              remaining: parsed.remaining,
+              totalPurchased: parsed.totalPurchased || 0,
+              usageHistory: Array.isArray(parsed.usageHistory) ? parsed.usageHistory : []
+            });
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // First time login for this Firebase UID: Grant 5 Welcome AI Credits
+      const welcomeCredits = {
+        remaining: 5,
+        totalPurchased: 0,
+        usageHistory: [
+          {
+            id: `welcome-${Date.now()}`,
+            action: '5 Welcome AI Credits Granted',
+            timestamp: new Date().toISOString(),
+            creditsUsed: 0
+          }
+        ]
+      };
+      markWelcomeCreditsClaimed(firebaseUser.uid);
+      setAiCredits(welcomeCredits);
+      try {
+        localStorage.setItem(userCreditsKey, JSON.stringify(welcomeCredits));
+      } catch (e) {}
+    } else {
+      // Guest Mode: 0 AI credits until logged in
+      setAiCredits({
+        remaining: 0,
+        totalPurchased: 0,
+        usageHistory: []
+      });
+    }
+  }, [firebaseUser]);
+
+  // Persist AI credits per-UID whenever aiCredits state changes for a logged in user
+  useEffect(() => {
+    if (firebaseUser?.uid) {
+      const userCreditsKey = `${AI_CREDITS_KEY}_${firebaseUser.uid}`;
+      try {
+        localStorage.setItem(userCreditsKey, JSON.stringify(aiCredits));
+      } catch (e) {}
+    }
+  }, [aiCredits, firebaseUser]);
 
   // 1. Resumes Collection State
   const [resumes, setResumes] = useState(() => {
@@ -206,27 +300,6 @@ export const ResumeProvider = ({ children }) => {
     };
   });
 
-  // Non-expiring AI Credits State
-  const [aiCredits, setAiCredits] = useState(() => {
-    try {
-      const saved = localStorage.getItem(AI_CREDITS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          remaining: typeof parsed.remaining === 'number' ? parsed.remaining : 5,
-          totalPurchased: parsed.totalPurchased || 0,
-          usageHistory: Array.isArray(parsed.usageHistory) ? parsed.usageHistory : []
-        };
-      }
-    } catch (e) {}
-    return {
-      remaining: 5,
-      totalPurchased: 0,
-      usageHistory: [
-        { id: 'use-welcome', action: 'Welcome Credits Granted', timestamp: new Date().toISOString(), creditsUsed: 0 }
-      ]
-    };
-  });
 
   // BYOK Keys loaded securely from environment (.env) or localStorage
   const [byokKeys, setByokKeys] = useState(() => {
@@ -257,6 +330,8 @@ export const ResumeProvider = ({ children }) => {
   const [isScanHistoryOpen, setIsScanHistoryOpen] = useState(false);
   const [isCompanyMatchOpen, setIsCompanyMatchOpen] = useState(false);
   const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
+  const [isGitHubImportModalOpen, setIsGitHubImportModalOpen] = useState(false);
+  const [isOpportunityXImportModalOpen, setIsOpportunityXImportModalOpen] = useState(false);
 
 
   // Auto-Save Effect
@@ -315,6 +390,20 @@ export const ResumeProvider = ({ children }) => {
     setPast([]);
     setFuture([]);
     trackEvent(AnalyticsEvents.RESUME_CREATED, { id: newId, template });
+    return newId;
+  }, []);
+
+  const importResumeData = useCallback((importedSchema) => {
+    if (!importedSchema || !importedSchema.metadata) return;
+    const newId = importedSchema.metadata.id || `ox-resume-import-${Date.now()}`;
+    const formatted = {
+      ...importedSchema,
+      metadata: { ...importedSchema.metadata, id: newId, uuid: newId, lastSaved: new Date().toISOString() }
+    };
+    setResumes((prev) => [formatted, ...prev]);
+    setActiveResumeIdState(newId);
+    setPast([]);
+    setFuture([]);
     return newId;
   }, []);
 
@@ -445,34 +534,17 @@ export const ResumeProvider = ({ children }) => {
     if (target) updateActiveResume(target.data);
   }, [activeVersions, updateActiveResume]);
 
-  // Auth Operations with Welcome Credit Handling
-  const handleLogin = useCallback((email, provider = 'Email') => {
-    const newSession = loginUser(email, provider);
-    setSession(newSession);
-
-    // If new user who hasn't claimed welcome credits, grant 5 Welcome AI Credits
-    if (newSession.isFirstClaim) {
-      setAiCredits((prev) => ({
-        ...prev,
-        remaining: (prev.remaining || 0) + 5,
-        usageHistory: [
-          {
-            id: `welcome-${Date.now()}`,
-            action: '5 Welcome AI Credits Granted',
-            timestamp: new Date().toISOString(),
-            creditsUsed: 0
-          },
-          ...prev.usageHistory
-        ]
-      }));
-    }
-    return newSession;
+  // Auth Operations — delegated to Firebase via AuthContext
+  // handleLogin now opens the AuthModal (actual auth happens via Firebase popup/email)
+  const handleLogin = useCallback(() => {
+    setIsAuthOpen(true);
   }, []);
 
-  const handleLogout = useCallback(() => {
-    const guestSession = logoutUser();
+  const handleLogout = useCallback(async () => {
+    await fbLogout();
+    const guestSession = await logoutUser();
     setSession(guestSession);
-  }, []);
+  }, [fbLogout]);
 
   // Credit Management Operations
   const addPurchasedCredits = useCallback((creditsAmount, packDetails = 'Credit Pack') => {
@@ -557,6 +629,330 @@ export const ResumeProvider = ({ children }) => {
     }
   }, []);
 
+  const importGitHubData = useCallback((payload) => {
+    if (!payload) return;
+    const { personal, projects = [], skills = [], updateSummary = false } = payload;
+
+    updateActiveResume((prev) => {
+      const existingPersonal = prev.personal || {};
+      const updatedPersonal = {
+        ...existingPersonal,
+        fullName: personal?.fullName || existingPersonal.fullName || '',
+        location: personal?.location || existingPersonal.location || '',
+        website: personal?.website || existingPersonal.website || '',
+        github: personal?.github || existingPersonal.github || '',
+        summary: (updateSummary && personal?.summary) ? personal.summary : (existingPersonal.summary || '')
+      };
+
+      // Projects merging
+      const existingProjects = Array.isArray(prev.projects) ? [...prev.projects] : [];
+      const newProjects = [...existingProjects];
+
+      projects.forEach(p => {
+        const pTitle = (p.title || p.name || '').toLowerCase().trim();
+        const pUrl = (p.htmlUrl || p.link || '').toLowerCase().trim();
+
+        const matchIndex = newProjects.findIndex(ex => {
+          const exTitle = (ex.title || ex.name || '').toLowerCase().trim();
+          const exLink = (ex.link || ex.url || '').toLowerCase().trim();
+          return (exTitle && exTitle === pTitle) || (exLink && pUrl && exLink === pUrl);
+        });
+
+        const projectItem = {
+          id: p.id || `proj-gh-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          title: p.title || p.name,
+          description: Array.isArray(p.bullets) && p.bullets.length > 0 ? p.bullets.join('\n') : (p.description || ''),
+          technologies: Array.isArray(p.technologies) ? p.technologies : [p.language].filter(Boolean),
+          link: p.htmlUrl || p.link || ''
+        };
+
+        if (matchIndex !== -1) {
+          if (p.action === 'replace') {
+            newProjects[matchIndex] = projectItem;
+          } else if (p.action === 'merge') {
+            const ex = newProjects[matchIndex];
+            newProjects[matchIndex] = {
+              ...ex,
+              description: ex.description ? `${ex.description}\n${projectItem.description}` : projectItem.description,
+              technologies: [...new Set([...(ex.technologies || []), ...(projectItem.technologies || [])])],
+              link: ex.link || projectItem.link
+            };
+          }
+          // If action === 'skip', keep existing without changes
+        } else {
+          newProjects.push(projectItem);
+        }
+      });
+
+      // Skills merging
+      const existingSkills = prev.skills || {};
+      let updatedSkills = { ...existingSkills };
+
+      if (Array.isArray(skills) && skills.length > 0) {
+        if (Array.isArray(existingSkills.languages) || Array.isArray(existingSkills.frameworks) || Array.isArray(existingSkills.tools)) {
+          updatedSkills = {
+            languages: [...new Set([...(existingSkills.languages || []), ...skills.filter(s => s.type === 'language').map(s => s.name || s)])],
+            frameworks: [...new Set([...(existingSkills.frameworks || []), ...skills.filter(s => s.type === 'framework').map(s => s.name || s)])],
+            tools: [...new Set([...(existingSkills.tools || []), ...skills.filter(s => s.type === 'tool').map(s => s.name || s)])]
+          };
+        } else if (Array.isArray(existingSkills)) {
+          const ghCategoryName = 'GitHub & Technical Skills';
+          const ghItems = skills.map(s => typeof s === 'string' ? s : (s.name || s));
+          const catIndex = existingSkills.findIndex(c => (c.category || '').toLowerCase() === ghCategoryName.toLowerCase());
+
+          if (catIndex !== -1) {
+            const cat = existingSkills[catIndex];
+            const mergedItems = [...new Set([...(cat.items || []), ...ghItems])];
+            const nextArr = [...existingSkills];
+            nextArr[catIndex] = { ...cat, items: mergedItems };
+            updatedSkills = nextArr;
+          } else {
+            updatedSkills = [
+              ...existingSkills,
+              { id: `cat-gh-${Date.now()}`, category: ghCategoryName, items: ghItems }
+            ];
+          }
+        } else {
+          updatedSkills = {
+            languages: skills.filter(s => s.type === 'language' || !s.type).map(s => s.name || s),
+            frameworks: skills.filter(s => s.type === 'framework').map(s => s.name || s),
+            tools: skills.filter(s => s.type === 'tool').map(s => s.name || s)
+          };
+        }
+      }
+
+      return {
+        ...prev,
+        personal: updatedPersonal,
+        projects: newProjects,
+        skills: updatedSkills,
+        metadata: {
+          ...prev.metadata,
+          lastSaved: new Date().toISOString()
+        }
+      };
+    });
+
+    setIsGitHubImportModalOpen(false);
+  }, [updateActiveResume]);
+
+  const importOpportunityXData = useCallback((payload) => {
+    if (!payload) return;
+    const {
+      personal,
+      education = [],
+      experience = [],
+      projects = [],
+      skills = [],
+      certificates = [],
+      achievements = [],
+      openSource = []
+    } = payload;
+
+    updateActiveResume((prev) => {
+      const existingPersonal = prev.personal || {};
+      const updatedPersonal = {
+        ...existingPersonal,
+        fullName: personal?.fullName || existingPersonal.fullName || '',
+        email: personal?.email || existingPersonal.email || '',
+        phone: personal?.phone || existingPersonal.phone || '',
+        location: personal?.location || existingPersonal.location || '',
+        website: personal?.website || existingPersonal.website || '',
+        linkedin: personal?.linkedin || existingPersonal.linkedin || '',
+        github: personal?.github || existingPersonal.github || '',
+        summary: personal?.summary || existingPersonal.summary || ''
+      };
+
+      // Profile photo asset update
+      const updatedAssets = {
+        ...(prev.assets || {}),
+        profilePhoto: personal?.photoUrl || prev.assets?.profilePhoto || null
+      };
+
+      // Education merging
+      const existingEducation = Array.isArray(prev.education) ? [...prev.education] : [];
+      const newEducation = [...existingEducation];
+
+      education.forEach(edu => {
+        const eduDeg = (edu.degree || '').toLowerCase().trim();
+        const matchIndex = newEducation.findIndex(ex => (ex.degree || '').toLowerCase().trim() === eduDeg);
+        const eduItem = {
+          id: edu.id || `edu-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          degree: edu.degree || '',
+          institution: edu.institution || edu.college || '',
+          location: edu.location || '',
+          period: edu.period || edu.graduationYear || '',
+          gpa: edu.gpa || edu.cgpa || ''
+        };
+
+        if (matchIndex !== -1) {
+          if (edu.action === 'replace') newEducation[matchIndex] = eduItem;
+          else if (edu.action === 'merge') {
+            newEducation[matchIndex] = { ...newEducation[matchIndex], ...eduItem };
+          }
+        } else if (edu.action !== 'skip') {
+          newEducation.push(eduItem);
+        }
+      });
+
+      // Verified Experience merging
+      const existingExperience = Array.isArray(prev.experience) ? [...prev.experience] : [];
+      const newExperience = [...existingExperience];
+
+      experience.forEach(exp => {
+        const expRole = (exp.role || '').toLowerCase().trim();
+        const expComp = (exp.company || '').toLowerCase().trim();
+        const matchIndex = newExperience.findIndex(ex =>
+          (ex.role || '').toLowerCase().trim() === expRole && (ex.company || '').toLowerCase().trim() === expComp
+        );
+        const expItem = {
+          id: exp.id || `exp-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          role: exp.role || '',
+          company: exp.company || '',
+          location: exp.location || '',
+          period: exp.period || '',
+          bullets: Array.isArray(exp.bullets) ? exp.bullets : (exp.description ? [exp.description] : [])
+        };
+
+        if (matchIndex !== -1) {
+          if (exp.action === 'replace') newExperience[matchIndex] = expItem;
+          else if (exp.action === 'merge') {
+            const ex = newExperience[matchIndex];
+            newExperience[matchIndex] = {
+              ...ex,
+              bullets: [...new Set([...(ex.bullets || []), ...(expItem.bullets || [])])]
+            };
+          }
+        } else if (exp.action !== 'skip') {
+          newExperience.push(expItem);
+        }
+      });
+
+      // Projects merging
+      const existingProjects = Array.isArray(prev.projects) ? [...prev.projects] : [];
+      const newProjects = [...existingProjects];
+
+      projects.forEach(p => {
+        const pTitle = (p.title || p.name || '').toLowerCase().trim();
+        const matchIndex = newProjects.findIndex(ex => (ex.title || ex.name || '').toLowerCase().trim() === pTitle);
+        const projectItem = {
+          id: p.id || `proj-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          title: p.title || p.name,
+          description: p.description || '',
+          technologies: Array.isArray(p.technologies) ? p.technologies : [],
+          link: p.link || ''
+        };
+
+        if (matchIndex !== -1) {
+          if (p.action === 'replace') newProjects[matchIndex] = projectItem;
+          else if (p.action === 'merge') {
+            const ex = newProjects[matchIndex];
+            newProjects[matchIndex] = {
+              ...ex,
+              description: `${ex.description}\n${projectItem.description}`,
+              technologies: [...new Set([...(ex.technologies || []), ...(projectItem.technologies || [])])],
+              link: ex.link || projectItem.link
+            };
+          }
+        } else if (p.action !== 'skip') {
+          newProjects.push(projectItem);
+        }
+      });
+
+      // Skills merging
+      const existingSkills = prev.skills || {};
+      let updatedSkills = { ...existingSkills };
+
+      if (Array.isArray(skills) && skills.length > 0) {
+        if (Array.isArray(existingSkills.languages) || Array.isArray(existingSkills.frameworks) || Array.isArray(existingSkills.tools)) {
+          updatedSkills = {
+            languages: [...new Set([...(existingSkills.languages || []), ...skills.filter(s => s.type === 'language').map(s => s.name || s)])],
+            frameworks: [...new Set([...(existingSkills.frameworks || []), ...skills.filter(s => s.type === 'framework').map(s => s.name || s)])],
+            tools: [...new Set([...(existingSkills.tools || []), ...skills.filter(s => s.type === 'tool').map(s => s.name || s)])]
+          };
+        } else if (Array.isArray(existingSkills)) {
+          const oxCatName = 'OpportunityX Verified Skills';
+          const oxItems = skills.map(s => typeof s === 'string' ? s : (s.name || s));
+          const catIndex = existingSkills.findIndex(c => (c.category || '').toLowerCase() === oxCatName.toLowerCase());
+
+          if (catIndex !== -1) {
+            const cat = existingSkills[catIndex];
+            const mergedItems = [...new Set([...(cat.items || []), ...oxItems])];
+            const nextArr = [...existingSkills];
+            nextArr[catIndex] = { ...cat, items: mergedItems };
+            updatedSkills = nextArr;
+          } else {
+            updatedSkills = [
+              ...existingSkills,
+              { id: `cat-ox-${Date.now()}`, category: oxCatName, items: oxItems }
+            ];
+          }
+        } else {
+          updatedSkills = {
+            languages: skills.filter(s => s.type === 'language' || !s.type).map(s => s.name || s),
+            frameworks: skills.filter(s => s.type === 'framework').map(s => s.name || s),
+            tools: skills.filter(s => s.type === 'tool').map(s => s.name || s)
+          };
+        }
+      }
+
+      // Verified Certificates merging
+      const existingCerts = Array.isArray(prev.certificates) ? [...prev.certificates] : [];
+      const newCerts = [...existingCerts];
+      certificates.forEach(c => {
+        const cName = (c.name || '').toLowerCase().trim();
+        const matchIndex = newCerts.findIndex(ex => (ex.name || '').toLowerCase().trim() === cName);
+        const certItem = {
+          id: c.id || `cert-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          name: c.name || '',
+          issuer: c.issuer || 'OpportunityX Academy',
+          date: c.date || '',
+          link: c.link || ''
+        };
+
+        if (matchIndex !== -1) {
+          if (c.action === 'replace') newCerts[matchIndex] = certItem;
+        } else if (c.action !== 'skip') {
+          newCerts.push(certItem);
+        }
+      });
+
+      // Achievements & Hackathons merging
+      const existingAch = Array.isArray(prev.achievements) ? [...prev.achievements] : [];
+      const newAch = [...existingAch];
+      achievements.forEach(a => {
+        const aTitle = (a.title || '').toLowerCase().trim();
+        const matchIndex = newAch.findIndex(ex => (ex.title || '').toLowerCase().trim() === aTitle);
+        const achItem = {
+          id: a.id || `ach-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          title: a.title || '',
+          description: a.description || ''
+        };
+        if (matchIndex === -1 && a.action !== 'skip') {
+          newAch.push(achItem);
+        }
+      });
+
+      return {
+        ...prev,
+        personal: updatedPersonal,
+        assets: updatedAssets,
+        education: newEducation,
+        experience: newExperience,
+        projects: newProjects,
+        skills: updatedSkills,
+        certificates: newCerts,
+        achievements: newAch,
+        metadata: {
+          ...prev.metadata,
+          lastSaved: new Date().toISOString()
+        }
+      };
+    });
+
+    setIsOpportunityXImportModalOpen(false);
+  }, [updateActiveResume]);
+
   const updatePersonal = (field, value) => updateActiveResume((prev) => ({ ...prev, personal: { ...prev.personal, [field]: value } }));
   const updateExperience = (items) => updateActiveResume((prev) => ({ ...prev, experience: items }));
   const updateEducation = (items) => updateActiveResume((prev) => ({ ...prev, education: items }));
@@ -568,7 +964,32 @@ export const ResumeProvider = ({ children }) => {
   const updateSocialLinks = (field, value) => updateActiveResume((prev) => ({ ...prev, socialLinks: { ...prev.socialLinks, [field]: value } }));
   const updateCustomSections = (items) => updateActiveResume((prev) => ({ ...prev, customSections: items }));
 
-  const setTemplate = (templateName) => updateActiveResume((prev) => ({ ...prev, metadata: { ...prev.metadata, template: templateName } }));
+  const setTemplate = (templateName) => updateActiveResume((prev) => {
+    const caps = getTemplateCapabilities(templateName);
+    const isPhoto = caps.supportsPhoto;
+    const defaultVisiblePos = caps.supportedPhotoPositions?.find(p => p !== 'hidden') || 'sidebar';
+
+    let nextPhotoPosition = prev.assets?.photoPosition;
+    if (isPhoto) {
+      if (!nextPhotoPosition || nextPhotoPosition === 'hidden' || !caps.supportedPhotoPositions?.includes(nextPhotoPosition)) {
+        nextPhotoPosition = defaultVisiblePos;
+      }
+    } else {
+      nextPhotoPosition = 'hidden';
+    }
+
+    const updatedAssets = {
+      ...(prev.assets || {}),
+      photoPosition: nextPhotoPosition,
+      profilePhoto: (isPhoto && !prev.assets?.profilePhoto) ? DEFAULT_PROFILE_PHOTO : (prev.assets?.profilePhoto || DEFAULT_PROFILE_PHOTO)
+    };
+
+    return {
+      ...prev,
+      assets: updatedAssets,
+      metadata: { ...prev.metadata, template: templateName }
+    };
+  });
   const setFontFamily = (fontName) => updateActiveResume((prev) => ({ ...prev, metadata: { ...prev.metadata, fontFamily: fontName } }));
   const setAccentColor = (colorHex) => updateActiveResume((prev) => ({ ...prev, metadata: { ...prev.metadata, accentColor: colorHex } }));
 
@@ -620,6 +1041,7 @@ export const ResumeProvider = ({ children }) => {
         undo,
         redo,
         loadDemoResume,
+        importResumeData,
         versions: activeVersions,
         createVersionSnapshot,
         restoreVersionSnapshot,
@@ -673,7 +1095,13 @@ export const ResumeProvider = ({ children }) => {
         isCompanyMatchOpen,
         setIsCompanyMatchOpen,
         isDonationModalOpen,
-        setIsDonationModalOpen
+        setIsDonationModalOpen,
+        isGitHubImportModalOpen,
+        setIsGitHubImportModalOpen,
+        importGitHubData,
+        isOpportunityXImportModalOpen,
+        setIsOpportunityXImportModalOpen,
+        importOpportunityXData
       }}
     >
       {children}
