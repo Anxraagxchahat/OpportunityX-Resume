@@ -4,42 +4,88 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg-dark: #05070D;
-  --bg-card: #0B0D14;
-  --bg-card-hover: #10131D;
+/* AMOLED Dark Mode (Default) */
+:root, [data-theme='dark'] {
+  --ox-bg: #000000;
+  --ox-surface-primary: #0A0A0A;
+  --ox-surface-secondary: #111111;
+  --ox-card-bg: #0A0A0A;
+  --ox-card-hover: #141414;
+  --ox-border: #1F1F1F;
+  --ox-border-highlight: rgba(249, 115, 22, 0.35);
+  --ox-text-primary: #FFFFFF;
+  --ox-text-secondary: #B3B3B3;
+  --ox-text-muted: #737373;
+  --ox-accent: #F97316;
 
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
+  --bg-dark: #000000;
+  --bg-card: #0A0A0A;
+  --bg-card-hover: #141414;
+  --text-main: #FFFFFF;
+  --text-muted: #B3B3B3;
 
   --primary: #F97316;
   --primary-hover: #EA580C;
   --secondary: #EAB308;
   --highlight: #F59E0B;
-
   --accent-green: #10B981;
-  --accent-red: #ef4444;
+  --accent-red: #EF4444;
 
-  --border-color: rgba(148, 163, 184, 0.12);
+  --border-color: #1F1F1F;
   --border-highlight: rgba(249, 115, 22, 0.25);
 
   --gradient-primary: linear-gradient(135deg, #F97316 0%, #F59E0B 100%);
   --gradient-glow: linear-gradient(90deg, rgba(249, 115, 22, 0.15), rgba(234, 179, 8, 0.15));
-  --gradient-text: linear-gradient(135deg, #F8FAFC 0%, #94A3B8 100%);
+  --gradient-text: linear-gradient(135deg, #FFFFFF 0%, #B3B3B3 100%);
 
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 24px;
 }
 
-body {
+/* Pure White Light Mode - Maximum Contrast & Bold Readability */
+[data-theme='light'] {
+  --ox-bg: #FFFFFF;
+  --ox-surface-primary: #FAFAFA;
+  --ox-surface-secondary: #F1F5F9;
+  --ox-card-bg: #FFFFFF;
+  --ox-card-hover: #F8FAFC;
+  --ox-border: #E2E8F0;
+  --ox-border-highlight: rgba(249, 115, 22, 0.4);
+  --ox-text-primary: #0F172A;
+  --ox-text-secondary: #334155;
+  --ox-text-muted: #475569;
+
+  --bg-dark: #FFFFFF;
+  --bg-card: #FAFAFA;
+  --bg-card-hover: #F1F5F9;
+  --text-main: #0F172A;
+  --text-muted: #334155;
+
+  --border-color: #E2E8F0;
+  --gradient-text: linear-gradient(135deg, #0F172A 0%, #334155 100%);
+}
+
+html, body {
   margin: 0;
   padding: 0;
-  background-color: var(--bg-dark);
-  color: var(--text-main);
+  background-color: var(--ox-bg);
+  color: var(--ox-text-primary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* Theme-Aware Text Selection Highlighting */
+::selection {
+  background-color: rgba(249, 115, 22, 0.35);
+  color: #FFFFFF;
+}
+
+[data-theme='light'] ::selection {
+  background-color: rgba(249, 115, 22, 0.25);
+  color: #0F172A;
 }
 
 /* Custom Scrollbars */
@@ -48,38 +94,39 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #05070D;
+  background: var(--ox-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(249, 115, 22, 0.4);
+  background: rgba(249, 115, 22, 0.6);
 }
 
 /* OpportunityX Design Tokens Utilities */
 .glass-panel {
-  background: rgba(11, 13, 20, 0.75);
-  border: 1px solid var(--border-color);
+  background: var(--ox-surface-primary);
+  border: 1px solid var(--ox-border);
   border-radius: var(--radius-md);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
 }
 
 .cyber-glass-card {
-  background: rgba(11, 13, 20, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--ox-card-bg);
+  border: 1px solid var(--ox-border);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.05);
   transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cyber-glass-card:hover {
-  border-color: rgba(249, 115, 22, 0.3);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 25px rgba(249, 115, 22, 0.15);
+  border-color: var(--ox-border-highlight);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.1), 0 0 25px rgba(249, 115, 22, 0.15);
 }
 
 .text-gradient-primary {
@@ -98,114 +145,160 @@ body {
 
 /* Authentic A4 Resume Paper Preview Styling */
 .a4-paper-container {
-  width: 210mm;
-  min-height: 297mm;
-  background: #ffffff;
-  color: #1e293b;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(249, 115, 22, 0.1);
-  box-sizing: border-box;
-  margin: 0 auto;
-  position: relative;
-  transition: transform 0.2s ease-in-out;
-  transform-origin: top center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
 }
 
+/* Global Light Mode Structural & High Contrast Overrides */
+[data-theme='light'] .bg-black,
+[data-theme='light'] .bg-slate-950,
+[data-theme='light'] .bg-\[\#05070D\],
+[data-theme='light'] .bg-\[\#0E111B\] {
+  background-color: #FFFFFF !important;
+}
+
+[data-theme='light'] .bg-slate-900,
+[data-theme='light'] .bg-\[\#080B12\],
+[data-theme='light'] .bg-\[\#070A12\],
+[data-theme='light'] .bg-\[\#07090F\],
+[data-theme='light'] .bg-\[\#0B0D14\],
+[data-theme='light'] .bg-\[\#0B0D14\]\/90,
+[data-theme='light'] .bg-slate-900\/70,
+[data-theme='light'] .bg-slate-900\/80,
+[data-theme='light'] .bg-slate-900\/90 {
+  background-color: #FAFAFA !important;
+}
+
+[data-theme='light'] .bg-\[\#10131D\],
+[data-theme='light'] .bg-slate-800,
+[data-theme='light'] .bg-slate-900\/60 {
+  background-color: #F1F5F9 !important;
+}
+
+[data-theme='light'] .text-white,
+[data-theme='light'] .text-slate-100,
+[data-theme='light'] .text-slate-200,
+[data-theme='light'] .text-slate-300 {
+  color: #0F172A !important;
+  font-weight: 600 !important;
+}
+
+[data-theme='light'] .text-slate-400,
+[data-theme='light'] .text-slate-500 {
+  color: #334155 !important;
+  font-weight: 500 !important;
+}
+
+[data-theme='light'] .border-slate-800,
+[data-theme='light'] .border-slate-700,
+[data-theme='light'] .border-slate-800\/80 {
+  border-color: #E2E8F0 !important;
+}
+
+/* Light Mode Modal Backdrop & Card Glass Overrides */
+[data-theme='light'] .bg-black\/80,
+[data-theme='light'] .bg-black\/85,
+[data-theme='light'] .bg-black\/90,
+[data-theme='light'] .bg-black\/75 {
+  background-color: rgba(15, 23, 42, 0.35) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Form Inputs, Textareas & Selects Light Mode Behavior */
+[data-theme='light'] input,
+[data-theme='light'] textarea,
+[data-theme='light'] select {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+  font-weight: 600 !important;
+}
+
+[data-theme='light'] input::placeholder,
+[data-theme='light'] textarea::placeholder {
+  color: #64748B !important;
+  font-weight: 500 !important;
+}
+
+/* Ensure solid CTA buttons retain high-contrast white text */
+[data-theme='light'] button.bg-orange-500,
+[data-theme='light'] a.bg-orange-500,
+[data-theme='light'] .bg-gradient-to-r.from-orange-500 {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   PRODUCTION PDF PAGINATION & FRAGMENTATION ENGINE
+   ========================================================================== */
+
+/* 1. Prevent page breaks inside indivisible content blocks */
+.pdf-block,
+.pdf-item,
+.pdf-section-header,
+.pdf-skills-group,
+.pdf-keep-together,
 .break-inside-avoid {
-  break-inside: avoid;
-  page-break-inside: avoid;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  -webkit-column-break-inside: avoid !important;
 }
 
-.no-print {
-  /* Class to mark non-printable UI elements */
+/* 2. Force section headers to stay attached to their following content (No Orphan Headings) */
+.pdf-section-header,
+h1, h2, h3, h4, h5, h6 {
+  break-after: avoid !important;
+  page-break-after: avoid !important;
 }
 
-/* PDF Print & Multi-Page A4 Precision Engine */
+/* 3. Prevent Widows & Orphans in paragraphs and bullet lists */
+p, li, ul, ol, blockquote, span {
+  orphans: 3;
+  widows: 3;
+}
+
+/* 4. Explicit manual page breaks */
+.pdf-page-break-before {
+  break-before: page !important;
+  page-break-before: always !important;
+}
+
+.pdf-page-break-after {
+  break-after: page !important;
+  page-break-after: always !important;
+}
+
+/* 5. Standard A4 Printable Margins & Print Stylesheet */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 12mm 15mm 15mm 15mm;
   }
 
   html, body {
-    width: 210mm !important;
-    height: auto !important;
-    min-height: 100% !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+
+  /* Hide UI elements during print */
+  .no-print,
+  nav,
+  footer,
+  aside,
+  header,
+  .no-print-area {
+    display: none !important;
+  }
+
+  /* Target print element */
+  #resume-a4-preview,
+  .print-area {
+    width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #ffffff !important;
-    overflow: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Hide all non-printable UI elements cleanly */
-  .no-print,
-  header,
-  nav,
-  aside,
-  footer,
-  button,
-  select,
-  input,
-  textarea,
-  [role="dialog"],
-  .modal-backdrop,
-  .ai-floating-assist,
-  .fixed.inset-0,
-  div[class*="fixed inset-0"],
-  div[class*="backdrop-blur"] {
-    display: none !important;
-  }
-
-  /* Force top-level flex / grid containers to expand in print */
-  #root,
-  main,
-  .flex-1,
-  div {
-    background: transparent !important;
     box-shadow: none !important;
-    max-width: none !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  /* Hide preview toolbar and guide lines during print */
-  .preview-toolbar,
-  .page-indicator-banner,
-  .page-break-guide {
-    display: none !important;
-  }
-
-  #resume-a4-preview,
-  .printable-resume-page {
-    position: static !important;
-    width: 210mm !important;
-    margin: 0 auto !important;
-    padding: 10mm 12mm !important;
-    box-shadow: none !important;
-    transform: none !important;
-    box-sizing: border-box !important;
-    background-color: #ffffff !important;
-    color: #1e293b !important;
-    overflow: visible !important;
-    visibility: visible !important;
-    display: block !important;
-  }
-
-  .a4-paper-container {
-    box-shadow: none !important;
-    margin: 0 !important;
-    transform: none !important;
-  }
-
-  /* Section breaking optimizations */
-  h1, h2, h3,
-  .break-inside-avoid,
-  .section-block,
-  .experience-item,
-  .project-item,
-  .education-item {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
+    background: #FFFFFF !important;
   }
 }
