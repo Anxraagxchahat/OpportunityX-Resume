@@ -53,10 +53,10 @@ class CashfreeService:
         if not clean_customer_id:
             clean_customer_id = "user_guest"
 
-        # Sanitize customer_phone (Cashfree requires 10 digits)
+        # Sanitize & Validate customer_phone (Cashfree requires valid 10-digit Indian mobile number)
         phone_digits = re.sub(r'\D', '', customer_phone or "")
-        if len(phone_digits) != 10:
-            phone_digits = "9999999999"
+        if len(phone_digits) != 10 or not re.match(r'^[6-9]\d{9}$', phone_digits) or re.match(r'^(.)\1{9}$', phone_digits):
+            raise ValueError("Please provide a valid 10-digit mobile number (e.g. 9876543210). Repetitive or dummy numbers are not accepted.")
 
         url = f"{self.base_url}/orders"
         payload = {

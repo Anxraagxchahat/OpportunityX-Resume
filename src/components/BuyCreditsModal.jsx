@@ -38,6 +38,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   const [paymentStep, setPaymentStep] = useState('select'); // 'select' | 'success'
   const [isProcessing, setIsProcessing] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [customerPhone, setCustomerPhone] = useState(session?.phone || session?.phoneNumber || '');
   const [errorMsg, setErrorMsg] = useState('');
 
   const active = isOpen !== undefined ? isOpen : isBuyCreditsModalOpen;
@@ -48,6 +49,16 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
       preloadCashfreeSDK();
     }
   }, [active]);
+
+  const validatePhone = (phoneStr) => {
+    const clean = (phoneStr || '').replace(/\D/g, '');
+    if (clean.length !== 10) return false;
+    if (!/^[6-9]\d{9}$/.test(clean)) return false;
+    // Reject dummy repeated digits (e.g. 9999999999, 0000000000, 1111111111)
+    if (/^(.)\1{9}$/.test(clean)) return false;
+    if (clean === '1234567890' || clean === '9876543210') return false;
+    return true;
+  };
 
   const handleClose = () => {
     setPaymentStep('select');
@@ -94,6 +105,11 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   const handleInitiateCashfreePayment = async () => {
     if (isProcessing) return; // Prevent duplicate payment session requests
 
+    if (!customerPhone || !validatePhone(customerPhone)) {
+      setErrorMsg("Please enter a valid 10-digit mobile number (e.g. 9876543210). Dummy or repetitive numbers are not allowed.");
+      return;
+    }
+
     if (!acceptedTerms) {
       setErrorMsg("You must accept the Terms & Conditions and Refund Policy to proceed.");
       return;
@@ -102,8 +118,8 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
     setIsProcessing(true);
     setErrorMsg('');
     try {
-      // 1. Create Cashfree Order on Production Backend
-      const orderData = await apiService.createCashfreeOrder(selectedPack.id);
+      // 1. Create Cashfree Order on Production Backend with real validated mobile number
+      const orderData = await apiService.createCashfreeOrder(selectedPack.id, customerPhone);
 
       if (!orderData || !orderData.payment_session_id) {
         throw new Error("Invalid payment session received from backend.");
@@ -231,6 +247,29 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Mandatory Mobile Number Input for Cashfree PG Receipt */}
+            <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-300">
+                Mobile Number <span className="text-orange-400">*</span> <span className="text-[10px] text-slate-400 font-normal">(Required by Cashfree PG)</span>
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3 text-xs font-bold text-slate-400 select-none">+91</span>
+                <input
+                  type="tel"
+                  maxLength={10}
+                  value={customerPhone}
+                  disabled={isProcessing}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setCustomerPhone(val);
+                    if (errorMsg) setErrorMsg('');
+                  }}
+                  placeholder="Enter 10-digit mobile number"
+                  className="w-full pl-11 pr-3 py-2 bg-[#0B0D14] border border-slate-700 focus:border-orange-500 rounded-lg text-xs text-white placeholder-slate-500 outline-none transition-colors disabled:opacity-50 font-mono tracking-wider"
+                />
+              </div>
             </div>
 
             {/* Mandatory Terms & Policy Checkbox */}
