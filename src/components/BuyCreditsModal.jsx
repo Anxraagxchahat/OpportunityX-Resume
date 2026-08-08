@@ -93,40 +93,33 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
     try {
       // 1. Create Cashfree Order on Production Backend
       const orderData = await apiService.createCashfreeOrder(selectedPack.id);
-      
-      // 2. Sandbox / Mock Execution Fallback
-      if (orderData.is_mock) {
-        setTimeout(async () => {
-          try {
-            const verifyRes = await apiService.verifyCashfreeOrder(orderData.order_id);
-            if (verifyRes.ok) {
-              addPurchasedCredits(selectedPack.credits, `₹${selectedPack.price} Pack (Cashfree)`);
-              setPaymentStep('success');
-            } else {
-              setErrorMsg(verifyRes.message || "Payment verification failed.");
-            }
-          } catch (err) {
-            setErrorMsg(err.message || "Verification error.");
-          }
-          setIsProcessing(false);
-        }, 1200);
-        return;
+
+      if (!orderData || !orderData.payment_session_id) {
+        throw new Error("Invalid payment session received from backend.");
       }
 
-      // 3. Live Cashfree Web SDK Payment Modal Checkout
+      // 2. Live Cashfree Web SDK Payment Modal Checkout
       await loadCashfreeScript(orderData.environment);
       const cashfree = window.Cashfree({ mode: orderData.environment === 'production' ? 'production' : 'sandbox' });
-      
+
       cashfree.checkout({
         paymentSessionId: orderData.payment_session_id,
         redirectTarget: '_modal'
       }).then(async () => {
         const verifyRes = await apiService.verifyCashfreeOrder(orderData.order_id);
-        if (verifyRes.ok) {
-          addPurchasedCredits(selectedPack.credits, `₹${selectedPack.price} Pack (Cashfree)`);
+        if (verifyRes.ok && verifyRes.status === 'PAID') {
+          // Fetch authoritative credit balance from backend DB
+          try {
+            const walletData = await apiService.getCreditBalance();
+            if (walletData && typeof walletData.remaining_credits === 'number') {
+              addPurchasedCredits(selectedPack.credits, `₹${selectedPack.price} Pack (Cashfree)`);
+            }
+          } catch (e) {
+            addPurchasedCredits(selectedPack.credits, `₹${selectedPack.price} Pack (Cashfree)`);
+          }
           setPaymentStep('success');
         } else {
-          setErrorMsg(verifyRes.message || "Payment verification returned pending/failed status.");
+          setErrorMsg(verifyRes.message || "Payment verification returned pending/failed status. No credits were added.");
         }
         setIsProcessing(false);
       }).catch((err) => {

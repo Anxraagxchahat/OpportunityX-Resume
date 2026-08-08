@@ -48,13 +48,16 @@ async def create_payment_order(
     order_id = f"OX_RESUME_{int(time.time())}_{str(uuid.uuid4())[:6]}"
 
     # Call Cashfree PG Order Creation
-    cf_res = await cashfree_service.create_order(
-        order_id=order_id,
-        amount=pack["price"],
-        customer_id=user.uid,
-        customer_email=user.email,
-        customer_phone=req.customer_phone or "9999999999"
-    )
+    try:
+        cf_res = await cashfree_service.create_order(
+            order_id=order_id,
+            amount=pack["price"],
+            customer_id=user.uid,
+            customer_email=user.email,
+            customer_phone=req.customer_phone or "9999999999"
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     # Save PENDING Payment in DB via Repository
     payment_repo = PaymentRepository(db)

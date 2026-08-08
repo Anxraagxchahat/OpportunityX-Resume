@@ -31,17 +31,10 @@ class CashfreeService:
         customer_email: str,
         customer_phone: str = "9999999999"
     ) -> Dict[str, Any]:
-        # Fallback to Sandbox Mock Mode if credentials are missing in local dev environment
+        # Reject order creation if Cashfree API credentials are not configured
         if not self.app_id or not self.secret_key or "your_" in self.app_id:
-            logger.info(f"[Cashfree Mock] Creating mock order session for order {order_id}")
-            return {
-                "order_id": order_id,
-                "payment_session_id": f"session_mock_{order_id}_{int(time.time())}",
-                "cf_order_id": f"cf_mock_{order_id}",
-                "amount": amount,
-                "is_mock": True,
-                "environment": settings.CASHFREE_ENV.lower()
-            }
+            logger.error("Cashfree API credentials missing or unconfigured.")
+            raise ValueError("Cashfree Payment Gateway is not configured on the backend server. CASHFREE_APP_ID and CASHFREE_SECRET_KEY are required.")
 
         url = f"{self.base_url}/orders"
         payload = {
@@ -74,14 +67,13 @@ class CashfreeService:
             }
 
     async def verify_order(self, order_id: str) -> Dict[str, Any]:
-        # Fallback Mock Mode Verification
         if not self.app_id or not self.secret_key or "your_" in self.app_id:
-            logger.info(f"[Cashfree Mock] Auto-verifying order {order_id} as PAID")
+            logger.error(f"Cannot verify Cashfree order {order_id}: credentials missing.")
             return {
                 "order_id": order_id,
-                "order_status": "PAID",
-                "cf_payment_id": f"cf_pay_mock_{int(time.time())}",
-                "is_mock": True
+                "order_status": "FAILED",
+                "cf_payment_id": "",
+                "is_mock": False
             }
 
         url = f"{self.base_url}/orders/{order_id}"
