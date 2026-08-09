@@ -131,7 +131,10 @@ export const ResumeProvider = ({ children }) => {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (e) {}
-    return [defaultResumeData];
+    return [{
+      ...emptyResumeSchema,
+      metadata: { ...emptyResumeSchema.metadata, id: 'ox-resume-initial', uuid: 'ox-resume-initial', title: 'My Resume' }
+    }];
   });
 
   // 2. Active Resume ID State
@@ -142,7 +145,7 @@ export const ResumeProvider = ({ children }) => {
         return savedId;
       }
     } catch (e) {}
-    return resumes[0]?.metadata?.id || defaultResumeData.metadata.id;
+    return resumes[0]?.metadata?.id || 'ox-resume-initial';
   });
 
   // Derived Active Resume Object

@@ -373,7 +373,7 @@ export const ResumeBuilderPage = () => {
                       type="text"
                       value={personal.fullName || ''}
                       onChange={(e) => updatePersonal('fullName', e.target.value)}
-                      placeholder="Alex Rivera"
+                      placeholder="e.g. Alex Rivera"
                       className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
                     />
                   </div>
@@ -383,7 +383,7 @@ export const ResumeBuilderPage = () => {
                       type="text"
                       value={personal.jobTitle || ''}
                       onChange={(e) => updatePersonal('jobTitle', e.target.value)}
-                      placeholder="Senior Full Stack Software Engineer"
+                      placeholder="e.g. Senior Full Stack Software Engineer"
                       className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
                     />
                   </div>
@@ -396,7 +396,7 @@ export const ResumeBuilderPage = () => {
                       type="email"
                       value={personal.email || ''}
                       onChange={(e) => updatePersonal('email', e.target.value)}
-                      placeholder="alex.rivera@opportunityx.dev"
+                      placeholder="e.g. alex.rivera@opportunityx.dev"
                       className={`w-full min-h-[44px] bg-[#10131D] border rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:outline-none ${
                         !isEmailValid ? 'border-red-500/80 text-red-200' : 'border-slate-800 focus:border-orange-500'
                       }`}
@@ -408,7 +408,7 @@ export const ResumeBuilderPage = () => {
                       type="text"
                       value={personal.phone || ''}
                       onChange={(e) => updatePersonal('phone', e.target.value)}
-                      placeholder="+1 (555) 234-5678"
+                      placeholder="e.g. +1 (555) 234-5678"
                       className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
                     />
                   </div>
@@ -418,7 +418,7 @@ export const ResumeBuilderPage = () => {
                       type="text"
                       value={personal.location || ''}
                       onChange={(e) => updatePersonal('location', e.target.value)}
-                      placeholder="San Francisco, CA / Remote"
+                      placeholder="e.g. San Francisco, CA / Remote"
                       className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
                     />
                   </div>
@@ -720,7 +720,7 @@ export const ResumeBuilderPage = () => {
                     rows={6}
                     value={personal.summary || ''}
                     onChange={(e) => updatePersonal('summary', e.target.value)}
-                    placeholder="Write a compelling executive summary..."
+                    placeholder="e.g. Versatile Full Stack Software Engineer with 5+ years of experience engineering high-throughput SaaS applications, cloud-native microservices, and AI-assisted web interfaces..."
                     className="w-full bg-[#10131D] border border-slate-800 rounded-xl p-3.5 text-xs font-medium text-white focus:border-orange-500 focus:outline-none leading-relaxed"
                   />
                 </div>
@@ -769,21 +769,21 @@ export const ResumeBuilderPage = () => {
                                 type="text"
                                 value={exp.role || ''}
                                 onChange={(e) => updateExperienceField(exp.id, 'role', e.target.value)}
-                                placeholder="Job Title"
+                                placeholder="e.g. Senior Full Stack Engineer"
                                 className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                               />
                               <input
                                 type="text"
                                 value={exp.company || ''}
                                 onChange={(e) => updateExperienceField(exp.id, 'company', e.target.value)}
-                                placeholder="Company Name"
+                                placeholder="e.g. Nexus Technologies"
                                 className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                               />
                               <input
                                 type="text"
                                 value={exp.startDate || ''}
                                 onChange={(e) => updateExperienceField(exp.id, 'startDate', e.target.value)}
-                                placeholder="Start Date"
+                                placeholder="e.g. 2023-01"
                                 className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                               />
                               <input
@@ -791,7 +791,7 @@ export const ResumeBuilderPage = () => {
                                 disabled={exp.current}
                                 value={exp.current ? 'Present' : exp.endDate || ''}
                                 onChange={(e) => updateExperienceField(exp.id, 'endDate', e.target.value)}
-                                placeholder="End Date"
+                                placeholder="e.g. Present or 2024-12"
                                 className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white disabled:opacity-60"
                               />
                             </div>
@@ -811,6 +811,7 @@ export const ResumeBuilderPage = () => {
                                     type="text"
                                     value={bullet}
                                     onChange={(e) => updateBulletPoint(exp.id, bIdx, e.target.value)}
+                                    placeholder="e.g. Architected distributed React & Node.js web services processing 15M+ daily requests..."
                                     className="flex-1 bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                                   />
                                   <button onClick={() => removeBulletPoint(exp.id, bIdx)} className="text-slate-500 hover:text-red-400 p-1">
@@ -853,32 +854,32 @@ export const ResumeBuilderPage = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <label className="text-[11px] font-semibold text-slate-400">Degree / Major</label>
-                          <input type="text" value={edu.degree || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, degree: e.target.value } : ed)))} placeholder="B.S. in Computer Science" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                          <input type="text" value={edu.degree || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, degree: e.target.value } : ed)))} placeholder="e.g. B.S. in Computer Science" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                         </div>
                         <div className="space-y-1">
                           <label className="text-[11px] font-semibold text-slate-400">University / School</label>
-                          <input type="text" value={edu.institution || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, institution: e.target.value } : ed)))} placeholder="University of California, Berkeley" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                          <input type="text" value={edu.institution || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, institution: e.target.value } : ed)))} placeholder="e.g. University of California, Berkeley" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
                           <label className="text-[11px] font-semibold text-slate-400">Start Date</label>
-                          <input type="text" value={edu.startDate || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, startDate: e.target.value } : ed)))} placeholder="2017-08" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                          <input type="text" value={edu.startDate || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, startDate: e.target.value } : ed)))} placeholder="e.g. 2017-08" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                         </div>
                         <div className="space-y-1">
                           <label className="text-[11px] font-semibold text-slate-400">End Date</label>
-                          <input type="text" value={edu.endDate || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, endDate: e.target.value } : ed)))} placeholder="2021-05 or Present" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                          <input type="text" value={edu.endDate || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, endDate: e.target.value } : ed)))} placeholder="e.g. 2021-05 or Present" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                         </div>
                         <div className="space-y-1">
                           <label className="text-[11px] font-semibold text-slate-400">GPA / Score</label>
-                          <input type="text" value={edu.gpa || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, gpa: e.target.value } : ed)))} placeholder="3.88 / 4.0" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                          <input type="text" value={edu.gpa || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, gpa: e.target.value } : ed)))} placeholder="e.g. 3.88 / 4.0" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                         </div>
                       </div>
 
                       <div className="space-y-1 pt-1">
                         <label className="text-[11px] font-semibold text-slate-400">Relevant Coursework</label>
-                        <input type="text" value={edu.relevantCoursework || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, relevantCoursework: e.target.value } : ed)))} placeholder="Algorithms & Data Structures, Operating Systems, Database Systems, Computer Networks, Machine Learning" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                        <input type="text" value={edu.relevantCoursework || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, relevantCoursework: e.target.value } : ed)))} placeholder="e.g. Algorithms & Data Structures, Operating Systems, Machine Learning" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                       </div>
                     </div>
                   ))}
@@ -905,8 +906,8 @@ export const ResumeBuilderPage = () => {
                         <span className="text-xs font-bold text-orange-400">{proj.name || `Project #${idx + 1}`}</span>
                         <button onClick={() => removeProjectItem(proj.id)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
-                      <input type="text" value={proj.name || ''} onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, name: e.target.value } : p)))} placeholder="Project Name" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
-                      <textarea rows={2} value={proj.description || ''} onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, description: e.target.value } : p)))} placeholder="Short description..." className="w-full bg-[#080B12] border border-slate-800 rounded-lg p-2 text-xs text-white" />
+                      <input type="text" value={proj.name || ''} onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, name: e.target.value } : p)))} placeholder="e.g. OpportunityX Pulse Dashboard" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                      <textarea rows={2} value={proj.description || ''} onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, description: e.target.value } : p)))} placeholder="e.g. Open-source analytics dashboard monitor designed for high-scale student tech hubs..." className="w-full bg-[#080B12] border border-slate-800 rounded-lg p-2 text-xs text-white" />
                     </div>
                   ))}
                 </div>
@@ -929,7 +930,7 @@ export const ResumeBuilderPage = () => {
                       <option value="frameworks">Frameworks</option>
                       <option value="tools">Tools</option>
                     </select>
-                    <input type="text" value={newSkillInput} onChange={(e) => setNewSkillInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSkillChip(skillCategory, newSkillInput); } }} placeholder="Type skill & press Enter" className="flex-1 bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                    <input type="text" value={newSkillInput} onChange={(e) => setNewSkillInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSkillChip(skillCategory, newSkillInput); } }} placeholder="e.g. TypeScript, React, Node.js (Press Enter)" className="flex-1 bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                     <button onClick={() => addSkillChip(skillCategory, newSkillInput)} className="px-3 py-1.5 bg-orange-500 text-black font-bold text-xs rounded-lg">Add</button>
                   </div>
                 </div>
@@ -959,7 +960,7 @@ export const ResumeBuilderPage = () => {
                 </div>
                 {certificates.map((cert) => (
                   <div key={cert.id} className="p-3 rounded-xl bg-[#10131D] border border-slate-800 space-y-2">
-                    <input type="text" value={cert.name || ''} onChange={(e) => updateCertificates(certificates.map((c) => (c.id === cert.id ? { ...c, name: e.target.value } : c)))} placeholder="Cert Title" className="w-full bg-[#080B12] border border-slate-800 rounded px-3 py-1 text-xs text-white" />
+                    <input type="text" value={cert.name || ''} onChange={(e) => updateCertificates(certificates.map((c) => (c.id === cert.id ? { ...c, name: e.target.value } : c)))} placeholder="e.g. AWS Certified Solutions Architect – Associate" className="w-full bg-[#080B12] border border-slate-800 rounded px-3 py-1 text-xs text-white" />
                   </div>
                 ))}
               </div>
@@ -974,7 +975,7 @@ export const ResumeBuilderPage = () => {
                 </div>
                 {achievements.map((ach) => (
                   <div key={ach.id} className="p-3 rounded-xl bg-[#10131D] border border-slate-800 space-y-2">
-                    <input type="text" value={ach.title || ''} onChange={(e) => updateAchievements(achievements.map((a) => (a.id === ach.id ? { ...a, title: e.target.value } : a)))} placeholder="Title" className="w-full bg-[#080B12] border border-slate-800 rounded px-3 py-1 text-xs text-white" />
+                    <input type="text" value={ach.title || ''} onChange={(e) => updateAchievements(achievements.map((a) => (a.id === ach.id ? { ...a, title: e.target.value } : a)))} placeholder="e.g. 1st Place Winner - OpportunityX Global Hackathon 2024" className="w-full bg-[#080B12] border border-slate-800 rounded px-3 py-1 text-xs text-white" />
                   </div>
                 ))}
               </div>
@@ -989,7 +990,7 @@ export const ResumeBuilderPage = () => {
                 </div>
                 {languages.map((lang) => (
                   <div key={lang.id} className="p-3 rounded-xl bg-[#10131D] border border-slate-800 space-y-2">
-                    <input type="text" value={lang.name || ''} onChange={(e) => updateLanguages(languages.map((l) => (l.id === lang.id ? { ...l, name: e.target.value } : l)))} placeholder="Language" className="w-full bg-[#080B12] border border-slate-800 rounded px-3 py-1 text-xs text-white" />
+                    <input type="text" value={lang.name || ''} onChange={(e) => updateLanguages(languages.map((l) => (l.id === lang.id ? { ...l, name: e.target.value } : l)))} placeholder="e.g. English (Native / Full Professional)" className="w-full bg-[#080B12] border border-slate-800 rounded px-3 py-1 text-xs text-white" />
                   </div>
                 ))}
               </div>
@@ -1002,8 +1003,8 @@ export const ResumeBuilderPage = () => {
                   <h2 className="text-base font-bold text-white flex items-center gap-2"><Share2 className="w-4 h-4 text-orange-400" /> Social Links</h2>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                  <input type="text" value={personal.github || ''} onChange={(e) => updatePersonal('github', e.target.value)} placeholder="github.com/alex" className="min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none" />
-                  <input type="text" value={personal.linkedin || ''} onChange={(e) => updatePersonal('linkedin', e.target.value)} placeholder="linkedin.com/in/alex" className="min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none" />
+                  <input type="text" value={personal.github || ''} onChange={(e) => updatePersonal('github', e.target.value)} placeholder="e.g. github.com/alexrivera" className="min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none" />
+                  <input type="text" value={personal.linkedin || ''} onChange={(e) => updatePersonal('linkedin', e.target.value)} placeholder="e.g. linkedin.com/in/alexrivera-dev" className="min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none" />
                 </div>
               </div>
             )}
@@ -1017,7 +1018,7 @@ export const ResumeBuilderPage = () => {
                 </div>
                 {customSections.map((cs) => (
                   <div key={cs.id} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-2">
-                    <input type="text" value={cs.title} onChange={(e) => updateCustomSections(customSections.map((s) => (s.id === cs.id ? { ...s, title: e.target.value } : s)))} placeholder="Custom Section Title" className="w-full bg-[#080B12] border border-slate-800 rounded px-3 py-1 text-xs font-bold text-orange-400" />
+                    <input type="text" value={cs.title} onChange={(e) => updateCustomSections(customSections.map((s) => (s.id === cs.id ? { ...s, title: e.target.value } : s)))} placeholder="e.g. Leadership & Volunteer" className="w-full bg-[#080B12] border border-slate-800 rounded px-3 py-1 text-xs font-bold text-orange-400" />
                   </div>
                 ))}
               </div>
