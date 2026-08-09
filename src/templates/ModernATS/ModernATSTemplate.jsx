@@ -1,6 +1,7 @@
 import React from 'react';
 import { TemplateSkills } from '../../components/template/TemplateSkills';
 import { CustomSectionsBlock } from '../reactive/shared/MiscBlocks';
+import { ProfilePhoto } from '../reactive/shared/ProfilePhoto';
 
 export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamily = 'Inter' }) => {
   const {
@@ -12,17 +13,22 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
     certificates = [],
     achievements = [],
     languages = [],
-    socialLinks = {}
+    socialLinks = {},
+    customSections = [],
+    assets = {}
   } = resumeData || {};
+
+  const showPhoto = assets?.profilePhoto && assets?.photoPosition !== 'hidden';
 
   return (
     <div className="space-y-4 text-slate-800 leading-normal" style={{ fontFamily: `'${fontFamily}', sans-serif` }}>
       
       {/* 1. HEADER */}
-      <div className="pb-3 border-b-2" style={{ borderColor: accentHex }}>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">{personal.fullName || 'Your Name'}</h1>
-        {personal.jobTitle && <p className="text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: accentHex }}>{personal.jobTitle}</p>}
-        <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-600 font-medium">
+      <div className="pb-3 border-b-2 flex justify-between items-start gap-4" style={{ borderColor: accentHex }}>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">{personal.fullName || 'Your Name'}</h1>
+          {personal.jobTitle && <p className="text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: accentHex }}>{personal.jobTitle}</p>}
+          <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-600 font-medium">
           {personal.email && <span>{personal.email}</span>}
           {personal.phone && <span>• {personal.phone}</span>}
           {personal.location && <span>• {personal.location}</span>}
@@ -30,10 +36,26 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
           {personal.github && <span>• {personal.github}</span>}
           {personal.linkedin && <span>• {personal.linkedin}</span>}
           {personal.twitter && <span>• {personal.twitter}</span>}
-          {Array.isArray(personal.customLinks) && personal.customLinks.map((cl, i) => (
-            cl.url ? <span key={i}>• {cl.label ? `${cl.label}: ` : ''}{cl.url}</span> : null
-          ))}
+            {Array.isArray(personal.customLinks) && personal.customLinks.map((cl, i) => (
+              cl.url ? <span key={i}>• {cl.label ? `${cl.label}: ` : ''}{cl.url}</span> : null
+            ))}
+          </div>
         </div>
+
+        {showPhoto && (
+          <div className="flex-shrink-0">
+            <ProfilePhoto
+              src={assets.profilePhoto}
+              size={72}
+              photoSize={assets?.photoSize}
+              shape={assets?.photoShape || 'rounded'}
+              position={assets?.photoPosition}
+              offsetY={assets?.photoOffsetY}
+              zoom={assets?.photoZoom}
+              borderColor={accentHex}
+            />
+          </div>
+        )}
       </div>
 
       {/* 2. SUMMARY */}
