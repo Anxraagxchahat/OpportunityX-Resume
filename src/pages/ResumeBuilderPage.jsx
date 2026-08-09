@@ -242,7 +242,7 @@ export const ResumeBuilderPage = () => {
   };
 
   const addBulletPoint = (expId) => {
-    updateExperience(experience.map((e) => (e.id === expId ? { ...e, bullets: [...(e.bullets || []), 'Optimized core workflow logic.'] } : e)));
+    updateExperience(experience.map((e) => (e.id === expId ? { ...e, bullets: [...(e.bullets || []), ''] } : e)));
   };
 
   const removeBulletPoint = (expId, bIdx) => {
@@ -258,7 +258,7 @@ export const ResumeBuilderPage = () => {
 
   // ================= PROJECTS =================
   const addProjectItem = () => {
-    const newItem = { id: `proj-${Date.now()}`, name: '', description: '', techStack: '', link: '', bullets: ['Built full stack web service using modern cloud APIs.'] };
+    const newItem = { id: `proj-${Date.now()}`, name: '', description: '', techStack: '', link: '', bullets: [''] };
     updateProjects([...projects, newItem]);
   };
   const removeProjectItem = (id) => updateProjects(projects.filter((p) => p.id !== id));
