@@ -23,6 +23,11 @@ import { downloadDirectPDF } from '../utils/pdfDownloader';
 
 export const fontOptions = [
   { id: 'Inter', name: 'Inter' },
+  { id: 'Roboto', name: 'Roboto' },
+  { id: 'Poppins', name: 'Poppins' },
+  { id: 'Open Sans', name: 'Open Sans' },
+  { id: 'Merriweather', name: 'Merriweather' },
+  { id: 'Lora', name: 'Lora' },
   { id: 'Outfit', name: 'Outfit' },
   { id: 'Plus Jakarta Sans', name: 'Plus Jakarta' },
   { id: 'JetBrains Mono', name: 'Mono Code' }
