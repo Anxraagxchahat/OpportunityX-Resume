@@ -1,6 +1,7 @@
 import React from 'react';
 import './styles.css';
 import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
+import { SocialLinksBlock } from '../reactive/shared/SocialLinksBlock';
 
 export const BRECreativeTemplate = ({ resumeData, accentHex, fontFamily }) => {
   const { personal = {}, experience = [], education = [], projects = [], skills = {}, assets = {} } = resumeData || {};
@@ -32,7 +33,6 @@ export const BRECreativeTemplate = ({ resumeData, accentHex, fontFamily }) => {
             {personal.phone && <div>{personal.phone}</div>}
             {personal.location && <div>{personal.location}</div>}
             {personal.linkedin && <div>{personal.linkedin}</div>}
-            {personal.website && <div>{personal.website}</div>}
           </div>
         </div>
 
@@ -103,6 +103,8 @@ export const BRECreativeTemplate = ({ resumeData, accentHex, fontFamily }) => {
             ))}
           </div>
         )}
+
+        <SocialLinksBlock personal={personal} accentHex={accentHex} />
       </div>
     </div>
   );

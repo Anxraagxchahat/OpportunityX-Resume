@@ -1,6 +1,7 @@
 import React from 'react';
 import { TemplateSkills } from '../../components/template/TemplateSkills';
 import { CustomSectionsBlock } from '../reactive/shared/MiscBlocks';
+import { SocialLinksBlock } from '../reactive/shared/SocialLinksBlock';
 
 export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFamily = 'Inter' }) => {
   const {
@@ -11,7 +12,8 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
     education = [],
     certificates = [],
     achievements = [],
-    languages = []
+    languages = [],
+    customSections = []
   } = resumeData || {};
 
   return (
@@ -22,7 +24,7 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">{personal.fullName || 'Executive Name'}</h1>
         {personal.jobTitle && <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: accentHex }}>{personal.jobTitle}</p>}
         <p className="text-xs text-slate-600 font-medium mt-1">
-          {[personal.email, personal.phone, personal.location, personal.website, personal.github, personal.linkedin].filter(Boolean).join(' • ')}
+          {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' • ')}
         </p>
       </div>
 
@@ -162,6 +164,9 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
       {Array.isArray(customSections) && customSections.length > 0 && (
         <CustomSectionsBlock customSections={customSections} accentHex={accentHex} />
       )}
+
+      {/* 11. SOCIAL & PORTFOLIO LINKS */}
+      <SocialLinksBlock personal={personal} accentHex={accentHex} />
     </div>
   );
 };

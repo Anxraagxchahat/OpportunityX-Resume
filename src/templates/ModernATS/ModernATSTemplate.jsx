@@ -2,6 +2,7 @@ import React from 'react';
 import { TemplateSkills } from '../../components/template/TemplateSkills';
 import { CustomSectionsBlock } from '../reactive/shared/MiscBlocks';
 import { ProfilePhoto } from '../reactive/shared/ProfilePhoto';
+import { SocialLinksBlock } from '../reactive/shared/SocialLinksBlock';
 
 export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamily = 'Inter' }) => {
   const {
@@ -20,8 +21,15 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
 
   const showPhoto = assets?.profilePhoto && assets?.photoPosition !== 'hidden';
 
+  const headerContactItems = [
+    personal.email,
+    personal.phone,
+    personal.location,
+    personal.linkedin
+  ].filter(Boolean);
+
   return (
-    <div className="space-y-4 text-slate-800 leading-normal" style={{ fontFamily: `'${fontFamily}', sans-serif` }}>
+    <div className="space-y-4 text-slate-800 leading-normal text-xs" style={{ fontFamily: `'${fontFamily}', sans-serif` }}>
       
       {/* 1. HEADER */}
       <div className="pb-3 border-b-2 flex justify-between items-start gap-4" style={{ borderColor: accentHex }}>
@@ -29,15 +37,8 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
           <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">{personal.fullName || 'Your Name'}</h1>
           {personal.jobTitle && <p className="text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: accentHex }}>{personal.jobTitle}</p>}
           <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-600 font-medium">
-          {personal.email && <span>{personal.email}</span>}
-          {personal.phone && <span>• {personal.phone}</span>}
-          {personal.location && <span>• {personal.location}</span>}
-          {(personal.website || personal.portfolio) && <span>• {personal.website || personal.portfolio}</span>}
-          {personal.github && <span>• {personal.github}</span>}
-          {personal.linkedin && <span>• {personal.linkedin}</span>}
-          {personal.twitter && <span>• {personal.twitter}</span>}
-            {Array.isArray(personal.customLinks) && personal.customLinks.map((cl, i) => (
-              cl.url ? <span key={i}>• {cl.label ? `${cl.label}: ` : ''}{cl.url}</span> : null
+            {headerContactItems.map((item, idx) => (
+              <span key={idx}>{idx > 0 && '• '}{item}</span>
             ))}
           </div>
         </div>
@@ -209,6 +210,9 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
       {Array.isArray(customSections) && customSections.length > 0 && (
         <CustomSectionsBlock customSections={customSections} accentHex={accentHex} />
       )}
+
+      {/* 11. SOCIAL & PORTFOLIO LINKS */}
+      <SocialLinksBlock personal={personal} accentHex={accentHex} />
     </div>
   );
 };

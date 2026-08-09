@@ -1,6 +1,7 @@
 import React from 'react';
 import { TemplateSkills } from '../../components/template/TemplateSkills';
 import { CustomSectionsBlock } from '../reactive/shared/MiscBlocks';
+import { SocialLinksBlock } from '../reactive/shared/SocialLinksBlock';
 
 export const MinimalATSTemplate = ({ resumeData, accentHex = '#000000', fontFamily = 'Inter' }) => {
   const {
@@ -11,7 +12,8 @@ export const MinimalATSTemplate = ({ resumeData, accentHex = '#000000', fontFami
     education = [],
     certificates = [],
     achievements = [],
-    languages = []
+    languages = [],
+    customSections = []
   } = resumeData || {};
 
   return (
@@ -22,7 +24,7 @@ export const MinimalATSTemplate = ({ resumeData, accentHex = '#000000', fontFami
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">{personal.fullName || 'Your Name'}</h1>
         {personal.jobTitle && <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide my-0.5">{personal.jobTitle}</p>}
         <p className="text-[11px] text-slate-600 font-mono flex flex-wrap justify-center gap-2">
-          {[personal.email, personal.phone, personal.location, personal.website, personal.github, personal.linkedin].filter(Boolean).join(' | ')}
+          {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' | ')}
         </p>
       </div>
 
@@ -159,6 +161,9 @@ export const MinimalATSTemplate = ({ resumeData, accentHex = '#000000', fontFami
       {Array.isArray(customSections) && customSections.length > 0 && (
         <CustomSectionsBlock customSections={customSections} accentHex={accentHex} />
       )}
+
+      {/* 11. SOCIAL & PORTFOLIO LINKS */}
+      <SocialLinksBlock personal={personal} accentHex={accentHex} />
     </div>
   );
 };

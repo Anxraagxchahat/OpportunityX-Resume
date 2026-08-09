@@ -1,18 +1,12 @@
 import React from 'react';
 
 export const ContactInfo = ({ personal, variant = 'inline', accentHex }) => {
-  const websiteLink = personal?.website || personal?.portfolio;
-  const customLinks = Array.isArray(personal?.customLinks) ? personal.customLinks.map(c => c.url ? (c.label ? `${c.label}: ${c.url}` : c.url) : null).filter(Boolean) : [];
-
+  // Top header strictly displays primary contact items: Email, Phone, Location, and LinkedIn
   const items = [
     personal?.email,
     personal?.phone,
     personal?.location,
-    websiteLink,
-    personal?.linkedin,
-    personal?.github,
-    personal?.twitter,
-    ...customLinks
+    personal?.linkedin
   ].filter(Boolean);
 
   if (variant === 'sidebar') {
@@ -21,11 +15,7 @@ export const ContactInfo = ({ personal, variant = 'inline', accentHex }) => {
         {personal?.email && <div className="break-all">{personal.email}</div>}
         {personal?.phone && <div>{personal.phone}</div>}
         {personal?.location && <div>{personal.location}</div>}
-        {websiteLink && <div className="break-all">{websiteLink}</div>}
         {personal?.linkedin && <div className="break-all">{personal.linkedin}</div>}
-        {personal?.github && <div className="break-all">{personal.github}</div>}
-        {personal?.twitter && <div className="break-all">{personal.twitter}</div>}
-        {customLinks.map((linkStr, i) => <div key={i} className="break-all">{linkStr}</div>)}
       </div>
     );
   }

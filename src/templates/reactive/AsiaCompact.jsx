@@ -6,6 +6,7 @@ import { EducationBlock } from './shared/EducationBlock';
 import { ProjectBlock } from './shared/ProjectBlock';
 import { SkillsBlock } from './shared/SkillsBlock';
 import { CertificatesBlock, AchievementsBlock } from './shared/MiscBlocks';
+import { SocialLinksBlock } from './shared/SocialLinksBlock';
 
 /**
  * Asia Compact (inspired by Meowth)
@@ -75,6 +76,8 @@ export const AsiaCompactTemplate = ({ resumeData, accentHex, fontFamily }) => {
             <AchievementsBlock achievements={achievements} />
           </div>
         )}
+
+        <SocialLinksBlock personal={personal} accentHex={accentHex} variant="compact" />
       </div>
     </div>
   );

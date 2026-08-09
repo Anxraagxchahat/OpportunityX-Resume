@@ -1,4 +1,5 @@
 import React from 'react';
+import { SocialLinksBlock } from '../reactive/shared/SocialLinksBlock';
 
 export const FullStackTemplate = ({ resumeData, accentHex, fontFamily }) => {
   const { personal = {}, experience = [], projects = [], skills = {}, education = [] } = resumeData || {};
@@ -9,7 +10,7 @@ export const FullStackTemplate = ({ resumeData, accentHex, fontFamily }) => {
         <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Full Stack Engineer'}</h1>
         <p className="text-xs font-mono font-bold" style={{ color: accentHex }}>{personal.jobTitle || 'Full Stack Developer'}</p>
         <p className="text-[11px] text-slate-500 font-mono mt-1">
-          {[personal.email, personal.github, personal.linkedin].filter(Boolean).join(' | ')}
+          {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' | ')}
         </p>
       </div>
 
@@ -59,6 +60,9 @@ export const FullStackTemplate = ({ resumeData, accentHex, fontFamily }) => {
           ))}
         </div>
       )}
+
+      {/* Social & Portfolio Links */}
+      <SocialLinksBlock personal={personal} accentHex={accentHex} />
     </div>
   );
 };

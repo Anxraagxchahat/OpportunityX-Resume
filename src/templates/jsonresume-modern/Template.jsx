@@ -1,6 +1,7 @@
 import React from 'react';
 import './styles.css';
 import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
+import { SocialLinksBlock } from '../reactive/shared/SocialLinksBlock';
 
 export const JSONResumeModernTemplate = ({ resumeData, accentHex, fontFamily }) => {
   const { personal = {}, experience = [], education = [], projects = [], skills = {}, assets = {} } = resumeData || {};
@@ -28,7 +29,6 @@ export const JSONResumeModernTemplate = ({ resumeData, accentHex, fontFamily }) 
             <div className="text-[11px] text-slate-600 space-y-0.5">
               {personal.phone && <div><strong>Phone:</strong> {personal.phone}</div>}
               {personal.email && <div><strong>Email:</strong> {personal.email}</div>}
-              {personal.website && <div><strong>Website:</strong> {personal.website}</div>}
               {personal.linkedin && <div><strong>LinkedIn:</strong> {personal.linkedin}</div>}
             </div>
           </div>
@@ -90,6 +90,9 @@ export const JSONResumeModernTemplate = ({ resumeData, accentHex, fontFamily }) 
           </div>
         </div>
       )}
+
+      {/* Social & Portfolio Links */}
+      <SocialLinksBlock personal={personal} accentHex={accentColor} />
     </div>
   );
 };

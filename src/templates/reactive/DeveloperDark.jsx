@@ -7,6 +7,7 @@ import { ProjectBlock } from './shared/ProjectBlock';
 import { SkillsBlock } from './shared/SkillsBlock';
 import { ProfilePhoto } from './shared/ProfilePhoto';
 import { CertificatesBlock, AchievementsBlock, LanguagesBlock, CustomSectionsBlock } from './shared/MiscBlocks';
+import { SocialLinksBlock } from './shared/SocialLinksBlock';
 import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 /**
@@ -111,6 +112,8 @@ export const DeveloperDarkTemplate = ({ resumeData, accentHex, fontFamily }) => 
             <CustomSectionsBlock customSections={customSections} accentHex={accentHex} />
           </div>
         )}
+
+        <SocialLinksBlock personal={personal} accentHex={accentHex} />
       </div>
     </div>
   );

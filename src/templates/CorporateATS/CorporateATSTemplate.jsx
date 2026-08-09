@@ -1,4 +1,5 @@
 import React from 'react';
+import { SocialLinksBlock } from '../reactive/shared/SocialLinksBlock';
 
 export const CorporateATSTemplate = ({ resumeData, accentHex, fontFamily }) => {
   const { personal = {}, experience = [], education = [], projects = [], skills = {} } = resumeData || {};
@@ -46,6 +47,9 @@ export const CorporateATSTemplate = ({ resumeData, accentHex, fontFamily }) => {
           </div>
         </div>
       )}
+
+      {/* Social & Portfolio Links */}
+      <SocialLinksBlock personal={personal} accentHex={accentHex} />
     </div>
   );
 };
