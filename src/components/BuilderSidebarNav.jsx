@@ -49,7 +49,7 @@ export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
       <div className="p-2 space-y-1 overflow-y-auto custom-scrollbar flex-1">
         
         {/* Top Header & Collapse Toggle */}
-        <div className="px-2 py-2 flex items-center justify-between">
+        <div className={`py-2 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between px-2'}`}>
           {!isCollapsed && (
             <span className="text-[10px] uppercase font-black text-[var(--ox-text-muted)] tracking-wider">
               Sections
@@ -57,7 +57,7 @@ export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
           )}
           <button
             onClick={toggleCollapse}
-            className="p-2 rounded-xl text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] hover:bg-[var(--ox-surface-secondary)] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center mx-auto"
+            className="p-2.5 rounded-xl text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] hover:bg-[var(--ox-surface-secondary)] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
             title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
             {isCollapsed ? <PanelLeftOpen className="w-4 h-4 text-orange-500" /> : <PanelLeftClose className="w-4 h-4" />}
@@ -77,7 +77,9 @@ export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
                 <div key={sec.id} className="relative group">
                   <button
                     onClick={() => onSelectSection(sec.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all min-h-[44px] ${
+                    className={`w-full flex items-center ${
+                      isCollapsed ? 'justify-center px-0' : 'gap-3 px-3'
+                    } py-2.5 rounded-xl text-xs font-semibold transition-all min-h-[44px] cursor-pointer ${
                       isActive
                         ? 'bg-orange-500/10 text-orange-500 border border-orange-500/30 shadow-[0_0_12px_rgba(249,115,22,0.15)]'
                         : isHidden
@@ -93,7 +95,7 @@ export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
                     )}
 
                     {/* Active Section Dot */}
-                    {isActive && (
+                    {!isCollapsed && isActive && (
                       <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_#F97316] shrink-0" />
                     )}
                   </button>
@@ -105,7 +107,7 @@ export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
                         e.stopPropagation();
                         toggleSectionVisibility(sec.id);
                       }}
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg opacity-40 group-hover:opacity-100 transition-opacity hover:bg-[var(--ox-surface-secondary)] min-h-[36px] min-w-[36px] flex items-center justify-center ${
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg opacity-40 group-hover:opacity-100 transition-opacity hover:bg-[var(--ox-surface-secondary)] min-h-[36px] min-w-[36px] flex items-center justify-center cursor-pointer ${
                         isHidden ? 'text-amber-500 opacity-100' : 'text-[var(--ox-text-muted)]'
                       }`}
                       title={isHidden ? `Show ${sec.label} section in PDF` : `Hide ${sec.label} section in PDF`}
