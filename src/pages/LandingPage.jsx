@@ -29,10 +29,12 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useResume } from '../context/ResumeContext';
+import { RealTemplateThumbnail } from '../components/template/RealTemplateThumbnail';
+import { getTemplateCapabilities } from '../templates';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
-  const { loadDemoResume } = useResume();
+  const { loadDemoResume, setTemplate } = useResume();
   const [openFaq, setOpenFaq] = useState(null);
 
   const handleDemo = () => {
@@ -69,13 +71,18 @@ export const LandingPage = () => {
     { title: "Ecosystem Integration", desc: "Connects seamlessly with verify.opportunityx.co.in & Career OS.", icon: Star }
   ];
 
+  const handleUseTemplate = (templateId) => {
+    setTemplate(templateId);
+    navigate('/builder');
+  };
+
   const templatesGallery = [
-    { name: "Modern Tech Lead", category: "Developer", tag: "Popular", color: "#F97316" },
-    { name: "Minimalist ATS", category: "Minimal", tag: "Recommended", color: "#2563EB" },
-    { name: "Software Engineer", category: "Developer", tag: "Popular", color: "#059669" },
-    { name: "Student Intern", category: "Student", tag: "Student", color: "#7C3AED" },
-    { name: "Data Scientist", category: "AI Engineer", tag: "New", color: "#F59E0B" },
-    { name: "Executive Director", category: "Executive", tag: "Recommended", color: "#EC4899" }
+    { id: 'modern', name: "Modern Tech Lead", category: "Developer", tag: "Popular", color: "#F97316" },
+    { id: 'minimal', name: "Minimalist ATS", category: "Minimal", tag: "Recommended", color: "#2563EB" },
+    { id: 'fullstack', name: "Software Engineer", category: "Developer", tag: "Popular", color: "#059669" },
+    { id: 'compact-entry', name: "Student Intern", category: "Student", tag: "Student", color: "#7C3AED" },
+    { id: 'developer-dark', name: "Data Scientist", category: "AI Engineer", tag: "New", color: "#F59E0B" },
+    { id: 'executive', name: "Executive Director", category: "Executive", tag: "Recommended", color: "#EC4899" }
   ];
 
   const faqs = [
@@ -408,33 +415,29 @@ export const LandingPage = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {templatesGallery.map((tmpl, idx) => (
-            <div key={idx} className="cyber-glass-card p-5 space-y-4 hover:border-[#F97316]/50 transition-all group">
-              <div className="h-44 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] p-4 relative overflow-hidden flex flex-col justify-between transition-colors">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30">
+            <div key={idx} className="cyber-glass-card p-5 space-y-4 hover:border-[#F97316]/50 transition-all group flex flex-col justify-between">
+              <div className="h-48 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] p-2 relative overflow-hidden flex flex-col justify-between transition-colors group-hover:scale-[1.01]">
+                <div className="flex items-center justify-between z-10 mb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30 backdrop-blur-sm">
                     {tmpl.tag}
                   </span>
-                  <span className="text-[10px] text-[var(--ox-text-secondary)] font-semibold">{tmpl.category}</span>
+                  <span className="text-[10px] text-[var(--ox-text-secondary)] font-semibold px-2 py-0.5 rounded-full bg-[var(--ox-card-bg)]/80 border border-[var(--ox-border)] backdrop-blur-sm">
+                    {tmpl.category}
+                  </span>
                 </div>
-                <div className="space-y-1.5">
-                  <div className="h-3 w-1/2 rounded bg-[#F97316]/30" />
-                  <div className="h-2 w-3/4 rounded bg-[var(--ox-border)]" />
-                  <div className="h-2 w-full rounded bg-[var(--ox-border)]" />
-                </div>
-                <div className="pt-2 flex gap-1">
-                  <div className="h-2 w-12 rounded bg-[#F97316]/50" />
-                  <div className="h-2 w-8 rounded bg-[var(--ox-border)]" />
+                <div className="flex-1 w-full relative min-h-0">
+                  <RealTemplateThumbnail template={getTemplateCapabilities(tmpl.id)} />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-1">
                 <div>
                   <h4 className="text-sm font-bold text-[var(--ox-text-primary)]">{tmpl.name}</h4>
                   <p className="text-[11px] text-[var(--ox-text-secondary)]">{tmpl.category} Format</p>
                 </div>
                 <button
-                  onClick={() => navigate('/builder')}
-                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#F97316] hover:bg-orange-600 rounded-lg transition-colors cursor-pointer"
+                  onClick={() => handleUseTemplate(tmpl.id)}
+                  className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#F97316] hover:bg-orange-600 rounded-lg transition-colors cursor-pointer shadow-sm hover:shadow"
                 >
                   Use Template
                 </button>
