@@ -93,6 +93,12 @@ export const BRECreativeTemplate = ({ resumeData, accentHex, fontFamily }) => {
                   <span className="text-[10px] text-slate-500">{edu.startDate} – {edu.endDate || 'Present'}</span>
                 </div>
                 <div className="text-xs text-slate-600">{edu.institution}</div>
+                {edu.gpa && <div className="text-[10px] text-slate-600 font-semibold">GPA: {edu.gpa}</div>}
+                {edu.relevantCoursework && (
+                  <div className="text-[10px] text-slate-700 font-medium mt-0.5">
+                    <strong>Relevant Coursework: </strong>{edu.relevantCoursework}
+                  </div>
+                )}
               </div>
             ))}
           </div>

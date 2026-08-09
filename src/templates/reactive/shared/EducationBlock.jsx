@@ -10,6 +10,11 @@ export const EducationBlock = ({ education, accentHex, variant = 'default' }) =>
         <div className="text-[10px] text-slate-600">{edu.institution}{edu.location ? ` · ${edu.location}` : ''}</div>
         <div className="text-[10px] text-slate-500">{edu.startDate} – {edu.endDate || 'Present'}</div>
         {edu.gpa && <div className="text-[10px] text-slate-600 font-semibold">GPA: {edu.gpa}</div>}
+        {edu.relevantCoursework && (
+          <div className="text-[10px] text-slate-700 mt-0.5">
+            <strong className="text-slate-900">Relevant Coursework: </strong>{edu.relevantCoursework}
+          </div>
+        )}
       </div>
     ));
   }
@@ -20,6 +25,11 @@ export const EducationBlock = ({ education, accentHex, variant = 'default' }) =>
         <div className="text-[10px] font-bold text-white">{edu.degree}</div>
         <div className="text-[9px] text-white/70">{edu.institution}</div>
         <div className="text-[9px] text-white/50">{edu.startDate} – {edu.endDate || 'Present'}</div>
+        {edu.relevantCoursework && (
+          <div className="text-[9px] text-white/80 mt-0.5">
+            <strong>Coursework: </strong>{edu.relevantCoursework}
+          </div>
+        )}
       </div>
     ));
   }
@@ -36,7 +46,7 @@ export const EducationBlock = ({ education, accentHex, variant = 'default' }) =>
         </div>
         {edu.gpa && <div className="text-[10px] text-slate-600 font-semibold pl-0.5">GPA / Score: {edu.gpa}</div>}
         {edu.relevantCoursework && (
-          <div className="text-[10px] text-slate-600 pl-0.5"><strong>Coursework:</strong> {edu.relevantCoursework}</div>
+          <div className="text-[10px] text-slate-600 pl-0.5 mt-0.5"><strong>Relevant Coursework: </strong>{edu.relevantCoursework}</div>
         )}
       </div>
     ));
@@ -51,7 +61,7 @@ export const EducationBlock = ({ education, accentHex, variant = 'default' }) =>
       </div>
       {edu.gpa && <div className="text-[10px] font-semibold text-slate-600">GPA / Score: {edu.gpa}</div>}
       {edu.relevantCoursework && (
-        <div className="text-[10px] text-slate-700">
+        <div className="text-[10px] text-slate-700 mt-0.5">
           <strong className="text-slate-900">Relevant Coursework: </strong>{edu.relevantCoursework}
         </div>
       )}

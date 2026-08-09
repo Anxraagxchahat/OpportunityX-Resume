@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const FullStackTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], projects = [], skills = {} } = resumeData || {};
+  const { personal = {}, experience = [], projects = [], skills = {}, education = [] } = resumeData || {};
 
   return (
     <div className="space-y-4 text-slate-800" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
@@ -34,6 +34,26 @@ export const FullStackTemplate = ({ resumeData, accentHex, fontFamily }) => {
                 <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
                   {exp.bullets.map((b, i) => <li key={i}>{b}</li>)}
                 </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {education.length > 0 && (
+        <div className="space-y-2 text-xs">
+          <h2 className="font-bold uppercase text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>Education</h2>
+          {education.map((edu) => (
+            <div key={edu.id || edu.degree} className="space-y-0.5">
+              <div className="flex justify-between font-bold text-slate-900">
+                <span>{edu.degree} — <span className="font-normal text-slate-600">{edu.institution || edu.college}</span></span>
+                <span className="font-normal text-slate-500">{edu.startDate} {edu.endDate ? `– ${edu.endDate}` : ''}</span>
+              </div>
+              {edu.gpa && <div className="text-[11px] text-slate-600 font-medium">GPA: {edu.gpa}</div>}
+              {edu.relevantCoursework && (
+                <div className="text-[11px] text-slate-700 font-medium">
+                  <strong className="text-slate-900">Relevant Coursework: </strong>{edu.relevantCoursework}
+                </div>
               )}
             </div>
           ))}

@@ -144,6 +144,16 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
                 <span className="text-slate-500 font-medium text-[11px]">{edu.period || `${edu.startDate || ''} ${edu.endDate ? `– ${edu.endDate}` : ''}`}</span>
               </div>
               {edu.gpa && <div className="text-[11px] font-semibold text-slate-600">CGPA / Score: {edu.gpa}</div>}
+              {edu.relevantCoursework && (
+                <div className="text-[11px] text-slate-700 font-medium">
+                  <strong className="text-slate-900">Relevant Coursework: </strong>{edu.relevantCoursework}
+                </div>
+              )}
+              {edu.description && (
+                <div className="text-[11px] text-slate-700 font-medium">
+                  {edu.description}
+                </div>
+              )}
             </div>
           ))}
         </div>

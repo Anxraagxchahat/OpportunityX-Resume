@@ -67,6 +67,12 @@ export const JSONResumeModernTemplate = ({ resumeData, accentHex, fontFamily }) 
                 <div className="font-bold text-xs text-slate-900">{edu.institution}</div>
                 <div className="text-xs text-slate-700">{edu.degree}</div>
                 <div className="text-[10px] text-slate-500">{edu.startDate} – {edu.endDate || 'Present'}</div>
+                {edu.gpa && <div className="text-[10px] text-slate-600 font-semibold">GPA: {edu.gpa}</div>}
+                {edu.relevantCoursework && (
+                  <div className="text-[10px] text-slate-700 font-medium mt-0.5">
+                    <strong>Relevant Coursework: </strong>{edu.relevantCoursework}
+                  </div>
+                )}
               </div>
             ))}
           </div>

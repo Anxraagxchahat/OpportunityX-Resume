@@ -104,6 +104,11 @@ export const MinimalATSTemplate = ({ resumeData, accentHex = '#000000', fontFami
                 <span className="text-slate-500 text-[11px]">{edu.period || `${edu.startDate || ''} ${edu.endDate ? `– ${edu.endDate}` : ''}`}</span>
               </div>
               {edu.gpa && <div className="text-[11px] text-slate-600 font-medium">GPA: {edu.gpa}</div>}
+              {edu.relevantCoursework && (
+                <div className="text-[11px] text-slate-700 font-medium">
+                  <strong className="text-slate-900">Relevant Coursework: </strong>{edu.relevantCoursework}
+                </div>
+              )}
             </div>
           ))}
         </div>
