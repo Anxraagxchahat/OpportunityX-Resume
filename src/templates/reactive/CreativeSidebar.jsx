@@ -6,7 +6,7 @@ import { EducationBlock } from './shared/EducationBlock';
 import { ProjectBlock } from './shared/ProjectBlock';
 import { SkillsBlock } from './shared/SkillsBlock';
 import { ProfilePhoto } from './shared/ProfilePhoto';
-import { CertificatesBlock, AchievementsBlock, LanguagesBlock } from './shared/MiscBlocks';
+import { CertificatesBlock, AchievementsBlock, LanguagesBlock, CustomSectionsBlock } from './shared/MiscBlocks';
 import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 /**
@@ -15,7 +15,7 @@ import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
  * Great for creative or tech roles where visual flair is welcome.
  */
 export const CreativeSidebarTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [], assets = {} } = resumeData || {};
+  const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [], customSections = [], assets = {} } = resumeData || {};
   const photoSrc = assets?.profilePhoto || DEFAULT_PROFILE_PHOTO;
 
   return (
@@ -101,6 +101,12 @@ export const CreativeSidebarTemplate = ({ resumeData, accentHex, fontFamily }) =
           <div>
             <SectionHeading title="Achievements" accentHex={accentHex} />
             <AchievementsBlock achievements={achievements} />
+          </div>
+        )}
+
+        {customSections && customSections.length > 0 && (
+          <div>
+            <CustomSectionsBlock customSections={customSections} accentHex={accentHex} />
           </div>
         )}
       </div>

@@ -13,7 +13,7 @@ import { CertificatesBlock, AchievementsBlock, LanguagesBlock, CustomSectionsBlo
  * Modern feel for developers, data scientists, or technical PMs.
  */
 export const DeveloperDarkTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [] } = resumeData || {};
+  const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [], customSections = [] } = resumeData || {};
   const sidebarColor = '#0f3d3e';
 
   return (
