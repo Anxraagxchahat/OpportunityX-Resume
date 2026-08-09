@@ -147,25 +147,21 @@ export const ResumeBuilderPage = () => {
     }
   }, [activeResume?.metadata?.id]);
 
-  // Auto-enable photo & visible position when active template supports photo
+  // Auto-enable photo & visible position when template supports photo
   useEffect(() => {
     const currentTemplate = activeResume?.metadata?.template;
     const caps = getTemplateCapabilities(currentTemplate);
 
     if (caps.supportsPhoto) {
       if (!activeResume?.assets?.photoPosition || activeResume?.assets?.photoPosition === 'hidden') {
-        const defaultPos = caps.supportedPhotoPositions?.find(p => p !== 'hidden') || 'sidebar';
+        const defaultPos = caps.supportedPhotoPositions?.find(p => p !== 'hidden') || 'top-right';
         updateAssets('photoPosition', defaultPos);
       }
       if (!activeResume?.assets?.profilePhoto) {
         updateAssets('profilePhoto', DEFAULT_PROFILE_PHOTO);
       }
-    } else {
-      if (activeSection === 'photo') {
-        setActiveSection('personal');
-      }
     }
-  }, [activeResume?.metadata?.template, activeSection]);
+  }, [activeResume?.metadata?.template]);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
   const [isMobilePreviewActive, setIsMobilePreviewActive] = useState(false);
 

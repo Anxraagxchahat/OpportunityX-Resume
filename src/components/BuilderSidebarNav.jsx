@@ -66,9 +66,7 @@ export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
 
         {/* Section List */}
         <div className="space-y-1">
-          {builderSections
-            .filter((sec) => sec.id !== 'photo' || isPhotoTemplate(activeResume?.metadata?.template))
-            .map((sec) => {
+          {builderSections.map((sec) => {
               const Icon = sec.icon;
               const isActive = activeSection === sec.id;
               const isHidden = hiddenSections.includes(sec.id);

@@ -5,7 +5,9 @@ import { ExperienceBlock } from './shared/ExperienceBlock';
 import { EducationBlock } from './shared/EducationBlock';
 import { ProjectBlock } from './shared/ProjectBlock';
 import { SkillsBlock } from './shared/SkillsBlock';
+import { ProfilePhoto } from './shared/ProfilePhoto';
 import { CertificatesBlock, AchievementsBlock, LanguagesBlock, CustomSectionsBlock } from './shared/MiscBlocks';
+import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 /**
  * Developer Dark (inspired by Ditgar)
@@ -13,13 +15,28 @@ import { CertificatesBlock, AchievementsBlock, LanguagesBlock, CustomSectionsBlo
  * Modern feel for developers, data scientists, or technical PMs.
  */
 export const DeveloperDarkTemplate = ({ resumeData, accentHex, fontFamily }) => {
-  const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [], customSections = [] } = resumeData || {};
+  const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [], customSections = [], assets = {} } = resumeData || {};
   const sidebarColor = '#0f3d3e';
+  const photoSrc = assets?.profilePhoto || DEFAULT_PROFILE_PHOTO;
 
   return (
     <div className="flex min-h-full" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
       {/* Dark Left Sidebar */}
       <div className="w-[34%] p-5 space-y-4 text-white" style={{ backgroundColor: sidebarColor }}>
+        {assets?.photoPosition !== 'hidden' && (
+          <div className="flex justify-center mb-3">
+            <ProfilePhoto
+              src={photoSrc}
+              size={72}
+              photoSize={assets?.photoSize}
+              shape={assets?.photoShape}
+              position={assets?.photoPosition}
+              offsetY={assets?.photoOffsetY}
+              zoom={assets?.photoZoom}
+              borderColor="rgba(255,255,255,0.3)"
+            />
+          </div>
+        )}
         <div className="pb-3 border-b border-white/20">
           <h1 className="text-lg font-black text-white">{personal.fullName || 'Your Name'}</h1>
           <p className="text-[11px] font-semibold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || 'Job Title'}</p>
