@@ -482,15 +482,21 @@ export const A4ResumePreview = () => {
             }}
           >
             {Array.from({ length: totalPages }).map((_, pageIdx) => {
-              // Bottom padding addition when negative pageBreakOffset is active on Page 1
-              const extraBottomPad = pageIdx === 0 && pageBreakOffset < 0 ? Math.abs(pageBreakOffset) : 0;
-              const bottomPadMm = topPadMm + extraBottomPad;
+              // Page 1 cutoff Y on physical sheet
+              const page1CutoffMm = 297 + Math.min(0, pageBreakOffset); // e.g. 290mm
+              // Height of template content rendered on Page 1
+              const page1ContentHeightMm = Math.max(10, page1CutoffMm - topPadMm); // e.g. 280mm
 
-              // Effective top offset for template viewport on Page 2+
-              const effectiveTopOffsetMm = pageIdx === 0 ? 0 : -(pageIdx * 297 + pageBreakOffset);
+              // Page 2+ text start Y position on physical A4 sheet (in mm)
+              // If showPage2Header is true, header takes space from topPadMm to topPadMm + 8mm. Text starts cleanly at topPadMm + 14mm.
+              const page2TextStartYMm = pageIdx > 0
+                ? (showPage2Header ? topPadMm + 14 + Math.max(0, page2TopMargin - 10) : topPadMm + Math.max(0, page2TopMargin - 10))
+                : 0;
 
-              // Top push padding for Page 2+ text positioning
-              const page2TopPushPad = pageIdx > 0 ? (showPage2Header ? page2TopMargin + 8 : page2TopMargin) : 0;
+              // Effective top offset for template on Page 2+
+              const effectiveTopOffsetMm = pageIdx === 0
+                ? 0
+                : -(page1ContentHeightMm * pageIdx);
 
               return (
                 <div key={`a4-page-sheet-${pageIdx}`} className="flex flex-col items-center">
@@ -535,14 +541,14 @@ export const A4ResumePreview = () => {
                       </div>
                     )}
 
-                    {/* Active Printable Viewport Frame (Clips Page 1 cleanly at break line leaving bottom space blank) */}
+                    {/* Active Printable Viewport Frame (Clips Page 1 & Page 2 cleanly at break line leaving no overlap) */}
                     <div
                       style={{
                         position: 'absolute',
-                        top: 0,
+                        top: pageIdx === 0 ? 0 : `${page2TextStartYMm}mm`,
                         left: 0,
                         width: '210mm',
-                        height: pageIdx === 0 ? `${297 + Math.min(0, pageBreakOffset)}mm` : '297mm',
+                        height: pageIdx === 0 ? `${page1CutoffMm}mm` : `${297 - page2TextStartYMm}mm`,
                         overflow: 'hidden'
                       }}
                     >
@@ -553,7 +559,7 @@ export const A4ResumePreview = () => {
                           top: `${effectiveTopOffsetMm}mm`,
                           left: 0,
                           width: '210mm',
-                          paddingTop: `${topPadMm + page2TopPushPad}mm`,
+                          paddingTop: pageIdx === 0 ? `${topPadMm}mm` : 0,
                           paddingLeft: `${sidePadMm}mm`,
                           paddingRight: `${sidePadMm}mm`,
                           paddingBottom: `${topPadMm}mm`
@@ -622,6 +628,17 @@ export const A4ResumePreview = () => {
                             <span>Pull Up (+25mm)</span>
                           </button>
                         )}
+                        <button
+                          onClick={() => updateStyle('showPage2Header', !showPage2Header)}
+                          className={`px-2.5 py-1 rounded-lg font-extrabold text-[10px] border cursor-pointer ${
+                            showPage2Header
+                              ? 'bg-slate-900 text-orange-400 border-orange-500/40 hover:bg-slate-800'
+                              : 'bg-orange-500/20 text-orange-300 border-orange-500/50 hover:bg-orange-500/30'
+                          }`}
+                          title="Toggle running header on Page 2 (Anurag Verma - Resume Page 2)"
+                        >
+                          {showPage2Header ? '🚫 Hide Page 2 Header' : '📄 Show Page 2 Header'}
+                        </button>
                         <button
                           onClick={handleFitToOnePage}
                           className="px-2.5 py-1 rounded-lg bg-orange-500 text-white font-extrabold text-[10px] shadow-sm hover:bg-orange-600 cursor-pointer"
