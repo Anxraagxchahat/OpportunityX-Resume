@@ -13,7 +13,8 @@ import {
   Layers,
   Scissors,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ArrowUpDown
 } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 import { trackEvent, AnalyticsEvents } from '../utils/analytics';
@@ -56,8 +57,11 @@ export const A4ResumePreview = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isPageBreakMenuOpen, setIsPageBreakMenuOpen] = useState(false);
+  const [isDraggingLine, setIsDraggingLine] = useState(false);
 
   const measureRef = useRef(null);
+  const dragStartYRef = useRef(0);
+  const dragStartOffsetRef = useRef(0);
 
   const { personal, experience, education, projects, skills, certificates, achievements, languages, customSections, metadata, assets, style } = activeResume;
   const accentHex = metadata?.accentColor || '#F97316';
@@ -72,8 +76,39 @@ export const A4ResumePreview = () => {
   const lineSpacing = style?.lineSpacing || 'normal';
   const pageBreakOffset = Number(style?.pageBreakOffset) || 0;
 
-  // Dynamic padding calculation for paper container
-  const paperPadding = pageMargin === 'compact' ? '6mm 8mm' : pageMargin === 'spacious' ? '14mm 16mm' : '10mm 12mm';
+  // Base margin values in mm
+  const topPadMm = pageMargin === 'compact' ? 6 : pageMargin === 'spacious' ? 14 : 10;
+  const sidePadMm = pageMargin === 'compact' ? 8 : pageMargin === 'spacious' ? 16 : 12;
+
+  // Dynamic Mouse Drag Handler for Page Break Line
+  const handleLineDragStart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingLine(true);
+    dragStartYRef.current = e.clientY;
+    dragStartOffsetRef.current = pageBreakOffset;
+
+    const handleMouseMove = (moveEvent) => {
+      const deltaYPx = moveEvent.clientY - dragStartYRef.current;
+      // 1mm ~ 3.7795px at 96 DPI, adjusted by zoom scale
+      const scale = zoomLevel / 100;
+      const deltaYMm = deltaYPx / (3.7795 * scale);
+      let newOffset = Math.round(dragStartOffsetRef.current + deltaYMm);
+
+      // Clamp offset between -60mm and +40mm
+      newOffset = Math.max(-60, Math.min(40, newOffset));
+      updateStyle('pageBreakOffset', newOffset);
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingLine(false);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
 
   const handleZoomIn = () => setZoomLevel((z) => Math.min(z + 10, 130));
   const handleZoomOut = () => setZoomLevel((z) => Math.max(z - 10, 50));
@@ -88,7 +123,7 @@ export const A4ResumePreview = () => {
   const handlePushToPageTwo = () => {
     updateStyle('sectionSpacing', 'spacious');
     updateStyle('pageMargin', 'spacious');
-    updateStyle('pageBreakOffset', -15);
+    updateStyle('pageBreakOffset', -20);
   };
 
   const handleDownloadPDF = async () => {
@@ -117,8 +152,6 @@ export const A4ResumePreview = () => {
     const calculatePages = () => {
       if (measureRef.current) {
         const heightPx = measureRef.current.scrollHeight;
-        // Standard A4 page height at 96 DPI is approx 1122.5px (297mm)
-        // Subtract 40px for margin tolerances
         const A4_HEIGHT_PX = 1100;
         const computedPages = Math.max(1, Math.ceil(heightPx / A4_HEIGHT_PX));
         setTotalPages(computedPages);
@@ -131,7 +164,7 @@ export const A4ResumePreview = () => {
   }, [activeResume, template, fontFamily, accentHex, style]);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[var(--ox-bg)] overflow-hidden relative transition-colors duration-300">
+    <div className={`flex-1 flex flex-col h-full bg-[var(--ox-bg)] overflow-hidden relative transition-colors duration-300 ${isDraggingLine ? 'select-none cursor-ns-resize' : ''}`}>
       {/* Top Toolbar (Non-printable) */}
       <div className="bg-[var(--ox-surface-primary)] border-b border-[var(--ox-border)] px-4 py-2 flex items-center justify-between gap-3 text-xs z-10 flex-wrap no-print transition-colors duration-300">
         {/* Template Selector */}
@@ -344,7 +377,7 @@ export const A4ResumePreview = () => {
         className="fixed left-[-9999px] top-0 pointer-events-none opacity-0 z-[-100] no-print"
         style={{
           width: '210mm',
-          padding: paperPadding,
+          padding: `${topPadMm}mm ${sidePadMm}mm`,
           fontFamily: `'${fontFamily}', sans-serif`
         }}
       >
@@ -386,92 +419,113 @@ export const A4ResumePreview = () => {
               transformOrigin: 'top center'
             }}
           >
-            {Array.from({ length: totalPages }).map((_, pageIdx) => (
-              <div key={`a4-page-sheet-${pageIdx}`} className="flex flex-col items-center">
-                {/* Page Number Badge */}
-                <div className="w-[210mm] flex items-center justify-between text-[11px] font-bold text-slate-400 mb-1.5 px-1">
-                  <span className="flex items-center gap-1 text-orange-400">
-                    <FileText className="w-3.5 h-3.5" /> PAGE {pageIdx + 1} OF {totalPages}
-                    {pageIdx > 0 && <span className="text-[10px] text-amber-400 ml-1">(Overflow)</span>}
-                  </span>
-                  <span className="text-slate-500 font-mono">210 × 297 mm (A4)</span>
-                </div>
+            {Array.from({ length: totalPages }).map((_, pageIdx) => {
+              // Bottom padding addition when negative pageBreakOffset is active on Page 1
+              const extraBottomPad = pageIdx === 0 && pageBreakOffset < 0 ? Math.abs(pageBreakOffset) : 0;
+              const bottomPadMm = topPadMm + extraBottomPad;
 
-                {/* Physical A4 Paper Sheet Frame */}
-                <div
-                  className="a4-paper-container shadow-2xl rounded-sm overflow-hidden relative border border-slate-300/10"
-                  style={{
-                    width: '210mm',
-                    height: '297mm',
-                    backgroundColor: paperBgColor,
-                    fontFamily: `'${fontFamily}', sans-serif`
-                  }}
-                >
-                  {/* Clipped Offset View of Resume Template */}
+              // Effective top offset for template viewport on Page 2+
+              const effectiveTopOffsetMm = pageIdx === 0 ? 0 : -(pageIdx * 297 + pageBreakOffset);
+
+              return (
+                <div key={`a4-page-sheet-${pageIdx}`} className="flex flex-col items-center">
+                  {/* Page Number Badge */}
+                  <div className="w-[210mm] flex items-center justify-between text-[11px] font-bold text-slate-400 mb-1.5 px-1">
+                    <span className="flex items-center gap-1 text-orange-400">
+                      <FileText className="w-3.5 h-3.5" /> PAGE {pageIdx + 1} OF {totalPages}
+                      {pageIdx > 0 && <span className="text-[10px] text-amber-400 ml-1">(Overflow)</span>}
+                    </span>
+                    <span className="text-slate-500 font-mono">210 × 297 mm (A4)</span>
+                  </div>
+
+                  {/* Physical A4 Paper Sheet Frame */}
                   <div
+                    className="a4-paper-container shadow-2xl rounded-sm overflow-hidden relative border border-slate-300/10"
                     style={{
-                      position: 'absolute',
-                      top: `-${pageIdx * 297}mm`,
-                      left: 0,
                       width: '210mm',
-                      padding: paperPadding
+                      height: '297mm',
+                      backgroundColor: paperBgColor,
+                      fontFamily: `'${fontFamily}', sans-serif`
                     }}
                   >
-                    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400 animate-pulse">Loading Template Engine...</div>}>
-                      <SelectedTemplateComponent
-                        resumeData={activeResume}
-                        accentHex={accentHex}
-                        fontFamily={fontFamily}
-                      />
-                    </Suspense>
+                    {/* Clipped Offset View of Resume Template */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: `${effectiveTopOffsetMm}mm`,
+                        left: 0,
+                        width: '210mm',
+                        paddingTop: `${topPadMm}mm`,
+                        paddingLeft: `${sidePadMm}mm`,
+                        paddingRight: `${sidePadMm}mm`,
+                        paddingBottom: `${bottomPadMm}mm`
+                      }}
+                    >
+                      <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400 animate-pulse">Loading Template Engine...</div>}>
+                        <SelectedTemplateComponent
+                          resumeData={activeResume}
+                          accentHex={accentHex}
+                          fontFamily={fontFamily}
+                        />
+                      </Suspense>
 
-                    {/* Signature & Watermark on Last Page */}
-                    {pageIdx === totalPages - 1 && (
-                      <>
-                        {assets?.digitalSignature && (
-                          <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
-                            <div className="text-center">
-                              <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
-                              <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                      {/* Signature & Watermark on Last Page */}
+                      {pageIdx === totalPages - 1 && (
+                        <>
+                          {assets?.digitalSignature && (
+                            <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
+                              <div className="text-center">
+                                <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
+                                <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                              </div>
                             </div>
+                          )}
+                          <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+                            <span>OpportunityX Resume Engine</span>
+                            <span>resume.opportunityx.co.in</span>
                           </div>
-                        )}
-                        <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
-                          <span>OpportunityX Resume Engine</span>
-                          <span>resume.opportunityx.co.in</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Section-Aware A4 Page Cutoff Marker with Interactive Fixers */}
-                {pageIdx < totalPages - 1 && (
-                  <div className="w-[210mm] mt-2 flex items-center justify-between gap-2 bg-orange-500/10 border border-dashed border-orange-500/40 p-2 rounded-xl text-xs">
-                    <span className="text-[11px] font-bold text-orange-400 flex items-center gap-1">
-                      ✂️ A4 PAGE BREAK AT PAGE {pageIdx + 1} ({297 + pageBreakOffset}mm)
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={handleFitToOnePage}
-                        className="px-2.5 py-1 rounded-lg bg-orange-500 text-white font-extrabold text-[10px] shadow-sm hover:bg-orange-600 transition-all cursor-pointer"
-                      >
-                        ⚡ Fit Page 1
-                      </button>
-                      <button
-                        onClick={handlePushToPageTwo}
-                        className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 font-extrabold text-[10px] border border-amber-500/40 hover:bg-slate-800 transition-all cursor-pointer"
-                      >
-                        ⬇️ Push Section to Page 2
-                      </button>
+                        </>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {/* Section-Aware A4 Page Cutoff Marker with Mouse Drag Handle */}
+                  {pageIdx < totalPages - 1 && (
+                    <div className="w-[210mm] mt-2 flex items-center justify-between gap-2 bg-orange-500/10 border border-dashed border-orange-500/40 p-2.5 rounded-xl text-xs">
+                      <span className="text-[11px] font-bold text-orange-400 flex items-center gap-1.5">
+                        <Scissors className="w-3.5 h-3.5" /> A4 PAGE BREAK AT {297 + pageBreakOffset}mm (Page {pageIdx + 1})
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {/* Mouse Drag Handle Button */}
+                        <div
+                          onMouseDown={handleLineDragStart}
+                          className="bg-orange-600 hover:bg-orange-500 text-white font-extrabold text-[10px] px-3 py-1 rounded-lg shadow-md flex items-center gap-1.5 cursor-ns-resize select-none active:scale-95 transition-all"
+                          title="Click & Drag vertically (↕) to shift Page Break position"
+                        >
+                          <ArrowUpDown className="w-3.5 h-3.5" />
+                          <span>DRAG LINE ↕ ({pageBreakOffset > 0 ? `+${pageBreakOffset}` : pageBreakOffset}mm)</span>
+                        </div>
+                        <button
+                          onClick={handleFitToOnePage}
+                          className="px-2.5 py-1 rounded-lg bg-orange-500 text-white font-extrabold text-[10px] shadow-sm hover:bg-orange-600 cursor-pointer"
+                        >
+                          ⚡ Fit 1 Page
+                        </button>
+                        <button
+                          onClick={handlePushToPageTwo}
+                          className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 font-extrabold text-[10px] border border-amber-500/40 hover:bg-slate-800 cursor-pointer"
+                        >
+                          ⬇️ Push to Page 2
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ) : (
-          /* View Mode B: Continuous Canvas with Glowing Interactive Page Break Guide Lines */
+          /* View Mode B: Continuous Canvas with Glowing Interactive & Mouse-Draggable Page Break Guide Lines */
           <div
             className="transition-transform duration-200 flex flex-col items-center"
             style={{
@@ -483,33 +537,47 @@ export const A4ResumePreview = () => {
               className="a4-paper-container shadow-2xl rounded-sm p-10 relative"
               style={{
                 backgroundColor: paperBgColor,
-                fontFamily: `'${fontFamily}', sans-serif`
+                fontFamily: `'${fontFamily}', sans-serif`,
+                paddingTop: `${topPadMm}mm`,
+                paddingLeft: `${sidePadMm}mm`,
+                paddingRight: `${sidePadMm}mm`,
+                paddingBottom: pageBreakOffset < 0 ? `${topPadMm + Math.abs(pageBreakOffset)}mm` : `${topPadMm}mm`
               }}
             >
-              {/* Dynamic Page Break Indicators with Interactive Actions */}
+              {/* Dynamic Page Break Indicators with Interactive Actions & Mouse Dragging */}
               {Array.from({ length: totalPages - 1 }).map((_, breakIdx) => {
                 const lineTopMm = (breakIdx + 1) * 297 + pageBreakOffset;
                 return (
                   <div
                     key={`page-break-line-${breakIdx}`}
-                    className="absolute left-0 right-0 flex items-center justify-center z-20"
+                    className="absolute left-0 right-0 flex items-center justify-center z-30 group"
                     style={{ top: `${lineTopMm}mm` }}
                   >
-                    <div className="w-full border-t-2 border-dashed border-orange-500/70 shadow-sm" />
-                    <div className="absolute bg-orange-600 text-black font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full shadow-xl border border-amber-300 flex items-center gap-2 pointer-events-auto">
-                      <Scissors className="w-3.5 h-3.5" />
-                      <span>A4 PAGE BREAK • END OF PAGE {breakIdx + 1} ({lineTopMm}mm)</span>
+                    <div
+                      onMouseDown={handleLineDragStart}
+                      className="w-full border-t-2 border-dashed border-orange-500 hover:border-orange-400 cursor-ns-resize shadow-md transition-colors"
+                    />
+                    <div
+                      onMouseDown={handleLineDragStart}
+                      className="absolute bg-orange-600 hover:bg-orange-500 text-white font-black text-[10px] uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-2xl border-2 border-amber-300 flex items-center gap-2 cursor-ns-resize select-none pointer-events-auto active:scale-105 transition-all"
+                      title="Click & Drag vertically (↕) to adjust Page Break position"
+                    >
+                      <ArrowUpDown className="w-3.5 h-3.5" />
+                      <span>DRAG LINE ↕ ({lineTopMm}mm)</span>
+                      <span className="bg-black/60 px-1.5 py-0.5 rounded text-[9px] text-amber-300 font-mono font-bold">
+                        {pageBreakOffset > 0 ? `+${pageBreakOffset}` : pageBreakOffset}mm
+                      </span>
                       <button
-                        onClick={handleFitToOnePage}
+                        onClick={(e) => { e.stopPropagation(); handleFitToOnePage(); }}
                         className="bg-black text-orange-300 px-2 py-0.5 rounded-full hover:bg-slate-900 text-[9px] cursor-pointer"
                       >
                         ⚡ Fit 1 Page
                       </button>
                       <button
-                        onClick={handlePushToPageTwo}
+                        onClick={(e) => { e.stopPropagation(); handlePushToPageTwo(); }}
                         className="bg-black text-amber-300 px-2 py-0.5 rounded-full hover:bg-slate-900 text-[9px] cursor-pointer"
                       >
-                        ⬇️ Push Section to Page 2
+                        ⬇️ Push to Page 2
                       </button>
                     </div>
                   </div>
