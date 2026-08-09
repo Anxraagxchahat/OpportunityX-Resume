@@ -5,7 +5,7 @@ import { ExperienceBlock } from './shared/ExperienceBlock';
 import { EducationBlock } from './shared/EducationBlock';
 import { ProjectBlock } from './shared/ProjectBlock';
 import { SkillsBlock } from './shared/SkillsBlock';
-import { CertificatesBlock, AchievementsBlock, LanguagesBlock } from './shared/MiscBlocks';
+import { CertificatesBlock, AchievementsBlock, LanguagesBlock, CustomSectionsBlock } from './shared/MiscBlocks';
 
 /**
  * Developer Dark (inspired by Ditgar)
@@ -86,6 +86,12 @@ export const DeveloperDarkTemplate = ({ resumeData, accentHex, fontFamily }) => 
           <div>
             <SectionHeading title="Achievements" accentHex={accentHex} variant="underline" />
             <AchievementsBlock achievements={achievements} />
+          </div>
+        )}
+
+        {customSections && customSections.length > 0 && (
+          <div>
+            <CustomSectionsBlock customSections={customSections} accentHex={accentHex} />
           </div>
         )}
       </div>

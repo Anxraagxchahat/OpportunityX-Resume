@@ -1,5 +1,6 @@
 import React from 'react';
 import { TemplateSkills } from '../../components/template/TemplateSkills';
+import { CustomSectionsBlock } from '../reactive/shared/MiscBlocks';
 
 export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFamily = 'Inter' }) => {
   const {
@@ -150,6 +151,11 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
             {languages.map(l => typeof l === 'string' ? l : `${l.name || l.language || ''}${l.proficiency ? ` (${l.proficiency})` : ''}`).filter(Boolean).join(' • ')}
           </p>
         </div>
+      )}
+
+      {/* 10. CUSTOM SECTIONS */}
+      {Array.isArray(customSections) && customSections.length > 0 && (
+        <CustomSectionsBlock customSections={customSections} accentHex={accentHex} />
       )}
     </div>
   );

@@ -72,3 +72,37 @@ export const LanguagesBlock = ({ languages, variant = 'default' }) => {
     </div>
   );
 };
+
+export const CustomSectionsBlock = ({ customSections, accentHex = '#F97316' }) => {
+  if (!customSections || customSections.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      {customSections.map((cs, sIdx) => {
+        if (!cs.title && (!cs.items || cs.items.length === 0)) return null;
+        const validItems = Array.isArray(cs.items) ? cs.items.filter((item) => item.name || item.description) : [];
+
+        return (
+          <div key={cs.id || sIdx} className="space-y-1 pdf-block pdf-keep-together">
+            {cs.title && (
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b pdf-section-header mb-1" style={{ borderColor: accentHex }}>
+                {cs.title}
+              </h2>
+            )}
+            {validItems.length > 0 ? (
+              <div className="space-y-1 text-xs">
+                {validItems.map((item, idx) => (
+                  <div key={item.id || idx} className="text-slate-700">
+                    {item.name && <strong className="text-slate-900">{item.name}</strong>}
+                    {item.name && item.description && <span className="mx-1">—</span>}
+                    {item.description && <span>{item.description}</span>}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
