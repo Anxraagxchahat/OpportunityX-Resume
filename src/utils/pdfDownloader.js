@@ -9,10 +9,16 @@ import html2pdf from 'html2pdf.js';
  * @returns {Promise<boolean>} Resolves to true when download completes
  */
 export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candidateName = 'Resume') => {
-  const element = document.getElementById(elementId);
+  let element = document.getElementById(elementId);
+
+  // Robust Fallback: search for .a4-paper-container if target ID is not directly matched
+  if (!element) {
+    element = document.querySelector('.a4-paper-container');
+  }
 
   if (!element) {
-    console.error(`Target resume element #${elementId} not found for PDF download.`);
+    console.error(`Target resume element #${elementId} or .a4-paper-container not found for PDF download.`);
+    window.print();
     return false;
   }
 
@@ -23,14 +29,16 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   const filename = `${safeName}_Resume.pdf`;
 
   const opt = {
-    margin: [10, 10, 12, 10], // Safe printable margins [top, left, bottom, right] in mm
+    margin: [0, 0, 0, 0], // Precise A4 edge alignment
     filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: {
       scale: 2,
       useCORS: true,
+      allowTaint: true,
       letterRendering: true,
       logging: false,
+      backgroundColor: '#ffffff',
       windowWidth: 794 // 210mm @ 96 DPI
     },
     jsPDF: {

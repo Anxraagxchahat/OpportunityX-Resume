@@ -411,15 +411,18 @@ export const A4ResumePreview = () => {
         </button>
       </div>
 
-      {/* Off-screen Measurement Node (hidden) */}
+      {/* Off-screen PDF Export Target & Measurement Node */}
       <div
+        id="resume-a4-preview"
         ref={measureRef}
         aria-hidden="true"
-        className="fixed left-[-9999px] top-0 pointer-events-none opacity-0 z-[-100] no-print"
+        className="fixed left-[-9999px] top-0 pointer-events-none z-[-100] bg-white text-slate-900"
         style={{
           width: '210mm',
+          backgroundColor: paperBgColor || '#ffffff',
           padding: `${topPadMm}mm ${sidePadMm}mm`,
-          fontFamily: `'${fontFamily}', sans-serif`
+          fontFamily: `'${fontFamily}', sans-serif`,
+          boxSizing: 'border-box'
         }}
       >
         <Suspense fallback={null}>
