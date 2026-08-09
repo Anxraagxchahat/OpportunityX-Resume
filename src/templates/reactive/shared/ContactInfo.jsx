@@ -1,13 +1,18 @@
 import React from 'react';
 
 export const ContactInfo = ({ personal, variant = 'inline', accentHex }) => {
+  const websiteLink = personal?.website || personal?.portfolio;
+  const customLinks = Array.isArray(personal?.customLinks) ? personal.customLinks.map(c => c.url ? (c.label ? `${c.label}: ${c.url}` : c.url) : null).filter(Boolean) : [];
+
   const items = [
     personal?.email,
     personal?.phone,
     personal?.location,
+    websiteLink,
     personal?.linkedin,
-    personal?.website,
-    personal?.github
+    personal?.github,
+    personal?.twitter,
+    ...customLinks
   ].filter(Boolean);
 
   if (variant === 'sidebar') {
@@ -16,9 +21,11 @@ export const ContactInfo = ({ personal, variant = 'inline', accentHex }) => {
         {personal?.email && <div className="break-all">{personal.email}</div>}
         {personal?.phone && <div>{personal.phone}</div>}
         {personal?.location && <div>{personal.location}</div>}
+        {websiteLink && <div className="break-all">{websiteLink}</div>}
         {personal?.linkedin && <div className="break-all">{personal.linkedin}</div>}
-        {personal?.website && <div className="break-all">{personal.website}</div>}
         {personal?.github && <div className="break-all">{personal.github}</div>}
+        {personal?.twitter && <div className="break-all">{personal.twitter}</div>}
+        {customLinks.map((linkStr, i) => <div key={i} className="break-all">{linkStr}</div>)}
       </div>
     );
   }
@@ -26,12 +33,7 @@ export const ContactInfo = ({ personal, variant = 'inline', accentHex }) => {
   if (variant === 'stacked') {
     return (
       <div className="space-y-0.5 text-[10px] text-slate-600">
-        {personal?.email && <div>{personal.email}</div>}
-        {personal?.phone && <div>{personal.phone}</div>}
-        {personal?.location && <div>{personal.location}</div>}
-        {personal?.linkedin && <div>{personal.linkedin}</div>}
-        {personal?.website && <div>{personal.website}</div>}
-        {personal?.github && <div>{personal.github}</div>}
+        {items.map((item, i) => <div key={i}>{item}</div>)}
       </div>
     );
   }

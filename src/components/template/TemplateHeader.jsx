@@ -14,6 +14,9 @@ const LinkedinIcon = ({ className = "w-3 h-3" }) => (
 );
 
 export const TemplateHeader = ({ personal = {}, accentHex = '#F97316', align = 'left', photoUrl = null }) => {
+  const websiteLink = personal.website || personal.portfolio;
+  const customLinks = Array.isArray(personal.customLinks) ? personal.customLinks : [];
+
   return (
     <div className={`pb-4 border-b border-slate-200 flex items-start justify-between gap-4 ${align === 'center' ? 'text-center flex-col items-center' : ''}`}>
       <div className="space-y-1">
@@ -26,8 +29,13 @@ export const TemplateHeader = ({ personal = {}, accentHex = '#F97316', align = '
           {personal.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-slate-400" />{personal.email}</span>}
           {personal.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" />{personal.phone}</span>}
           {personal.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-400" />{personal.location}</span>}
+          {websiteLink && <span className="flex items-center gap-1"><Globe className="w-3 h-3 text-slate-400" />{websiteLink}</span>}
           {personal.github && <span className="flex items-center gap-1"><GithubIcon className="w-3 h-3 text-slate-400" />{personal.github}</span>}
           {personal.linkedin && <span className="flex items-center gap-1"><LinkedinIcon className="w-3 h-3 text-slate-400" />{personal.linkedin}</span>}
+          {personal.twitter && <span className="flex items-center gap-1"><Globe className="w-3 h-3 text-slate-400" />{personal.twitter}</span>}
+          {customLinks.map((cl, idx) => (
+            cl.url ? <span key={idx} className="flex items-center gap-1"><Globe className="w-3 h-3 text-slate-400" />{cl.label ? `${cl.label}: ` : ''}{cl.url}</span> : null
+          ))}
         </div>
       </div>
 

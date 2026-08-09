@@ -25,9 +25,13 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
           {personal.email && <span>{personal.email}</span>}
           {personal.phone && <span>• {personal.phone}</span>}
           {personal.location && <span>• {personal.location}</span>}
-          {personal.website && <span>• {personal.website}</span>}
+          {(personal.website || personal.portfolio) && <span>• {personal.website || personal.portfolio}</span>}
           {personal.github && <span>• {personal.github}</span>}
           {personal.linkedin && <span>• {personal.linkedin}</span>}
+          {personal.twitter && <span>• {personal.twitter}</span>}
+          {Array.isArray(personal.customLinks) && personal.customLinks.map((cl, i) => (
+            cl.url ? <span key={i}>• {cl.label ? `${cl.label}: ` : ''}{cl.url}</span> : null
+          ))}
         </div>
       </div>
 
