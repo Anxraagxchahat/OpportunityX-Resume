@@ -43,6 +43,7 @@ export const A4ResumePreview = () => {
     setTemplate,
     setFontFamily,
     setAccentColor,
+    updateStyle,
     activeResumeId,
     setIsInspectorOpen,
     setIsThemeCustomizerOpen,
@@ -54,6 +55,7 @@ export const A4ResumePreview = () => {
   const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'continuous'
   const [totalPages, setTotalPages] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isPageBreakMenuOpen, setIsPageBreakMenuOpen] = useState(false);
 
   const measureRef = useRef(null);
 
@@ -65,8 +67,29 @@ export const A4ResumePreview = () => {
   const paperBg = style?.paperBackground || 'white';
   const paperBgColor = paperBg === 'warm' ? '#fdfbf7' : paperBg === 'light-gray' ? '#f8fafc' : paperBg === 'minimal-accent' ? '#f0fdf4' : '#ffffff';
 
+  const pageMargin = style?.pageMargin || 'normal';
+  const sectionSpacing = style?.sectionSpacing || 'normal';
+  const lineSpacing = style?.lineSpacing || 'normal';
+  const pageBreakOffset = Number(style?.pageBreakOffset) || 0;
+
+  // Dynamic padding calculation for paper container
+  const paperPadding = pageMargin === 'compact' ? '6mm 8mm' : pageMargin === 'spacious' ? '14mm 16mm' : '10mm 12mm';
+
   const handleZoomIn = () => setZoomLevel((z) => Math.min(z + 10, 130));
   const handleZoomOut = () => setZoomLevel((z) => Math.max(z - 10, 50));
+
+  const handleFitToOnePage = () => {
+    updateStyle('pageMargin', 'compact');
+    updateStyle('sectionSpacing', 'compact');
+    updateStyle('lineSpacing', 'compact');
+    updateStyle('pageBreakOffset', 0);
+  };
+
+  const handlePushToPageTwo = () => {
+    updateStyle('sectionSpacing', 'spacious');
+    updateStyle('pageMargin', 'spacious');
+    updateStyle('pageBreakOffset', -15);
+  };
 
   const handleDownloadPDF = async () => {
     if (isDownloading) return;
@@ -105,7 +128,7 @@ export const A4ResumePreview = () => {
     calculatePages();
     const timer = setTimeout(calculatePages, 200);
     return () => clearTimeout(timer);
-  }, [activeResume, template, fontFamily, accentHex]);
+  }, [activeResume, template, fontFamily, accentHex, style]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--ox-bg)] overflow-hidden relative transition-colors duration-300">
@@ -165,6 +188,82 @@ export const A4ResumePreview = () => {
               title={c.name}
             />
           ))}
+        </div>
+
+        {/* Page 2 & Spacing Quick Control Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setIsPageBreakMenuOpen(!isPageBreakMenuOpen)}
+            className="px-2.5 py-1 rounded-lg bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] hover:border-orange-500/50 font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Fix Page Break & Section Spacing"
+          >
+            <Scissors className="w-3.5 h-3.5 text-orange-500" />
+            <span>Page 2 Fix & Spacing</span>
+          </button>
+
+          {isPageBreakMenuOpen && (
+            <div className="absolute top-full left-0 mt-2 w-72 bg-[var(--ox-card-bg,#0B0D14)] border border-[var(--ox-border)] rounded-2xl shadow-2xl p-4 space-y-3 z-50 animate-fadeIn text-xs text-[var(--ox-text-primary)]">
+              <div className="flex items-center justify-between border-b border-[var(--ox-border)] pb-2 font-bold">
+                <span>Page Break & Spacing Fixer</span>
+                <button onClick={() => setIsPageBreakMenuOpen(false)} className="text-[var(--ox-text-muted)] hover:text-white">✕</button>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  onClick={() => { handleFitToOnePage(); setIsPageBreakMenuOpen(false); }}
+                  className="py-1.5 px-2 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-500 font-bold text-[11px] hover:bg-orange-500/20 cursor-pointer"
+                >
+                  ⚡ Fit 1 Page
+                </button>
+                <button
+                  onClick={() => { handlePushToPageTwo(); setIsPageBreakMenuOpen(false); }}
+                  className="py-1.5 px-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[11px] hover:bg-amber-500/20 cursor-pointer"
+                >
+                  ✂️ Clean Page 2 Break
+                </button>
+              </div>
+
+              {/* Section Spacing */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-[var(--ox-text-secondary)]">Section Spacing</label>
+                <div className="grid grid-cols-3 gap-1">
+                  {['compact', 'normal', 'spacious'].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => updateStyle('sectionSpacing', s)}
+                      className={`py-1 rounded-lg border text-[10px] font-bold capitalize cursor-pointer ${
+                        sectionSpacing === s ? 'bg-orange-500 text-white border-orange-500' : 'bg-[var(--ox-surface-secondary)] border-[var(--ox-border)] text-[var(--ox-text-secondary)]'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Page Break Line Shift Offset */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-[var(--ox-text-secondary)]">Page Line Shift Offset</span>
+                  <span className="text-orange-500 font-mono font-bold">{pageBreakOffset}mm</span>
+                </div>
+                <div className="grid grid-cols-5 gap-1">
+                  {[-20, -10, 0, 10, 20].map((off) => (
+                    <button
+                      key={off}
+                      onClick={() => updateStyle('pageBreakOffset', off)}
+                      className={`py-1 rounded-lg border text-center font-mono font-bold text-[10px] cursor-pointer ${
+                        pageBreakOffset === off ? 'bg-orange-500 text-white border-orange-500' : 'bg-[var(--ox-surface-secondary)] border-[var(--ox-border)] text-[var(--ox-text-secondary)]'
+                      }`}
+                    >
+                      {off > 0 ? `+${off}` : off}mm
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* View Mode Toggle (Multi-Page A4 Cards vs Continuous) */}
@@ -245,7 +344,7 @@ export const A4ResumePreview = () => {
         className="fixed left-[-9999px] top-0 pointer-events-none opacity-0 z-[-100] no-print"
         style={{
           width: '210mm',
-          padding: '10mm 12mm',
+          padding: paperPadding,
           fontFamily: `'${fontFamily}', sans-serif`
         }}
       >
@@ -315,7 +414,7 @@ export const A4ResumePreview = () => {
                       top: `-${pageIdx * 297}mm`,
                       left: 0,
                       width: '210mm',
-                      padding: '10mm 12mm'
+                      padding: paperPadding
                     }}
                   >
                     <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400 animate-pulse">Loading Template Engine...</div>}>
@@ -326,39 +425,53 @@ export const A4ResumePreview = () => {
                       />
                     </Suspense>
 
-                  {/* Signature & Watermark on Last Page */}
-                  {pageIdx === totalPages - 1 && (
-                    <>
-                      {assets?.digitalSignature && (
-                        <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
-                          <div className="text-center">
-                            <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
-                            <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                    {/* Signature & Watermark on Last Page */}
+                    {pageIdx === totalPages - 1 && (
+                      <>
+                        {assets?.digitalSignature && (
+                          <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
+                            <div className="text-center">
+                              <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
+                              <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                            </div>
                           </div>
+                        )}
+                        <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+                          <span>OpportunityX Resume Engine</span>
+                          <span>resume.opportunityx.co.in</span>
                         </div>
-                      )}
-                      <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
-                        <span>OpportunityX Resume Engine</span>
-                        <span>resume.opportunityx.co.in</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Section-Aware A4 Page Cutoff Marker */}
-              {pageIdx < totalPages - 1 && (
-                <div className="w-[210mm] mt-1 text-center pointer-events-none">
-                  <div className="flex items-center justify-center gap-2 text-[9px] font-bold text-orange-500 bg-orange-500/10 border border-dashed border-orange-500/40 py-1 px-3 rounded-full">
-                    <span>✂️ Section-Aware Page Break — Next section begins cleanly on Page {pageIdx + 2}</span>
+                      </>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
+
+                {/* Section-Aware A4 Page Cutoff Marker with Interactive Fixers */}
+                {pageIdx < totalPages - 1 && (
+                  <div className="w-[210mm] mt-2 flex items-center justify-between gap-2 bg-orange-500/10 border border-dashed border-orange-500/40 p-2 rounded-xl text-xs">
+                    <span className="text-[11px] font-bold text-orange-400 flex items-center gap-1">
+                      ✂️ A4 PAGE BREAK AT PAGE {pageIdx + 1} ({297 + pageBreakOffset}mm)
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={handleFitToOnePage}
+                        className="px-2.5 py-1 rounded-lg bg-orange-500 text-white font-extrabold text-[10px] shadow-sm hover:bg-orange-600 transition-all cursor-pointer"
+                      >
+                        ⚡ Fit Page 1
+                      </button>
+                      <button
+                        onClick={handlePushToPageTwo}
+                        className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 font-extrabold text-[10px] border border-amber-500/40 hover:bg-slate-800 transition-all cursor-pointer"
+                      >
+                        ⬇️ Push Section to Page 2
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         ) : (
-          /* View Mode B: Continuous Canvas with Glowing Page Break Guide Lines */
+          /* View Mode B: Continuous Canvas with Glowing Interactive Page Break Guide Lines */
           <div
             className="transition-transform duration-200 flex flex-col items-center"
             style={{
@@ -373,20 +486,35 @@ export const A4ResumePreview = () => {
                 fontFamily: `'${fontFamily}', sans-serif`
               }}
             >
-              {/* Dynamic Page Break Indicators */}
-              {Array.from({ length: totalPages - 1 }).map((_, breakIdx) => (
-                <div
-                  key={`page-break-line-${breakIdx}`}
-                  className="absolute left-0 right-0 pointer-events-none flex items-center justify-center z-20"
-                  style={{ top: `${(breakIdx + 1) * 297}mm` }}
-                >
-                  <div className="w-full border-t-2 border-dashed border-orange-500/70 shadow-sm" />
-                  <div className="absolute bg-orange-600 text-black font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full shadow-xl border border-amber-300 flex items-center gap-1.5">
-                    <Scissors className="w-3.5 h-3.5" />
-                    <span>A4 PAGE BREAK • END OF PAGE {breakIdx + 1} ({297 * (breakIdx + 1)}mm)</span>
+              {/* Dynamic Page Break Indicators with Interactive Actions */}
+              {Array.from({ length: totalPages - 1 }).map((_, breakIdx) => {
+                const lineTopMm = (breakIdx + 1) * 297 + pageBreakOffset;
+                return (
+                  <div
+                    key={`page-break-line-${breakIdx}`}
+                    className="absolute left-0 right-0 flex items-center justify-center z-20"
+                    style={{ top: `${lineTopMm}mm` }}
+                  >
+                    <div className="w-full border-t-2 border-dashed border-orange-500/70 shadow-sm" />
+                    <div className="absolute bg-orange-600 text-black font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full shadow-xl border border-amber-300 flex items-center gap-2 pointer-events-auto">
+                      <Scissors className="w-3.5 h-3.5" />
+                      <span>A4 PAGE BREAK • END OF PAGE {breakIdx + 1} ({lineTopMm}mm)</span>
+                      <button
+                        onClick={handleFitToOnePage}
+                        className="bg-black text-orange-300 px-2 py-0.5 rounded-full hover:bg-slate-900 text-[9px] cursor-pointer"
+                      >
+                        ⚡ Fit 1 Page
+                      </button>
+                      <button
+                        onClick={handlePushToPageTwo}
+                        className="bg-black text-amber-300 px-2 py-0.5 rounded-full hover:bg-slate-900 text-[9px] cursor-pointer"
+                      >
+                        ⬇️ Push Section to Page 2
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400 animate-pulse">Loading Template Engine...</div>}>
                 <SelectedTemplateComponent
