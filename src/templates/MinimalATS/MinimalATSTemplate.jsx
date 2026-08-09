@@ -143,7 +143,9 @@ export const MinimalATSTemplate = ({ resumeData, accentHex = '#000000', fontFami
           <h2 className="font-bold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
             Languages
           </h2>
-          <p className="text-slate-700 font-medium">{languages.join(' • ')}</p>
+          <p className="text-slate-700 font-medium">
+            {languages.map(l => typeof l === 'string' ? l : `${l.name || l.language || ''}${l.proficiency ? ` (${l.proficiency})` : ''}`).filter(Boolean).join(' • ')}
+          </p>
         </div>
       )}
     </div>

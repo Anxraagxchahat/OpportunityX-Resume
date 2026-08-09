@@ -40,12 +40,22 @@ export const AchievementsBlock = ({ achievements, accentHex, variant = 'default'
 export const LanguagesBlock = ({ languages, variant = 'default' }) => {
   if (!languages || languages.length === 0) return null;
 
+  const formatted = languages.map((l) => {
+    if (typeof l === 'string') return { name: l, proficiency: '' };
+    return {
+      name: l.name || l.language || '',
+      proficiency: l.proficiency || ''
+    };
+  }).filter((l) => l.name);
+
+  if (formatted.length === 0) return null;
+
   if (variant === 'sidebar') {
     return (
       <div className="flex flex-wrap gap-1">
-        {languages.map((l) => (
-          <span key={l.id} className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-white/15 text-white/90 border border-white/20">
-            {l.language}{l.proficiency ? ` (${l.proficiency})` : ''}
+        {formatted.map((l, idx) => (
+          <span key={idx} className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-white/15 text-white/90 border border-white/20">
+            {l.name}{l.proficiency ? ` (${l.proficiency})` : ''}
           </span>
         ))}
       </div>
@@ -54,9 +64,9 @@ export const LanguagesBlock = ({ languages, variant = 'default' }) => {
 
   return (
     <div className="flex flex-wrap gap-1.5 text-[10px]">
-      {languages.map((l) => (
-        <span key={l.id} className="text-slate-700">
-          <strong>{l.language}</strong>{l.proficiency ? ` (${l.proficiency})` : ''}
+      {formatted.map((l, idx) => (
+        <span key={idx} className="text-slate-700">
+          <strong>{l.name}</strong>{l.proficiency ? ` (${l.proficiency})` : ''}
         </span>
       ))}
     </div>

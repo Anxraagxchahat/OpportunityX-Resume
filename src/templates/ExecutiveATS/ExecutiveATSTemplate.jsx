@@ -146,7 +146,9 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
           <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
             Languages
           </h2>
-          <p className="text-slate-700 font-medium">{languages.join(' • ')}</p>
+          <p className="text-slate-700 font-medium">
+            {languages.map(l => typeof l === 'string' ? l : `${l.name || l.language || ''}${l.proficiency ? ` (${l.proficiency})` : ''}`).filter(Boolean).join(' • ')}
+          </p>
         </div>
       )}
     </div>
