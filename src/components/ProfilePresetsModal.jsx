@@ -12,9 +12,9 @@ export const profilesList = [
 ];
 
 export const presetsList = [
-  { id: 'Fresher', title: 'Fresher & Entry Level', desc: 'Prioritizes education, academic projects, and core technical skills', template: 'student' },
+  { id: 'Fresher', title: 'Fresher & Entry Level', desc: 'Prioritizes education, academic projects, and core technical skills', template: 'compact-entry' },
   { id: 'Experienced', title: 'Experienced Professional', desc: 'Emphasizes high-impact work experience, achievements, and metrics', template: 'executive' },
-  { id: 'Student', title: 'Student & Campus Placement', desc: 'Highlights coursework, honors, GPA, and hackathon wins', template: 'student' },
+  { id: 'Student', title: 'Student & Campus Placement', desc: 'Highlights coursework, honors, GPA, and hackathon wins', template: 'compact-entry' },
   { id: 'International', title: 'International Applicant', desc: 'ATS-friendly minimalist layout with clean global contact info', template: 'minimal' }
 ];
 

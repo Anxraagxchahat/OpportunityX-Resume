@@ -479,14 +479,49 @@ export const ResumeProvider = ({ children }) => {
 
   const applyResumePreset = useCallback((presetName) => {
     updateActiveResume((prev) => {
-      let targetTemplate = prev.metadata.template || 'modern';
-      let targetProfile = prev.metadata.targetProfile || 'Software Developer';
-      if (presetName === 'Fresher') { targetTemplate = 'student'; targetProfile = 'Fresher / Entry Level'; }
-      else if (presetName === 'Experienced') { targetTemplate = 'executive'; targetProfile = 'Senior Engineer'; }
-      else if (presetName === 'Student') { targetTemplate = 'student'; targetProfile = 'College Student'; }
-      else if (presetName === 'International Resume') { targetTemplate = 'minimal'; targetProfile = 'Global Applicant'; }
+      let targetTemplate = prev.metadata?.template || 'modern';
+      let targetProfile = prev.metadata?.targetProfile || 'Software Developer';
+      let accentColor = prev.metadata?.accentColor || '#F97316';
 
-      return { ...prev, metadata: { ...prev.metadata, template: targetTemplate, targetProfile } };
+      if (presetName === 'Fresher' || presetName === 'Student') {
+        targetTemplate = 'compact-entry';
+        targetProfile = presetName === 'Fresher' ? 'Fresher & Entry Level' : 'Student & Campus Placement';
+        accentColor = '#F97316';
+      } else if (presetName === 'Experienced') {
+        targetTemplate = 'executive';
+        targetProfile = 'Experienced Professional';
+        accentColor = '#1E293B';
+      } else if (presetName === 'International' || presetName === 'International Resume') {
+        targetTemplate = 'minimal';
+        targetProfile = 'International Applicant';
+        accentColor = '#2563EB';
+      }
+
+      const caps = getTemplateCapabilities(targetTemplate);
+      const isPhoto = caps.supportsPhoto;
+      const defaultVisiblePos = caps.supportedPhotoPositions?.find(p => p !== 'hidden') || 'top-right';
+
+      let nextPhotoPosition = prev.assets?.photoPosition;
+      if (isPhoto) {
+        if (!nextPhotoPosition || nextPhotoPosition === 'hidden') {
+          nextPhotoPosition = defaultVisiblePos;
+        }
+      }
+
+      return {
+        ...prev,
+        assets: {
+          ...(prev.assets || {}),
+          photoPosition: nextPhotoPosition
+        },
+        metadata: {
+          ...prev.metadata,
+          template: targetTemplate,
+          targetProfile,
+          accentColor,
+          lastSaved: new Date().toISOString()
+        }
+      };
     });
   }, [updateActiveResume]);
 
