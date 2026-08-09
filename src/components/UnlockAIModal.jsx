@@ -43,67 +43,67 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#0B0D14] border border-orange-500/30 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-5 relative max-h-[92vh] overflow-y-auto custom-scrollbar">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn no-print">
+      <div className="bg-[var(--ox-card-bg,#0B0D14)] border border-[var(--ox-border)] rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-5 relative max-h-[92vh] overflow-y-auto custom-scrollbar transition-colors duration-300">
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-900 transition-colors"
+          className="absolute top-4 right-4 text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] p-1 rounded-lg hover:bg-[var(--ox-surface-secondary)] transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Top Guarantee Line */}
-        <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-[11px] text-orange-300 font-semibold text-center leading-snug">
+        <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-[11px] text-orange-600 dark:text-orange-300 font-semibold text-center leading-snug">
           Resume Builder will always remain free. Login is only required to unlock AI features and save AI credits.
         </div>
 
         {/* Modal Header */}
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/40 text-orange-400">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/40 text-orange-500 flex-shrink-0">
             <Sparkles className="w-6 h-6 animate-pulse" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-white">Unlock AI Features</h3>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Login to claim your <strong className="text-amber-400">5 FREE Welcome AI Credits</strong>.
+            <h3 className="text-xl font-black text-[var(--ox-text-primary)]">Unlock AI Features</h3>
+            <p className="text-xs text-[var(--ox-text-secondary)] mt-0.5">
+              Login to claim your <strong className="text-amber-500 font-bold">5 FREE Welcome AI Credits</strong>.
             </p>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-[var(--ox-text-muted)]">
               Continue building resumes without login anytime.
             </p>
           </div>
         </div>
 
         {/* AI Benefits Checklist */}
-        <div className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Included AI Benefits:</span>
-          <div className="grid grid-cols-2 gap-2 text-xs text-slate-200 pt-1">
-            <div className="flex items-center gap-1.5 font-semibold text-orange-400">
-              <Check className="w-4 h-4 text-orange-400 flex-shrink-0" />
+        <div className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-[var(--ox-text-secondary)]">Included AI Benefits:</span>
+          <div className="grid grid-cols-2 gap-2 text-xs text-[var(--ox-text-primary)] pt-1">
+            <div className="flex items-center gap-1.5 font-semibold text-orange-500">
+              <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
               <span>5 Welcome Credits</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <span>AI Summary Generator</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <span>AI Resume Review</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <span>Experience Rewrite</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <span>Grammar Assistant</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <span>Cover Letter Generator</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <span>LinkedIn Generator</span>
             </div>
           </div>
@@ -113,41 +113,41 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
         <div className="space-y-2.5 pt-1">
           <button
             onClick={() => openRealAuth()}
-            className="w-full py-3 px-4 rounded-xl bg-[#141824] hover:bg-slate-800 border border-slate-700 text-xs font-bold text-white flex items-center justify-center gap-2.5 transition-all shadow-sm"
+            className="w-full py-3 px-4 rounded-xl bg-[var(--ox-surface-primary)] hover:bg-[var(--ox-card-hover)] border border-[var(--ox-border)] text-xs font-bold text-[var(--ox-text-primary)] flex items-center justify-center gap-2.5 transition-all shadow-sm cursor-pointer"
           >
-            <GoogleIcon className="w-4 h-4" /> Continue with Google
+            <GoogleIcon className="w-4 h-4 flex-shrink-0" /> Continue with Google
           </button>
 
           <button
             onClick={() => openRealAuth()}
-            className="w-full py-3 px-4 rounded-xl bg-[#141824] hover:bg-slate-800 border border-slate-700 text-xs font-bold text-white flex items-center justify-center gap-2.5 transition-all shadow-sm"
+            className="w-full py-3 px-4 rounded-xl bg-[var(--ox-surface-primary)] hover:bg-[var(--ox-card-hover)] border border-[var(--ox-border)] text-xs font-bold text-[var(--ox-text-primary)] flex items-center justify-center gap-2.5 transition-all shadow-sm cursor-pointer"
           >
-            <GithubIcon className="w-4 h-4" /> Continue with GitHub
+            <GithubIcon className="w-4 h-4 flex-shrink-0" /> Continue with GitHub
           </button>
 
           {!showEmailForm ? (
             <button
               onClick={() => setShowEmailForm(true)}
-              className="w-full py-2.5 px-4 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center justify-center gap-2 transition-all"
+              className="w-full py-2.5 px-4 rounded-xl bg-[var(--ox-surface-secondary)] hover:bg-[var(--ox-card-hover)] border border-[var(--ox-border)] text-xs font-semibold text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
-              <Mail className="w-4 h-4 text-slate-400" /> Continue with Email
+              <Mail className="w-4 h-4 text-[var(--ox-text-muted)]" /> Continue with Email
             </button>
           ) : (
-            <form onSubmit={handleEmailSubmit} className="space-y-2 p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+            <form onSubmit={handleEmailSubmit} className="space-y-2 p-3 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)]">
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <Mail className="w-4 h-4 text-[var(--ox-text-muted)] absolute left-3 top-3" />
                 <input
                   type="email"
                   required
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="your.email@example.com"
-                  className="w-full bg-[#0B0D14] border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                  className="w-full bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-xl pl-9 pr-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-black font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5"
+                className="w-full py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>Claim 5 Free Credits & Continue</span> <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -156,17 +156,17 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
 
           <button
             onClick={handleClose}
-            className="w-full py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+            className="w-full py-2 text-xs font-semibold text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] transition-colors cursor-pointer"
           >
             Cancel (Continue Editing Without Login)
           </button>
         </div>
 
         {/* Login Benefits Summary */}
-        <div className="pt-3 border-t border-slate-800/80 space-y-1.5">
-          <span className="text-[11px] font-bold text-slate-300">Login gives you:</span>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400">
-            <span className="text-emerald-400">✓ 5 Welcome AI Credits</span>
+        <div className="pt-3 border-t border-[var(--ox-border)] space-y-1.5">
+          <span className="text-[11px] font-bold text-[var(--ox-text-secondary)]">Login gives you:</span>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--ox-text-muted)]">
+            <span className="text-emerald-500 font-semibold">✓ 5 Welcome AI Credits</span>
             <span>✓ AI Features</span>
             <span>✓ Cloud Backup</span>
             <span>✓ Multi-device Sync</span>
@@ -175,9 +175,9 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Privacy Note */}
-        <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-[10px] text-slate-400 space-y-1 leading-relaxed">
-          <div className="flex items-center gap-1.5 font-bold text-slate-300">
-            <Shield className="w-3.5 h-3.5 text-emerald-400" /> Your Resume Privacy is Guaranteed
+        <div className="p-3 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[10px] text-[var(--ox-text-muted)] space-y-1 leading-relaxed">
+          <div className="flex items-center gap-1.5 font-bold text-[var(--ox-text-secondary)]">
+            <Shield className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" /> Your Resume Privacy is Guaranteed
           </div>
           <p>
             Your resume is private. OpportunityX does not sell your personal data. AI requests are processed only when you use AI features. Only the minimum required resume content is sent for AI generation.
