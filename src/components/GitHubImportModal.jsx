@@ -318,47 +318,37 @@ export const GitHubImportModal = ({ isOpen, onClose }) => {
               )}
 
               <div className="max-w-md mx-auto space-y-4">
-                {/* Method 1: OAuth */}
-                <button
-                  onClick={handleOAuthConnect}
-                  disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2"
-                >
-                  {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
-                  <span>Continue with GitHub (OAuth)</span>
-                </button>
-
-                <div className="flex items-center gap-3 text-[var(--ox-text-muted)] text-xs my-2">
-                  <div className="flex-1 h-px bg-[var(--ox-border)]" />
-                  <span>OR</span>
-                  <div className="flex-1 h-px bg-[var(--ox-border)]" />
-                </div>
-
-                {/* Method 2: Manual Username Input */}
+                {/* GitHub Username Input Form */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    handleFetchUser(usernameInput);
+                    if (usernameInput.trim()) {
+                      handleFetchUser(usernameInput.trim());
+                    }
                   }}
                   className="space-y-3"
                 >
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-3 text-xs text-[var(--ox-text-muted)] font-mono">@</span>
-                    <input
-                      type="text"
-                      value={usernameInput}
-                      onChange={(e) => setUsernameInput(e.target.value)}
-                      placeholder="github-username"
-                      className="w-full bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-xl pl-8 pr-4 py-2.5 text-xs placeholder-[var(--ox-text-muted)] focus:outline-none focus:border-purple-500"
-                    />
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-bold text-[var(--ox-text-secondary)]">GitHub Username</label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-3 text-xs text-[var(--ox-text-muted)] font-mono">@</span>
+                      <input
+                        type="text"
+                        value={usernameInput}
+                        onChange={(e) => setUsernameInput(e.target.value)}
+                        placeholder="e.g. torvalds or your-username"
+                        className="w-full bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-xl pl-8 pr-4 py-2.5 text-xs placeholder-[var(--ox-text-muted)] focus:outline-none focus:border-purple-500 transition-colors"
+                      />
+                    </div>
                   </div>
+
                   <button
                     type="submit"
                     disabled={isLoading || !usernameInput.trim()}
-                    className="w-full py-2.5 px-4 rounded-xl bg-[var(--ox-surface-secondary)] hover:bg-[var(--ox-card-hover)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] font-bold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-3 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                   >
                     {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                    <span>Fetch Public Profile</span>
+                    <span>{isLoading ? 'Fetching GitHub Profile...' : 'Fetch GitHub Profile'}</span>
                   </button>
                 </form>
               </div>
