@@ -448,44 +448,56 @@ export const A4ResumePreview = () => {
                       fontFamily: `'${fontFamily}', sans-serif`
                     }}
                   >
-                    {/* Clipped Offset View of Resume Template */}
+                    {/* Active Printable Viewport Frame (Clips Page 1 cleanly at break line leaving bottom space blank) */}
                     <div
                       style={{
                         position: 'absolute',
-                        top: `${effectiveTopOffsetMm}mm`,
+                        top: 0,
                         left: 0,
                         width: '210mm',
-                        paddingTop: `${topPadMm}mm`,
-                        paddingLeft: `${sidePadMm}mm`,
-                        paddingRight: `${sidePadMm}mm`,
-                        paddingBottom: `${bottomPadMm}mm`
+                        height: pageIdx === 0 ? `${297 + Math.min(0, pageBreakOffset)}mm` : '297mm',
+                        overflow: 'hidden'
                       }}
                     >
-                      <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400 animate-pulse">Loading Template Engine...</div>}>
-                        <SelectedTemplateComponent
-                          resumeData={activeResume}
-                          accentHex={accentHex}
-                          fontFamily={fontFamily}
-                        />
-                      </Suspense>
+                      {/* Clipped Offset View of Resume Template */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: `${effectiveTopOffsetMm}mm`,
+                          left: 0,
+                          width: '210mm',
+                          paddingTop: `${topPadMm}mm`,
+                          paddingLeft: `${sidePadMm}mm`,
+                          paddingRight: `${sidePadMm}mm`,
+                          paddingBottom: `${topPadMm}mm`
+                        }}
+                      >
+                        <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400 animate-pulse">Loading Template Engine...</div>}>
+                          <SelectedTemplateComponent
+                            resumeData={activeResume}
+                            accentHex={accentHex}
+                            fontFamily={fontFamily}
+                          />
+                        </Suspense>
 
-                      {/* Signature & Watermark on Last Page */}
-                      {pageIdx === totalPages - 1 && (
-                        <>
-                          {assets?.digitalSignature && (
-                            <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
-                              <div className="text-center">
-                                <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
-                                <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                        {/* Signature & Watermark on Last Page */}
+                        {pageIdx === totalPages - 1 && (
+                          <>
+                            {assets?.digitalSignature && (
+                              <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
+                                <div className="text-center">
+                                  <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
+                                  <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                                </div>
                               </div>
+                            )}
+                            <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+                              <span>OpportunityX Resume Engine</span>
+                              <span>resume.opportunityx.co.in</span>
                             </div>
-                          )}
-                          <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
-                            <span>OpportunityX Resume Engine</span>
-                            <span>resume.opportunityx.co.in</span>
-                          </div>
-                        </>
-                      )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
 
