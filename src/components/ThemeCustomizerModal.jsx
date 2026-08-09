@@ -134,39 +134,108 @@ export const ThemeCustomizerModal = () => {
           </div>
         </div>
 
-        {/* 4. Page Margins & Spacing */}
-        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-300">Page Margins</label>
-            <select
-              value={style.pageMargin || 'normal'}
-              onChange={(e) => updateStyle('pageMargin', e.target.value)}
-              className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white"
-            >
-              <option value="compact">Compact (Tight)</option>
-              <option value="normal">Normal (Standard)</option>
-              <option value="spacious">Spacious (Generous)</option>
-            </select>
+        {/* 4. Section Spacing & Page Break Fixer */}
+        <div className="space-y-3 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-300">Page Break & Section Spacing</span>
+            <span className="text-[10px] text-amber-400 font-semibold">Fix 2nd Page & Cutoffs</span>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-300">Line Spacing</label>
-            <select
-              value={style.lineSpacing || 'normal'}
-              onChange={(e) => updateStyle('lineSpacing', e.target.value)}
-              className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white"
+          {/* Quick Preset Buttons */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => {
+                updateStyle('pageMargin', 'compact');
+                updateStyle('sectionSpacing', 'compact');
+                updateStyle('lineSpacing', 'compact');
+                updateStyle('pageBreakOffset', 0);
+              }}
+              className="p-2 rounded-xl bg-orange-500/10 border border-orange-500/40 text-orange-400 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-orange-500/20 transition-all cursor-pointer"
             >
-              <option value="compact">Compact</option>
-              <option value="normal">Normal</option>
-              <option value="relaxed">Relaxed</option>
-            </select>
+              ⚡ Fit Everything on 1 Page
+            </button>
+            <button
+              onClick={() => {
+                updateStyle('sectionSpacing', 'spacious');
+                updateStyle('pageMargin', 'spacious');
+                updateStyle('pageBreakOffset', -15);
+              }}
+              className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-amber-500/20 transition-all cursor-pointer"
+            >
+              ✂️ Push Cutoff to Page 2
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-400">Page Margins</label>
+              <select
+                value={style.pageMargin || 'normal'}
+                onChange={(e) => updateStyle('pageMargin', e.target.value)}
+                className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white"
+              >
+                <option value="compact">Compact (Tight)</option>
+                <option value="normal">Normal (Standard)</option>
+                <option value="spacious">Spacious (Generous)</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-400">Section Gap</label>
+              <select
+                value={style.sectionSpacing || 'normal'}
+                onChange={(e) => updateStyle('sectionSpacing', e.target.value)}
+                className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white"
+              >
+                <option value="compact">Compact</option>
+                <option value="normal">Normal</option>
+                <option value="spacious">Spacious</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-400">Line Spacing</label>
+              <select
+                value={style.lineSpacing || 'normal'}
+                onChange={(e) => updateStyle('lineSpacing', e.target.value)}
+                className="w-full bg-[#10131D] border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white"
+              >
+                <option value="compact">Compact</option>
+                <option value="normal">Normal</option>
+                <option value="relaxed">Relaxed</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Manual Page Break Offset */}
+          <div className="space-y-1 pt-1">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-semibold text-slate-400">Page Break Line Shift Offset</span>
+              <span className="text-orange-400 font-mono font-bold">{style.pageBreakOffset || 0}mm</span>
+            </div>
+            <div className="grid grid-cols-5 gap-1 text-[11px]">
+              {[-20, -10, 0, 10, 20].map((offset) => {
+                const isSel = (Number(style.pageBreakOffset) || 0) === offset;
+                return (
+                  <button
+                    key={offset}
+                    onClick={() => updateStyle('pageBreakOffset', offset)}
+                    className={`py-1 rounded-lg border text-center font-mono font-bold transition-all cursor-pointer ${
+                      isSel ? 'bg-orange-500 text-white border-orange-500' : 'bg-[#10131D] text-slate-400 border-slate-800 hover:text-white'
+                    }`}
+                  >
+                    {offset > 0 ? `+${offset}` : offset}mm
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         <div className="pt-3 border-t border-slate-800 flex justify-end">
           <button
             onClick={() => setIsThemeCustomizerOpen(false)}
-            className="px-5 py-2 text-xs font-bold text-black bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl"
+            className="px-5 py-2 text-xs font-bold text-black bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl cursor-pointer"
           >
             Apply Styling
           </button>
