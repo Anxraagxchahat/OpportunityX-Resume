@@ -911,11 +911,54 @@ export const ResumeBuilderPage = () => {
                   {projects.map((proj, idx) => (
                     <div key={proj.id} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-orange-400">{proj.name || `Project #${idx + 1}`}</span>
+                        <span className="text-xs font-bold text-orange-400">{proj.name || proj.title || `Project #${idx + 1}`}</span>
                         <button onClick={() => removeProjectItem(proj.id)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
-                      <input type="text" value={proj.name || ''} onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, name: e.target.value } : p)))} placeholder="e.g. OpportunityX Pulse Dashboard" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
-                      <textarea rows={2} value={proj.description || ''} onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, description: e.target.value } : p)))} placeholder="e.g. Open-source analytics dashboard monitor designed for high-scale student tech hubs..." className="w-full bg-[#080B12] border border-slate-800 rounded-lg p-2 text-xs text-white" />
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-semibold text-slate-400">Project Title / Name *</label>
+                          <input
+                            type="text"
+                            value={proj.name || proj.title || ''}
+                            onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, name: e.target.value, title: e.target.value } : p)))}
+                            placeholder="e.g. OpportunityX AI Career Platform"
+                            className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-semibold text-slate-400">Project Link / GitHub URL</label>
+                          <input
+                            type="text"
+                            value={proj.link || proj.url || proj.htmlUrl || ''}
+                            onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, link: e.target.value, url: e.target.value, htmlUrl: e.target.value } : p)))}
+                            placeholder="e.g. https://github.com/user/project"
+                            className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-slate-400">Technologies Used (Tech Stack)</label>
+                        <input
+                          type="text"
+                          value={proj.techStack || (Array.isArray(proj.technologies) ? proj.technologies.join(', ') : '') || ''}
+                          onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, techStack: e.target.value } : p)))}
+                          placeholder="e.g. React.js, Node.js, PostgreSQL, Tailwind CSS, AWS"
+                          className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-slate-400">Project Description / Details</label>
+                        <textarea
+                          rows={2}
+                          value={proj.description || ''}
+                          onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, description: e.target.value } : p)))}
+                          placeholder="e.g. Built an AI-powered career platform that helps students discover internships and scholarships with ATS scoring..."
+                          className="w-full bg-[#080B12] border border-slate-800 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
