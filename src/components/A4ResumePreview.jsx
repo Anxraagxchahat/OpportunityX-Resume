@@ -14,7 +14,9 @@ import {
   Scissors,
   CheckCircle2,
   AlertCircle,
-  ArrowUpDown
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 import { trackEvent, AnalyticsEvents } from '../utils/analytics';
@@ -103,8 +105,8 @@ export const A4ResumePreview = () => {
       const deltaYMm = deltaYPx / (3.7795 * scale);
       let newOffset = Math.round(dragStartOffsetRef.current + deltaYMm);
 
-      // Clamp offset between -60mm and +40mm
-      newOffset = Math.max(-60, Math.min(40, newOffset));
+      // Clamp offset between -140mm and +50mm for deep section pushes
+      newOffset = Math.max(-140, Math.min(50, newOffset));
       updateStyle('pageBreakOffset', newOffset);
     };
 
@@ -129,10 +131,17 @@ export const A4ResumePreview = () => {
   };
 
   const handlePushToPageTwo = () => {
-    updateStyle('sectionSpacing', 'spacious');
-    updateStyle('pageMargin', 'spacious');
-    updateStyle('pageBreakOffset', -20);
+    const currentOffset = styleConfig?.pageBreakOffset || 0;
+    // Step by -25mm per click up to -140mm to cleanly push sections onto Page 2
+    const nextOffset = Math.max(-140, currentOffset - 25);
+    updateStyle('pageBreakOffset', nextOffset);
     updateStyle('page2TopMargin', 15);
+  };
+
+  const handlePullToPageOne = () => {
+    const currentOffset = styleConfig?.pageBreakOffset || 0;
+    const nextOffset = Math.min(50, currentOffset + 25);
+    updateStyle('pageBreakOffset', nextOffset);
   };
 
   const handleDownloadPDF = async () => {
@@ -285,13 +294,22 @@ export const A4ResumePreview = () => {
               </div>
 
               {/* Page Break Line Shift Offset */}
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-semibold text-[var(--ox-text-secondary)]">Page Line Shift Offset</span>
-                  <span className="text-orange-500 font-mono font-bold">{pageBreakOffset}mm</span>
+                  <span className="font-semibold text-[var(--ox-text-secondary)]">Page Cutoff Line Shift</span>
+                  <span className="text-orange-500 font-mono font-bold">{pageBreakOffset > 0 ? `+${pageBreakOffset}` : pageBreakOffset}mm</span>
                 </div>
+                <input
+                  type="range"
+                  min={-140}
+                  max={50}
+                  step={1}
+                  value={pageBreakOffset}
+                  onChange={(e) => updateStyle('pageBreakOffset', Number(e.target.value))}
+                  className="w-full accent-orange-500 cursor-pointer h-2 bg-[var(--ox-surface-secondary)] rounded-lg"
+                />
                 <div className="grid grid-cols-5 gap-1">
-                  {[-20, -10, 0, 10, 20].map((off) => (
+                  {[-100, -60, -30, 0, 20].map((off) => (
                     <button
                       key={off}
                       onClick={() => updateStyle('pageBreakOffset', off)}
@@ -573,30 +591,43 @@ export const A4ResumePreview = () => {
                   {/* Section-Aware A4 Page Cutoff Marker with Mouse Drag Handle */}
                   {pageIdx < totalPages - 1 && (
                     <div className="w-[210mm] mt-2 flex items-center justify-between gap-2 bg-orange-500/10 border border-dashed border-orange-500/40 p-2.5 rounded-xl text-xs">
-                      <span className="text-[11px] font-bold text-orange-400 flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-orange-400 flex items-center gap-1.5 shrink-0">
                         <Scissors className="w-3.5 h-3.5" /> A4 PAGE BREAK AT {297 + pageBreakOffset}mm (Page {pageIdx + 1})
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap justify-end">
                         {/* Mouse Drag Handle Button */}
                         <div
                           onMouseDown={handleLineDragStart}
                           className="bg-orange-600 hover:bg-orange-500 text-white font-extrabold text-[10px] px-3 py-1 rounded-lg shadow-md flex items-center gap-1.5 cursor-ns-resize select-none active:scale-95 transition-all"
-                          title="Click & Drag vertically (↕) to shift Page Break position"
+                          title="Click & Drag vertically (↕) up or down to shift Page Break position"
                         >
                           <ArrowUpDown className="w-3.5 h-3.5" />
                           <span>DRAG LINE ↕ ({pageBreakOffset > 0 ? `+${pageBreakOffset}` : pageBreakOffset}mm)</span>
                         </div>
                         <button
+                          onClick={handlePushToPageTwo}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-extrabold text-[10px] border border-amber-500/40 hover:bg-amber-500/30 cursor-pointer flex items-center gap-1 shadow-sm"
+                          title="Push page cutoff line UP by 25mm so the overlapping section (e.g. Skills) jumps cleanly to Page 2"
+                        >
+                          <ArrowDown className="w-3 h-3 text-amber-400" />
+                          <span>Push Section to Page 2 (-25mm)</span>
+                        </button>
+                        {pageBreakOffset < 0 && (
+                          <button
+                            onClick={handlePullToPageOne}
+                            className="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-300 font-bold text-[10px] border border-slate-700 hover:bg-slate-800 cursor-pointer flex items-center gap-1"
+                            title="Pull page cutoff line DOWN by 25mm to fit more on Page 1"
+                          >
+                            <ArrowUp className="w-3 h-3 text-slate-400" />
+                            <span>Pull Up (+25mm)</span>
+                          </button>
+                        )}
+                        <button
                           onClick={handleFitToOnePage}
                           className="px-2.5 py-1 rounded-lg bg-orange-500 text-white font-extrabold text-[10px] shadow-sm hover:bg-orange-600 cursor-pointer"
+                          title="Auto-adjust spacing to fit entire resume onto 1 single page"
                         >
                           ⚡ Fit 1 Page
-                        </button>
-                        <button
-                          onClick={handlePushToPageTwo}
-                          className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 font-extrabold text-[10px] border border-amber-500/40 hover:bg-slate-800 cursor-pointer"
-                        >
-                          ⬇️ Push to Page 2
                         </button>
                       </div>
                     </div>
