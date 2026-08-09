@@ -81,6 +81,12 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const handleError = (firebaseError) => {
     trackAuthEvent('auth_error', { code: firebaseError.code, message: firebaseError.message });
 
+    const msg = firebaseError.message || '';
+    if (msg.includes('redirect_uri') || (firebaseError.code === 'auth/invalid-credential' && activeProvider === 'github')) {
+      setError('GitHub OAuth Callback URL is misconfigured in GitHub OAuth App settings. Authorization Callback URL must be set to: https://opportunityx-61efd.firebaseapp.com/__/auth/handler');
+      return;
+    }
+
     const errorMap = {
       'auth/wrong-password': 'Incorrect password. Please try again.',
       'auth/user-not-found': 'No account found with this email. Try signing up.',
