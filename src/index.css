@@ -169,6 +169,7 @@ html, body {
 }
 
 [data-theme='light'] .bg-\[\#10131D\],
+[data-theme='light'] .bg-\[\#141824\],
 [data-theme='light'] .bg-slate-800,
 [data-theme='light'] .bg-slate-900\/60 {
   background-color: #F1F5F9 !important;
