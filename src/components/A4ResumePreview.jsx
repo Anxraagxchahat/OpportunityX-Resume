@@ -76,6 +76,9 @@ export const A4ResumePreview = () => {
   const lineSpacing = style?.lineSpacing || 'normal';
   const pageBreakOffset = Number(style?.pageBreakOffset) || 0;
 
+  const showPage2Header = style?.showPage2Header !== false;
+  const page2TopMargin = Number(style?.page2TopMargin) ?? 10;
+
   // Base margin values in mm
   const topPadMm = pageMargin === 'compact' ? 6 : pageMargin === 'spacious' ? 14 : 10;
   const sidePadMm = pageMargin === 'compact' ? 8 : pageMargin === 'spacious' ? 16 : 12;
@@ -124,6 +127,7 @@ export const A4ResumePreview = () => {
     updateStyle('sectionSpacing', 'spacious');
     updateStyle('pageMargin', 'spacious');
     updateStyle('pageBreakOffset', -20);
+    updateStyle('page2TopMargin', 15);
   };
 
   const handleDownloadPDF = async () => {
@@ -295,6 +299,38 @@ export const A4ResumePreview = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Page 2 Header & Top Push Spacing */}
+              <div className="space-y-1.5 pt-2 border-t border-[var(--ox-border)]">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-[var(--ox-text-secondary)]">Page 2 Header & Spacing</span>
+                  <button
+                    onClick={() => updateStyle('showPage2Header', !showPage2Header)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${
+                      showPage2Header ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'
+                    }`}
+                  >
+                    Header: {showPage2Header ? 'ON ✓' : 'OFF ✕'}
+                  </button>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-[var(--ox-text-muted)]">
+                  <span>Page 2 Top Push Spacing:</span>
+                  <span className="text-amber-400 font-mono font-bold">{page2TopMargin}mm</span>
+                </div>
+                <div className="grid grid-cols-5 gap-1">
+                  {[0, 5, 10, 15, 20].map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => updateStyle('page2TopMargin', m)}
+                      className={`py-1 rounded-lg border text-center font-mono font-bold text-[10px] cursor-pointer ${
+                        page2TopMargin === m ? 'bg-amber-500 text-black border-amber-500' : 'bg-[var(--ox-surface-secondary)] border-[var(--ox-border)] text-[var(--ox-text-secondary)]'
+                      }`}
+                    >
+                      {m}mm
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -427,6 +463,9 @@ export const A4ResumePreview = () => {
               // Effective top offset for template viewport on Page 2+
               const effectiveTopOffsetMm = pageIdx === 0 ? 0 : -(pageIdx * 297 + pageBreakOffset);
 
+              // Top push padding for Page 2+ text positioning
+              const page2TopPushPad = pageIdx > 0 ? (showPage2Header ? page2TopMargin + 8 : page2TopMargin) : 0;
+
               return (
                 <div key={`a4-page-sheet-${pageIdx}`} className="flex flex-col items-center">
                   {/* Page Number Badge */}
@@ -448,6 +487,28 @@ export const A4ResumePreview = () => {
                       fontFamily: `'${fontFamily}', sans-serif`
                     }}
                   >
+                    {/* Page 2 Mini Running Header */}
+                    {pageIdx > 0 && showPage2Header && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: `${topPadMm}mm`,
+                          left: `${sidePadMm}mm`,
+                          right: `${sidePadMm}mm`,
+                          zIndex: 20
+                        }}
+                        className="border-b border-slate-300/80 pb-1.5 flex items-center justify-between text-[11px] font-bold text-slate-700 select-none bg-inherit"
+                      >
+                        <span className="flex items-center gap-1.5 text-orange-600 font-extrabold uppercase tracking-wide text-[10px]">
+                          <FileText className="w-3.5 h-3.5 text-orange-500" />
+                          {personal?.fullName || 'Candidate Name'} — Resume (Page {pageIdx + 1})
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-normal font-mono">
+                          {personal?.email || personal?.phone || 'OpportunityX Engine'}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Active Printable Viewport Frame (Clips Page 1 cleanly at break line leaving bottom space blank) */}
                     <div
                       style={{
@@ -466,7 +527,7 @@ export const A4ResumePreview = () => {
                           top: `${effectiveTopOffsetMm}mm`,
                           left: 0,
                           width: '210mm',
-                          paddingTop: `${topPadMm}mm`,
+                          paddingTop: `${topPadMm + page2TopPushPad}mm`,
                           paddingLeft: `${sidePadMm}mm`,
                           paddingRight: `${sidePadMm}mm`,
                           paddingBottom: `${topPadMm}mm`

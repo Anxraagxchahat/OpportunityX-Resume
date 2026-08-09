@@ -230,6 +230,44 @@ export const ThemeCustomizerModal = () => {
               })}
             </div>
           </div>
+
+          {/* Page 2 Header & Top Push Spacing Controls */}
+          <div className="space-y-2 pt-2 border-t border-slate-800/80">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-300">Page 2 Header & Top Spacing</span>
+              <button
+                onClick={() => updateStyle('showPage2Header', style.showPage2Header === false ? true : false)}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                  style.showPage2Header !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'
+                }`}
+              >
+                Page 2 Header: {style.showPage2Header !== false ? 'ON ✓' : 'OFF ✕'}
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-400 font-medium">Page 2 Top Push Spacing (Text Offset)</span>
+                <span className="text-amber-400 font-mono font-bold">{style.page2TopMargin || 10}mm</span>
+              </div>
+              <div className="grid grid-cols-6 gap-1 text-[10px]">
+                {[0, 5, 10, 15, 20, 25].map((m) => {
+                  const isSel = (Number(style.page2TopMargin) ?? 10) === m;
+                  return (
+                    <button
+                      key={m}
+                      onClick={() => updateStyle('page2TopMargin', m)}
+                      className={`py-1 rounded-lg border text-center font-mono font-bold transition-all cursor-pointer ${
+                        isSel ? 'bg-amber-500 text-black border-amber-500' : 'bg-[#10131D] text-slate-400 border-slate-800 hover:text-white'
+                      }`}
+                    >
+                      {m}mm
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="pt-3 border-t border-slate-800 flex justify-end">
