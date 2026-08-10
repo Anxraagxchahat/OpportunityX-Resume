@@ -347,6 +347,7 @@ export const ResumeProvider = ({ children }) => {
 
 
   // BYOK Keys loaded securely from environment (.env) or localStorage
+  const ENV_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENROUTER_KEY || '';
   const [byokKeys, setByokKeys] = useState(() => {
     try {
       const saved = localStorage.getItem(BYOK_KEY);
