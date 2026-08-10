@@ -39,10 +39,8 @@ export const Navbar = () => {
     { label: 'AI Suite', to: '/ai-assistant', icon: Wand2 }
   ];
 
-  const isBuilderRoute = location.pathname === '/builder';
-
   return (
-    <header className={`${isBuilderRoute ? 'hidden md:block' : ''} sticky top-0 z-50 w-full bg-[var(--ox-surface-primary)] backdrop-blur-md border-b border-[var(--ox-border)] transition-colors duration-300 no-print`}>
+    <header className="hidden md:block sticky top-0 z-50 w-full bg-[var(--ox-surface-primary)] backdrop-blur-md border-b border-[var(--ox-border)] transition-colors duration-300 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-3">
 
         {/* Mobile Left Hamburger */}
