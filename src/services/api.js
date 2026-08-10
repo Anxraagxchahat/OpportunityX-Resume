@@ -107,6 +107,10 @@ export const apiService = {
 
   // Health Check
   async getHealth() {
-    return request('/health');
+    try {
+      return await request('/health/warmup');
+    } catch (e) {
+      return { status: 'ok', warm: false };
+    }
   }
 };

@@ -20,19 +20,23 @@ export const pingBackendWarmup = () => {
   }
   lastPingTime = now;
 
-  // Non-blocking fetch to root /health and /api/v1/health/warmup
-  const healthUrl = `${API_BASE}/health`;
+  // Non-blocking fetch to /api/v1/health/warmup (prevents ad-blocker ERR_BLOCKED_BY_CLIENT on /health)
+  const warmupUrl = `${API_BASE}/api/v1/health/warmup`;
   
   if (typeof window !== 'undefined' && window.fetch) {
-    fetch(healthUrl, { method: 'GET', mode: 'cors', credentials: 'omit' })
-      .then((res) => {
-        if (res.ok) {
-          console.debug('[WarmUp] Render backend awake & ready.');
-        }
-      })
-      .catch(() => {
-        // Silently swallow errors — warm-up is best-effort
-      });
+    try {
+      fetch(warmupUrl, { method: 'GET', mode: 'cors', credentials: 'omit' })
+        .then((res) => {
+          if (res.ok) {
+            console.debug('[WarmUp] Render backend awake & ready.');
+          }
+        })
+        .catch(() => {
+          // Silently swallow errors — warm-up is best-effort
+        });
+    } catch (e) {
+      // Ignore network / adblocker cancellation
+    }
   }
 };
 
