@@ -20,15 +20,11 @@ function MobileAppShellContent() {
   return (
     <div className="w-full min-h-dvh bg-[var(--ox-bg)] flex flex-col overflow-x-hidden text-[var(--ox-text-primary)] font-sans relative select-none">
       
-      {/* 1. TOP NAVIGATION / HEADER LAYER */}
-      {activeTab === 'edit' && (
-        <>
-          <MobileTopBar />
-          <MobileSectionNav />
-        </>
-      )}
+      {/* 1. TOP NAVIGATION / HEADER LAYER (ALWAYS RENDERED) */}
+      <MobileTopBar />
 
-      {activeTab === 'home' && <MobileTopBar />}
+      {/* 2. SECTION CHIPS (Edit mode only) */}
+      {activeTab === 'edit' && <MobileSectionNav />}
 
       {/* 2. MUTUALLY EXCLUSIVE ACTIVE VIEW CONTENT */}
       <main className="flex-1 flex flex-col">

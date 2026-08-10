@@ -74,10 +74,6 @@ export const ResumeBuilderPage = () => {
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef(null);
 
-  if (isMobile) {
-    return <MobileResumeBuilder />;
-  }
-
 
   const handleResizeStart = (e) => {
     e.preventDefault();
@@ -205,6 +201,10 @@ export const ResumeBuilderPage = () => {
   const closeAiModal = () => {
     setAiModalConfig((prev) => ({ ...prev, isOpen: false }));
   };
+
+  if (isMobile) {
+    return <MobileResumeBuilder />;
+  }
 
   const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [], socialLinks = {}, customSections = [], metadata = {}, assets = {} } = activeResume;
   const hiddenSections = metadata.hiddenSections || [];

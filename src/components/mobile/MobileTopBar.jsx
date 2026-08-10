@@ -50,8 +50,9 @@ export const MobileTopBar = () => {
             alt="OpportunityX Logo"
             className="w-7 h-7 rounded-full object-cover shrink-0 shadow-[0_0_10px_rgba(249,115,22,0.3)]"
           />
-          <span className="text-xs sm:text-base font-black tracking-tight text-[var(--ox-text-primary)] truncate">
-            OX <span className="text-[#F97316]">Resume</span>
+          <span className="text-xs xs:text-sm sm:text-base font-black tracking-tight text-[var(--ox-text-primary)] truncate">
+            <span className="xs:hidden">OX <span className="text-[#F97316]">Resume</span></span>
+            <span className="hidden xs:inline">Opportunity<span className="text-[#F97316]">X</span> Resume</span>
           </span>
         </div>
 
