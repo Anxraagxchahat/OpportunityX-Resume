@@ -1,0 +1,463 @@
+import React, { useState } from 'react';
+import {
+  User, FileText, Briefcase, GraduationCap, FolderGit2, Cpu, Award, Trophy,
+  Languages, Share2, Layers, Plus, Trash2, Edit3, Eye, EyeOff, Sparkles,
+  ChevronLeft, ChevronRight, Check, X, Globe, Link, Camera
+} from 'lucide-react';
+import { useResume } from '../../context/ResumeContext';
+import { useMobileNavigation } from '../../context/MobileNavigationContext';
+import { builderSections } from './MobileSectionNav';
+
+export const MobileSectionEditor = () => {
+  const {
+    activeResume,
+    updatePersonal,
+    updateExperience,
+    updateEducation,
+    updateProjects,
+    updateSkills,
+    updateCertificates,
+    updateAchievements,
+    updateLanguages,
+    updateSocialLinks,
+    toggleSectionVisibility
+  } = useResume();
+
+  const { activeSection, setActiveSection, openCardEditor, setAiModalConfig, addToast } = useMobileNavigation();
+
+  const hiddenSections = activeResume.metadata?.hiddenSections || [];
+  const isHidden = hiddenSections.includes(activeSection);
+
+  const personal = activeResume.personal || {};
+  const experience = Array.isArray(activeResume.experience) ? activeResume.experience : [];
+  const education = Array.isArray(activeResume.education) ? activeResume.education : [];
+  const projects = Array.isArray(activeResume.projects) ? activeResume.projects : [];
+  const skills = activeResume.skills || {};
+  const certificates = Array.isArray(activeResume.certificates) ? activeResume.certificates : [];
+  const achievements = Array.isArray(activeResume.achievements) ? activeResume.achievements : [];
+  const languages = Array.isArray(activeResume.languages) ? activeResume.languages : [];
+  const socialLinks = activeResume.socialLinks || {};
+
+  // Form Field Change Helper
+  const handlePersonalChange = (field, value) => {
+    updatePersonal({ ...personal, [field]: value });
+  };
+
+  // Section Stepper Previous/Next
+  const currentSectionIdx = builderSections.findIndex((s) => s.id === activeSection);
+  const handlePrevSection = () => {
+    if (currentSectionIdx > 0) {
+      setActiveSection(builderSections[currentSectionIdx - 1].id);
+    }
+  };
+  const handleNextSection = () => {
+    if (currentSectionIdx < builderSections.length - 1) {
+      setActiveSection(builderSections[currentSectionIdx + 1].id);
+    }
+  };
+
+  // Delete handlers
+  const handleDeleteExperience = (idx) => {
+    const updated = experience.filter((_, i) => i !== idx);
+    updateExperience(updated);
+    addToast('Experience entry deleted', 'info');
+  };
+
+  const handleDeleteEducation = (idx) => {
+    const updated = education.filter((_, i) => i !== idx);
+    updateEducation(updated);
+    addToast('Education entry deleted', 'info');
+  };
+
+  const handleDeleteProject = (idx) => {
+    const updated = projects.filter((_, i) => i !== idx);
+    updateProjects(updated);
+    addToast('Project deleted', 'info');
+  };
+
+  // Skill Add / Remove
+  const [newSkillInput, setNewSkillInput] = useState('');
+  const [skillCategory, setSkillCategory] = useState('languages');
+
+  const handleAddSkill = () => {
+    if (!newSkillInput.trim()) return;
+    const skillList = Array.isArray(skills[skillCategory]) ? [...skills[skillCategory]] : [];
+    if (!skillList.includes(newSkillInput.trim())) {
+      skillList.push(newSkillInput.trim());
+      updateSkills({ ...skills, [skillCategory]: skillList });
+      addToast(`Added skill to ${skillCategory}`, 'success');
+    }
+    setNewSkillInput('');
+  };
+
+  const handleRemoveSkill = (category, skillToRemove) => {
+    const skillList = Array.isArray(skills[category]) ? skills[category].filter((s) => s !== skillToRemove) : [];
+    updateSkills({ ...skills, [category]: skillList });
+  };
+
+  return (
+    <div className="w-full bg-[var(--ox-bg)] p-4 space-y-5 pb-32 select-none no-print">
+      
+      {/* Mobile Section Header */}
+      <div className="p-4 rounded-3xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] space-y-2 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrevSection}
+              disabled={currentSectionIdx === 0}
+              className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] disabled:opacity-30 min-h-[40px] min-w-[40px] flex items-center justify-center cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <h2 className="text-base font-black text-[var(--ox-text-primary)] capitalize">
+              {builderSections.find((s) => s.id === activeSection)?.label || activeSection}
+            </h2>
+          </div>
+
+          <button
+            onClick={() => toggleSectionVisibility(activeSection)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 min-h-[40px] cursor-pointer transition-colors ${
+              isHidden
+                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+            }`}
+          >
+            {isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <span>{isHidden ? 'Hidden' : 'Visible'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 1-COLUMN FORM EDITORS BY SECTION */}
+
+      {/* 1. PERSONAL INFO */}
+      {activeSection === 'personal' && (
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Full Name *</label>
+            <input
+              type="text"
+              placeholder="e.g. Alex Morgan"
+              value={personal.fullName || ''}
+              onChange={(e) => handlePersonalChange('fullName', e.target.value)}
+              className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-sm font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Target Job Role *</label>
+            <input
+              type="text"
+              placeholder="e.g. Senior Full Stack Engineer"
+              value={personal.targetRole || ''}
+              onChange={(e) => handlePersonalChange('targetRole', e.target.value)}
+              className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-sm font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Email Address *</label>
+            <input
+              type="email"
+              placeholder="e.g. alex.morgan@example.com"
+              value={personal.email || ''}
+              onChange={(e) => handlePersonalChange('email', e.target.value)}
+              className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-sm font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Phone Number</label>
+            <input
+              type="tel"
+              placeholder="e.g. +1 (555) 019-2834"
+              value={personal.phone || ''}
+              onChange={(e) => handlePersonalChange('phone', e.target.value)}
+              className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-sm font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Location</label>
+            <input
+              type="text"
+              placeholder="e.g. San Francisco, CA"
+              value={personal.location || ''}
+              onChange={(e) => handlePersonalChange('location', e.target.value)}
+              className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-sm font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Portfolio / Website URL</label>
+            <input
+              type="url"
+              placeholder="e.g. https://alexmorgan.dev"
+              value={personal.website || ''}
+              onChange={(e) => handlePersonalChange('website', e.target.value)}
+              className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-xs font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 2. SUMMARY SECTION */}
+      {activeSection === 'summary' && (
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Executive Summary</label>
+              <span className="text-[10px] text-[var(--ox-text-muted)] font-mono font-bold">
+                {(personal.summary || '').length} / 1000
+              </span>
+            </div>
+
+            <textarea
+              rows={7}
+              placeholder="Write a concise professional intro emphasizing your key achievements, strengths, and career focus..."
+              value={personal.summary || ''}
+              onChange={(e) => handlePersonalChange('summary', e.target.value)}
+              className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl p-4 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none leading-relaxed"
+            />
+          </div>
+
+          {/* AI Assistance Button placed safely below textarea */}
+          <button
+            onClick={() => {
+              setAiModalConfig({
+                isOpen: true,
+                title: 'Improve Summary with AI',
+                onApply: (newSummary) => handlePersonalChange('summary', newSummary)
+              });
+            }}
+            className="w-full py-3.5 rounded-2xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 font-bold text-xs flex items-center justify-center gap-2 min-h-[48px] active:scale-95 transition-all"
+          >
+            <Sparkles className="w-4 h-4 animate-pulse text-amber-400" />
+            <span>Improve Summary with AI</span>
+          </button>
+        </div>
+      )}
+
+      {/* 3. WORK EXPERIENCE SECTION */}
+      {activeSection === 'experience' && (
+        <div className="space-y-4">
+          <button
+            onClick={() => openCardEditor('experience', null, -1)}
+            className="w-full py-3.5 rounded-2xl bg-orange-500 text-white font-bold text-xs flex items-center justify-center gap-2 min-h-[48px] shadow-md active:scale-95 transition-transform"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Add Work Experience</span>
+          </button>
+
+          <div className="space-y-3">
+            {experience.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="p-4 rounded-3xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] space-y-2 relative"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-[var(--ox-text-primary)]">{item.role || item.title || 'Untitled Role'}</h3>
+                    <p className="text-xs text-orange-400 font-semibold">{item.company || 'Company Name'}</p>
+                    <p className="text-[10px] text-[var(--ox-text-muted)] pt-0.5">{item.startDate} – {item.endDate || 'Present'}</p>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => openCardEditor('experience', item, idx)}
+                      className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteExperience(idx)}
+                      className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. EDUCATION SECTION */}
+      {activeSection === 'education' && (
+        <div className="space-y-4">
+          <button
+            onClick={() => openCardEditor('education', null, -1)}
+            className="w-full py-3.5 rounded-2xl bg-orange-500 text-white font-bold text-xs flex items-center justify-center gap-2 min-h-[48px] shadow-md active:scale-95 transition-transform"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Add Education</span>
+          </button>
+
+          <div className="space-y-3">
+            {education.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="p-4 rounded-3xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-[var(--ox-text-primary)]">{item.degree || 'Degree Program'}</h3>
+                    <p className="text-xs text-orange-400 font-semibold">{item.institution || item.school || 'University'}</p>
+                    <p className="text-[10px] text-[var(--ox-text-muted)] pt-0.5">{item.startDate} – {item.endDate}</p>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => openCardEditor('education', item, idx)}
+                      className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEducation(idx)}
+                      className="p-2 rounded-xl bg-rose-500/10 text-rose-400 min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 5. PROJECTS SECTION */}
+      {activeSection === 'projects' && (
+        <div className="space-y-4">
+          <button
+            onClick={() => openCardEditor('projects', null, -1)}
+            className="w-full py-3.5 rounded-2xl bg-orange-500 text-white font-bold text-xs flex items-center justify-center gap-2 min-h-[48px] shadow-md active:scale-95 transition-transform"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Add Project</span>
+          </button>
+
+          <div className="space-y-3">
+            {projects.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="p-4 rounded-3xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-[var(--ox-text-primary)]">{item.name || item.title || 'Project Name'}</h3>
+                    <p className="text-xs text-[var(--ox-text-secondary)] line-clamp-2">{item.description}</p>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => openCardEditor('projects', item, idx)}
+                      className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProject(idx)}
+                      className="p-2 rounded-xl bg-rose-500/10 text-rose-400 min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 6. SKILLS SECTION */}
+      {activeSection === 'skills' && (
+        <div className="space-y-5">
+          <div className="p-4 rounded-3xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] space-y-3">
+            <h3 className="text-xs font-bold text-[var(--ox-text-secondary)] uppercase tracking-wider">Add Skill Tag</h3>
+            
+            <div className="flex items-center gap-2">
+              <select
+                value={skillCategory}
+                onChange={(e) => setSkillCategory(e.target.value)}
+                className="bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-xs font-bold text-[var(--ox-text-primary)] rounded-xl px-3 py-3 min-h-[44px]"
+              >
+                <option value="languages">Languages</option>
+                <option value="frameworks">Frameworks</option>
+                <option value="tools">Tools / DB</option>
+              </select>
+
+              <input
+                type="text"
+                placeholder="e.g. React, Python..."
+                value={newSkillInput}
+                onChange={(e) => setNewSkillInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
+                className="flex-1 bg-[var(--ox-card-bg)] border border-[var(--ox-border)] text-xs text-[var(--ox-text-primary)] rounded-xl px-3 py-3 min-h-[44px]"
+              />
+
+              <button
+                onClick={handleAddSkill}
+                className="p-3 rounded-xl bg-orange-500 text-white font-bold min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Categorized Skills Chips */}
+          {['languages', 'frameworks', 'tools'].map((cat) => {
+            const skillItems = Array.isArray(skills[cat]) ? skills[cat] : [];
+            if (skillItems.length === 0) return null;
+
+            return (
+              <div key={cat} className="space-y-2">
+                <h4 className="text-xs font-bold text-orange-400 capitalize">{cat}</h4>
+                <div className="flex flex-wrap gap-2">
+                  {skillItems.map((sk, sIdx) => (
+                    <span
+                      key={sIdx}
+                      className="px-3 py-1.5 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-xs font-semibold text-[var(--ox-text-primary)] flex items-center gap-1.5 min-h-[38px]"
+                    >
+                      {sk}
+                      <button
+                        onClick={() => handleRemoveSkill(cat, sk)}
+                        className="p-1 rounded-full text-slate-400 hover:text-rose-400"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Sticky Bottom Stepper Footer */}
+      <div className="fixed bottom-14 left-0 right-0 p-3 bg-[var(--ox-surface-primary)] border-t border-[var(--ox-border)] flex items-center justify-between gap-3 pb-safe z-10 shadow-lg">
+        <button
+          onClick={handlePrevSection}
+          disabled={currentSectionIdx === 0}
+          className="px-4 py-2.5 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] font-bold text-xs disabled:opacity-30 min-h-[44px] cursor-pointer"
+        >
+          Previous
+        </button>
+
+        <button
+          onClick={handleNextSection}
+          disabled={currentSectionIdx === builderSections.length - 1}
+          className="px-6 py-2.5 rounded-xl bg-orange-500 text-white font-bold text-xs shadow-md min-h-[44px] cursor-pointer active:scale-95 transition-transform"
+        >
+          {currentSectionIdx === builderSections.length - 1 ? 'Finish & Review' : 'Save & Next'}
+        </button>
+      </div>
+
+    </div>
+  );
+};
+
+export default MobileSectionEditor;
