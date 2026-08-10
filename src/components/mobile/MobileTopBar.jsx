@@ -44,14 +44,14 @@ export const MobileTopBar = () => {
         </button>
 
         {/* Center: Brand Header */}
-        <div className="flex items-center gap-1.5 font-sans">
+        <div className="flex items-center gap-1.5 font-sans min-w-0">
           <img
             src="/favicon.png"
             alt="OpportunityX Logo"
             className="w-7 h-7 rounded-full object-cover shrink-0 shadow-[0_0_10px_rgba(249,115,22,0.3)]"
           />
-          <span className="text-base font-black tracking-tight text-[var(--ox-text-primary)]">
-            Opportunity<span className="text-[#F97316]">X</span>
+          <span className="text-xs sm:text-base font-black tracking-tight text-[var(--ox-text-primary)] truncate">
+            OX <span className="text-[#F97316]">Resume</span>
           </span>
         </div>
 

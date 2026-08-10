@@ -56,23 +56,29 @@ export const MobileSectionEditor = () => {
     }
   };
 
-  // Delete handlers
-  const handleDeleteExperience = (idx) => {
-    const updated = experience.filter((_, i) => i !== idx);
-    updateExperience(updated);
-    addToast('Experience entry deleted', 'info');
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, type: null, index: -1, title: '' });
+
+  const confirmDelete = (type, idx, title) => {
+    setDeleteConfirm({ isOpen: true, type, index: idx, title });
   };
 
-  const handleDeleteEducation = (idx) => {
-    const updated = education.filter((_, i) => i !== idx);
-    updateEducation(updated);
-    addToast('Education entry deleted', 'info');
-  };
-
-  const handleDeleteProject = (idx) => {
-    const updated = projects.filter((_, i) => i !== idx);
-    updateProjects(updated);
-    addToast('Project deleted', 'info');
+  const handleExecuteDelete = () => {
+    const { type, index } = deleteConfirm;
+    if (type === 'experience') {
+      const updated = experience.filter((_, i) => i !== index);
+      updateExperience(updated);
+      addToast('Experience entry deleted', 'info');
+    } else if (type === 'education') {
+      const updated = education.filter((_, i) => i !== index);
+      updateEducation(updated);
+      addToast('Education entry deleted', 'info');
+    } else if (type === 'projects') {
+      const updated = projects.filter((_, i) => i !== index);
+      updateProjects(updated);
+      addToast('Project deleted', 'info');
+    }
+    setDeleteConfirm({ isOpen: false, type: null, index: -1, title: '' });
   };
 
   // Skill Add / Remove
@@ -270,10 +276,10 @@ export const MobileSectionEditor = () => {
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => handleDeleteExperience(idx)}
-                      className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                      onClick={() => confirmDelete('experience', idx, item.role || item.title || 'Experience')}
+                      className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -310,15 +316,15 @@ export const MobileSectionEditor = () => {
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => openCardEditor('education', item, idx)}
-                      className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                      className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleDeleteEducation(idx)}
-                      className="p-2 rounded-xl bg-rose-500/10 text-rose-400 min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                      onClick={() => confirmDelete('education', idx, item.degree || 'Education')}
+                      className="p-2 rounded-xl bg-rose-500/10 text-rose-400 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -354,15 +360,15 @@ export const MobileSectionEditor = () => {
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => openCardEditor('projects', item, idx)}
-                      className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                      className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleDeleteProject(idx)}
-                      className="p-2 rounded-xl bg-rose-500/10 text-rose-400 min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+                      onClick={() => confirmDelete('projects', idx, item.name || item.title || 'Project')}
+                      className="p-2 rounded-xl bg-rose-500/10 text-rose-400 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -455,6 +461,39 @@ export const MobileSectionEditor = () => {
           {currentSectionIdx === builderSections.length - 1 ? 'Finish & Review' : 'Save & Next'}
         </button>
       </div>
+
+      {/* Lightweight Delete Confirmation Dialog */}
+      {deleteConfirm.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-3xl p-5 w-full max-w-xs space-y-4 shadow-2xl text-center">
+            <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-black text-[var(--ox-text-primary)]">
+                Delete this {deleteConfirm.type}?
+              </h4>
+              <p className="text-xs text-[var(--ox-text-secondary)]">
+                "{deleteConfirm.title}" will be permanently removed.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => setDeleteConfirm({ isOpen: false, type: null, index: -1, title: '' })}
+                className="flex-1 py-2.5 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] font-bold text-xs min-h-[44px]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleExecuteDelete}
+                className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white font-bold text-xs min-h-[44px] shadow-md"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
