@@ -50,8 +50,9 @@ export const ExportCenterModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn no-print">
-      <div className="bg-[#0B0D14] border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-5 relative">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn no-print select-none">
+      <div className="bg-[#0B0D14] border border-slate-800 rounded-t-3xl sm:rounded-2xl w-full max-w-lg shadow-2xl p-5 sm:p-6 space-y-5 relative max-h-[90dvh] overflow-y-auto pb-safe">
+
         <button
           onClick={() => setIsExportCenterOpen(false)}
           className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-900 transition-colors"

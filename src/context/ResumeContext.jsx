@@ -26,8 +26,47 @@ const AI_CREDITS_KEY = 'opportunityx_ai_credits_v1';
 const BYOK_KEY = 'opportunityx_byok_keys_v1';
 const SELECTED_MODEL_KEY = 'opportunityx_selected_ai_model_v1';
 
-// Load OpenRouter key securely from environment configuration (.env)
-const ENV_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
+// Helper function to guarantee IDs and date fields on array items
+export const ensureResumeItemIds = (resume) => {
+  if (!resume || typeof resume !== 'object') return resume;
+
+  const fixArray = (arr, prefix) => {
+    if (!Array.isArray(arr)) return [];
+    return arr.map((item, idx) => {
+      if (typeof item === 'string') {
+        return { id: `${prefix}-${idx}-${Date.now()}`, name: item };
+      }
+      if (typeof item === 'object' && item !== null) {
+        const itemCopy = { ...item };
+        if (!itemCopy.id) {
+          itemCopy.id = `${prefix}-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`;
+        }
+        if (prefix === 'edu' && itemCopy.period && (!itemCopy.startDate || !itemCopy.endDate)) {
+          const parts = itemCopy.period.split(/\s*[-–—]\s*/);
+          if (parts.length >= 2) {
+            if (!itemCopy.startDate) itemCopy.startDate = parts[0];
+            if (!itemCopy.endDate) itemCopy.endDate = parts.slice(1).join(' - ');
+          } else if (!itemCopy.startDate) {
+            itemCopy.startDate = itemCopy.period;
+          }
+        }
+        return itemCopy;
+      }
+      return item;
+    });
+  };
+
+  return {
+    ...resume,
+    education: fixArray(resume.education, 'edu'),
+    experience: fixArray(resume.experience, 'exp'),
+    projects: fixArray(resume.projects, 'proj'),
+    certificates: fixArray(resume.certificates, 'cert'),
+    achievements: fixArray(resume.achievements, 'ach'),
+    languages: fixArray(resume.languages, 'lang'),
+    customSections: fixArray(resume.customSections, 'cust')
+  };
+};
 
 export const ResumeProvider = ({ children }) => {
   // 0. Firebase Auth Integration
@@ -148,9 +187,12 @@ export const ResumeProvider = ({ children }) => {
     return resumes[0]?.metadata?.id || 'ox-resume-initial';
   });
 
+
+
   // Derived Active Resume Object
   const activeResume = useMemo(() => {
-    return resumes.find((r) => r.metadata?.id === activeResumeId || r.metadata?.uuid === activeResumeId) || resumes[0] || defaultResumeData;
+    const raw = resumes.find((r) => r.metadata?.id === activeResumeId || r.metadata?.uuid === activeResumeId) || resumes[0] || defaultResumeData;
+    return ensureResumeItemIds(raw);
   }, [resumes, activeResumeId]);
 
   // Dynamic Intelligence Computations
@@ -398,10 +440,11 @@ export const ResumeProvider = ({ children }) => {
 
   const importResumeData = useCallback((importedSchema) => {
     if (!importedSchema || !importedSchema.metadata) return;
-    const newId = importedSchema.metadata.id || `ox-resume-import-${Date.now()}`;
+    const normalizedSchema = ensureResumeItemIds(importedSchema);
+    const newId = normalizedSchema.metadata.id || `ox-resume-import-${Date.now()}`;
     const formatted = {
-      ...importedSchema,
-      metadata: { ...importedSchema.metadata, id: newId, uuid: newId, lastSaved: new Date().toISOString() }
+      ...normalizedSchema,
+      metadata: { ...normalizedSchema.metadata, id: newId, uuid: newId, lastSaved: new Date().toISOString() }
     };
     setResumes((prev) => [formatted, ...prev]);
     setActiveResumeIdState(newId);

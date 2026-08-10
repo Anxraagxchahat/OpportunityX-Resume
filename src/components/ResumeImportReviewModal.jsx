@@ -54,8 +54,9 @@ export const ResumeImportReviewModal = ({ parsedData, onClose }) => {
   })();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn text-white no-print">
-      <div className="bg-[#0B0D14] border border-slate-800 rounded-3xl w-full max-w-3xl shadow-2xl p-6 sm:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn text-white no-print">
+      <div className="bg-[#0B0D14] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-3xl shadow-2xl p-5 sm:p-8 space-y-6 relative h-[92dvh] sm:h-auto sm:max-h-[90vh] overflow-y-auto custom-scrollbar pb-safe">
+
         <button
           onClick={onClose}
           className="absolute top-5 right-5 text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-900 transition-colors"
