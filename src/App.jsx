@@ -15,6 +15,8 @@ import { AIUpgradePromptModal } from './components/AIUpgradePromptModal';
 import { GitHubImportModal } from './components/GitHubImportModal';
 import { OpportunityXImportModal } from './components/OpportunityXImportModal';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
+import { MobileNavigationProvider } from './context/MobileNavigationContext';
+import { MobileMoreMenuModal } from './components/mobile/MobileMoreMenuModal';
 
 import { ScrollToTop } from './components/ScrollToTop';
 
@@ -96,15 +98,18 @@ export function App() {
         <AuthGate>
           <ResumeProvider>
             <Router>
-              <ScrollToTop />
-              <AppContent />
-              <DonationSupportModal />
-              <UnlockAIModal />
-              <BuyCreditsModal />
-              <AICreditsModal />
-              <AIUpgradePromptModal />
-              <GitHubImportModal />
-              <OpportunityXImportModal />
+              <MobileNavigationProvider>
+                <ScrollToTop />
+                <AppContent />
+                <MobileMoreMenuModal />
+                <DonationSupportModal />
+                <UnlockAIModal />
+                <BuyCreditsModal />
+                <AICreditsModal />
+                <AIUpgradePromptModal />
+                <GitHubImportModal />
+                <OpportunityXImportModal />
+              </MobileNavigationProvider>
             </Router>
           </ResumeProvider>
         </AuthGate>

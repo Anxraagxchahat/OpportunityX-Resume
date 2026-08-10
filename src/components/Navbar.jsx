@@ -16,6 +16,7 @@ import { useResume } from '../context/ResumeContext';
 import { AuthModal } from './AuthModal';
 import { ThemeTogglePill } from './ThemeTogglePill';
 import { UserAvatar } from './UserAvatar';
+import { MobileTopBar } from './mobile/MobileTopBar';
 
 export const Navbar = () => {
   const location = useLocation();
@@ -40,7 +41,14 @@ export const Navbar = () => {
   ];
 
   return (
-    <header className="hidden md:block sticky top-0 z-50 w-full bg-[var(--ox-surface-primary)] backdrop-blur-md border-b border-[var(--ox-border)] transition-colors duration-300 no-print">
+    <>
+      {/* Mobile Top Bar (<768px) - Always renders on mobile viewports */}
+      <div className="md:hidden sticky top-0 z-50 w-full no-print">
+        <MobileTopBar />
+      </div>
+
+      {/* Desktop Navbar (>=768px) - Always renders on desktop viewports */}
+      <header className="hidden md:block sticky top-0 z-50 w-full bg-[var(--ox-surface-primary)] backdrop-blur-md border-b border-[var(--ox-border)] transition-colors duration-300 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-3">
 
         {/* Mobile Left Hamburger */}
@@ -176,5 +184,6 @@ export const Navbar = () => {
 
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </header>
+    </>
   );
 };

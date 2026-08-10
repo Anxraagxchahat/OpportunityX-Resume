@@ -191,7 +191,22 @@ html, body {
   }
 }
 
+/* ═══ Mobile Top Bar Responsive Toggles ═══ */
+/* Brand: Show "OX" below 390px, "OpportunityX" at 390px+ */
+.mobile-brand-full { display: none; }
+.mobile-brand-short { display: inline; }
+@media (min-width: 390px) {
+  .mobile-brand-full { display: inline; }
+  .mobile-brand-short { display: none; }
+}
 
+/* Credits label: Show number-only below 390px, "N Cr" at 390px+ */
+.mobile-credits-full { display: none; }
+.mobile-credits-short { display: inline; }
+@media (min-width: 390px) {
+  .mobile-credits-full { display: inline; }
+  .mobile-credits-short { display: none; }
+}
 /* Global Light Mode Structural & High Contrast Overrides */
 [data-theme='light'] .bg-black,
 [data-theme='light'] .bg-slate-950,

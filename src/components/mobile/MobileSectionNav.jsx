@@ -30,7 +30,7 @@ export const MobileSectionNav = () => {
   }, [activeSection]);
 
   return (
-    <div className="w-full bg-[var(--ox-surface-primary)] border-b border-[var(--ox-border)] px-2 py-2 sticky top-[84px] z-20 select-none no-print">
+    <div className="w-full bg-[var(--ox-surface-primary)] border-b border-[var(--ox-border)] px-2 py-1.5 sticky top-[96px] z-20 select-none no-print">
       <div
         ref={scrollRef}
         className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth px-1"
