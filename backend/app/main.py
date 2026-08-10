@@ -38,7 +38,9 @@ app.add_middleware(StructuredLoggingMiddleware)
 cors_origins = [o for o in (settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else []) if o != "*"]
 default_origins = [
     "https://resume.opportunityx.co.in",
+    "https://www.resume.opportunityx.co.in",
     "https://opportunityx.co.in",
+    "https://www.opportunityx.co.in",
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",

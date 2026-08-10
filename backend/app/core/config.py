@@ -16,7 +16,9 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "https://resume.opportunityx.co.in",
-        "https://opportunityx.co.in"
+        "https://www.resume.opportunityx.co.in",
+        "https://opportunityx.co.in",
+        "https://www.opportunityx.co.in"
     ]
 
     @field_validator("CORS_ORIGINS", mode="before")
