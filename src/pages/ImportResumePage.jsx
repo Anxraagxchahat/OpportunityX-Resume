@@ -19,6 +19,8 @@ import {
 import { useResume } from '../context/ResumeContext';
 import { parseResumeFile } from '../utils/resumeParserEngine';
 import { ResumeImportReviewModal } from '../components/ResumeImportReviewModal';
+import { useIsMobile } from '../hooks/useIsMobile';
+import { MobileImportWizard } from '../components/mobile/MobileImportWizard';
 
 const GithubIcon = ({ className = "w-5 h-5" }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -33,6 +35,8 @@ const LinkedinIcon = ({ className = "w-5 h-5" }) => (
 );
 
 export const ImportResumePage = () => {
+  const isMobile = useIsMobile(768);
+
   const navigate = useNavigate();
   const { loadDemoResume, setIsGitHubImportModalOpen, setIsOpportunityXImportModalOpen } = useResume();
   const [isParsing, setIsParsing] = useState(false);
@@ -41,6 +45,11 @@ export const ImportResumePage = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [errorDebug, setErrorDebug] = useState(null);
+
+  if (isMobile) {
+    return <MobileImportWizard />;
+  }
+
 
   const handleFileUpload = async (file) => {
     setIsParsing(true);

@@ -18,6 +18,8 @@ import { ThemeCustomizerModal } from '../components/ThemeCustomizerModal';
 import { PhotoCropModal } from '../components/PhotoCropModal';
 import { DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS, isPhotoTemplate } from '../utils/photoDefaults';
 import { getTemplateCapabilities } from '../templates';
+import { useIsMobile } from '../hooks/useIsMobile';
+import { MobileResumeBuilder } from '../components/mobile/MobileResumeBuilder';
 
 import {
   Plus, Trash2, ChevronDown, ChevronUp, MoveUp, MoveDown, User, FileText,
@@ -38,6 +40,8 @@ const LinkedinIcon = ({ className = "w-3.5 h-3.5" }) => (
 );
 
 export const ResumeBuilderPage = () => {
+  const isMobile = useIsMobile(768);
+
   const {
     activeResume,
     updatePersonal,
@@ -69,6 +73,11 @@ export const ResumeBuilderPage = () => {
   });
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef(null);
+
+  if (isMobile) {
+    return <MobileResumeBuilder />;
+  }
+
 
   const handleResizeStart = (e) => {
     e.preventDefault();
@@ -215,8 +224,8 @@ export const ResumeBuilderPage = () => {
     updateExperience([...experience, newItem]);
   };
 
-  const removeExperienceItem = (id) => updateExperience(experience.filter((e) => e.id !== id));
-  const updateExperienceField = (id, field, value) => updateExperience(experience.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+  const removeExperienceItem = (id, targetIdx) => updateExperience(experience.filter((e, idx) => (e.id && id ? e.id !== id : idx !== targetIdx)));
+  const updateExperienceField = (id, targetIdx, field, value) => updateExperience(experience.map((e, idx) => ((e.id && id ? e.id === id : idx === targetIdx) ? { ...e, [field]: value } : e)));
 
   const moveExperience = (index, direction) => {
     const nextIndex = index + direction;
@@ -228,10 +237,10 @@ export const ResumeBuilderPage = () => {
     updateExperience(items);
   };
 
-  const updateBulletPoint = (expId, index, text) => {
+  const updateBulletPoint = (expId, targetIdx, index, text) => {
     updateExperience(
-      experience.map((e) => {
-        if (e.id === expId) {
+      experience.map((e, idx) => {
+        if ((e.id && expId && e.id === expId) || idx === targetIdx) {
           const newBullets = [...(e.bullets || [])];
           newBullets[index] = text;
           return { ...e, bullets: newBullets };
@@ -241,12 +250,12 @@ export const ResumeBuilderPage = () => {
     );
   };
 
-  const addBulletPoint = (expId) => {
-    updateExperience(experience.map((e) => (e.id === expId ? { ...e, bullets: [...(e.bullets || []), ''] } : e)));
+  const addBulletPoint = (expId, targetIdx) => {
+    updateExperience(experience.map((e, idx) => ((e.id && expId && e.id === expId) || idx === targetIdx ? { ...e, bullets: [...(e.bullets || []), ''] } : e)));
   };
 
-  const removeBulletPoint = (expId, bIdx) => {
-    updateExperience(experience.map((e) => (e.id === expId ? { ...e, bullets: (e.bullets || []).filter((_, idx) => idx !== bIdx) } : e)));
+  const removeBulletPoint = (expId, targetIdx, bIdx) => {
+    updateExperience(experience.map((e, idx) => ((e.id && expId && e.id === expId) || idx === targetIdx ? { ...e, bullets: (e.bullets || []).filter((_, bI) => bI !== bIdx) } : e)));
   };
 
   // ================= EDUCATION =================
@@ -254,14 +263,14 @@ export const ResumeBuilderPage = () => {
     const newItem = { id: `edu-${Date.now()}`, institution: '', degree: '', location: '', startDate: '', endDate: '2025', gpa: '', description: '' };
     updateEducation([...education, newItem]);
   };
-  const removeEducationItem = (id) => updateEducation(education.filter((e) => e.id !== id));
+  const removeEducationItem = (id, targetIdx) => updateEducation(education.filter((e, idx) => (e.id && id ? e.id !== id : idx !== targetIdx)));
 
   // ================= PROJECTS =================
   const addProjectItem = () => {
     const newItem = { id: `proj-${Date.now()}`, name: '', description: '', techStack: '', link: '', bullets: [''] };
     updateProjects([...projects, newItem]);
   };
-  const removeProjectItem = (id) => updateProjects(projects.filter((p) => p.id !== id));
+  const removeProjectItem = (id, targetIdx) => updateProjects(projects.filter((p, idx) => (p.id && id ? p.id !== id : idx !== targetIdx)));
 
   // ================= SKILLS CHIPS =================
   const addSkillChip = (category, name) => {
@@ -280,16 +289,16 @@ export const ResumeBuilderPage = () => {
 
   // ================= OTHER SECTIONS =================
   const addCertificateItem = () => updateCertificates([...certificates, { id: `cert-${Date.now()}`, name: '', issuer: '', date: '' }]);
-  const removeCertificateItem = (id) => updateCertificates(certificates.filter((c) => c.id !== id));
+  const removeCertificateItem = (id, targetIdx) => updateCertificates(certificates.filter((c, idx) => (c.id && id ? c.id !== id : idx !== targetIdx)));
 
   const addAchievementItem = () => updateAchievements([...achievements, { id: `ach-${Date.now()}`, title: '', description: '' }]);
-  const removeAchievementItem = (id) => updateAchievements(achievements.filter((a) => a.id !== id));
+  const removeAchievementItem = (id, targetIdx) => updateAchievements(achievements.filter((a, idx) => (a.id && id ? a.id !== id : idx !== targetIdx)));
 
   const addLanguageItem = () => updateLanguages([...languages, { id: `lang-${Date.now()}`, name: '', proficiency: 'Professional Working' }]);
-  const removeLanguageItem = (id) => updateLanguages(languages.filter((l) => l.id !== id));
+  const removeLanguageItem = (id, targetIdx) => updateLanguages(languages.filter((l, idx) => (l.id && id ? l.id !== id : idx !== targetIdx)));
 
   const addCustomSection = () => updateCustomSections([...customSections, { id: `cust-${Date.now()}`, title: 'Volunteering & Leadership', items: [{ id: `citem-${Date.now()}`, name: 'Community Leader', description: 'Organized local tech workshops.' }] }]);
-  const removeCustomSection = (id) => updateCustomSections(customSections.filter((cs) => cs.id !== id));
+  const removeCustomSection = (id, targetIdx) => updateCustomSections(customSections.filter((cs, idx) => (cs.id && id ? cs.id !== id : idx !== targetIdx)));
 
   const isEmailValid = !personal.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal.email);
 
@@ -752,12 +761,13 @@ export const ResumeBuilderPage = () => {
 
                 <div className="space-y-4">
                   {experience.map((exp, idx) => {
-                    const isCollapsed = collapsedItems[exp.id];
+                    const itemKey = exp.id || `exp-${idx}`;
+                    const isCollapsed = collapsedItems[itemKey];
                     return (
-                      <div key={exp.id} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
+                      <div key={itemKey} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
                         <div className="flex items-center justify-between">
                           <button
-                            onClick={() => toggleItemCollapse(exp.id)}
+                            onClick={() => toggleItemCollapse(itemKey)}
                             className="flex items-center gap-2 text-xs font-bold text-orange-400 text-left hover:underline"
                           >
                             {isCollapsed ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
@@ -766,7 +776,7 @@ export const ResumeBuilderPage = () => {
                           <div className="flex items-center gap-1">
                             <button onClick={() => moveExperience(idx, -1)} disabled={idx === 0} className="p-1 text-slate-400 disabled:opacity-20"><MoveUp className="w-3.5 h-3.5" /></button>
                             <button onClick={() => moveExperience(idx, 1)} disabled={idx === experience.length - 1} className="p-1 text-slate-400 disabled:opacity-20"><MoveDown className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => removeExperienceItem(exp.id)} className="p-1 text-slate-500 hover:text-red-400 ml-2"><Trash2 className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => removeExperienceItem(exp.id, idx)} className="p-1 text-slate-500 hover:text-red-400 ml-2"><Trash2 className="w-3.5 h-3.5" /></button>
                           </div>
                         </div>
 
@@ -776,21 +786,21 @@ export const ResumeBuilderPage = () => {
                               <input
                                 type="text"
                                 value={exp.role || ''}
-                                onChange={(e) => updateExperienceField(exp.id, 'role', e.target.value)}
+                                onChange={(e) => updateExperienceField(exp.id, idx, 'role', e.target.value)}
                                 placeholder="e.g. Senior Full Stack Engineer"
                                 className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                               />
                               <input
                                 type="text"
                                 value={exp.company || ''}
-                                onChange={(e) => updateExperienceField(exp.id, 'company', e.target.value)}
+                                onChange={(e) => updateExperienceField(exp.id, idx, 'company', e.target.value)}
                                 placeholder="e.g. Nexus Technologies"
                                 className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                               />
                               <input
                                 type="text"
                                 value={exp.startDate || ''}
-                                onChange={(e) => updateExperienceField(exp.id, 'startDate', e.target.value)}
+                                onChange={(e) => updateExperienceField(exp.id, idx, 'startDate', e.target.value)}
                                 placeholder="e.g. 2023-01"
                                 className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                               />
@@ -798,7 +808,7 @@ export const ResumeBuilderPage = () => {
                                 type="text"
                                 disabled={exp.current}
                                 value={exp.current ? 'Present' : exp.endDate || ''}
-                                onChange={(e) => updateExperienceField(exp.id, 'endDate', e.target.value)}
+                                onChange={(e) => updateExperienceField(exp.id, idx, 'endDate', e.target.value)}
                                 placeholder="e.g. Present or 2024-12"
                                 className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white disabled:opacity-60"
                               />
@@ -810,7 +820,7 @@ export const ResumeBuilderPage = () => {
                                 <InlineAIBadge
                                   size="sm"
                                   label="Rewrite with AI"
-                                  onClick={() => openAiModal('bullet', exp.bullets?.[0], (improved) => updateBulletPoint(exp.id, 0, improved))}
+                                  onClick={() => openAiModal('bullet', exp.bullets?.[0], (improved) => updateBulletPoint(exp.id, idx, 0, improved))}
                                 />
                               </div>
                               {(exp.bullets || []).map((bullet, bIdx) => (
@@ -818,16 +828,16 @@ export const ResumeBuilderPage = () => {
                                   <input
                                     type="text"
                                     value={bullet}
-                                    onChange={(e) => updateBulletPoint(exp.id, bIdx, e.target.value)}
+                                    onChange={(e) => updateBulletPoint(exp.id, idx, bIdx, e.target.value)}
                                     placeholder="e.g. Architected distributed React & Node.js web services processing 15M+ daily requests..."
                                     className="flex-1 bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                                   />
-                                  <button onClick={() => removeBulletPoint(exp.id, bIdx)} className="text-slate-500 hover:text-red-400 p-1">
+                                  <button onClick={() => removeBulletPoint(exp.id, idx, bIdx)} className="text-slate-500 hover:text-red-400 p-1">
                                     <X className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
                               ))}
-                              <button onClick={() => addBulletPoint(exp.id)} className="text-[11px] font-semibold text-orange-400 hover:underline flex items-center gap-1 pt-1">
+                              <button onClick={() => addBulletPoint(exp.id, idx)} className="text-[11px] font-semibold text-orange-400 hover:underline flex items-center gap-1 pt-1">
                                 + Add Bullet Point
                               </button>
                             </div>
@@ -853,44 +863,83 @@ export const ResumeBuilderPage = () => {
                 </div>
 
                 <div className="space-y-4">
-                  {education.map((edu, idx) => (
-                    <div key={edu.id} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-orange-400">{edu.degree || `Education #${idx + 1}`}</span>
-                        <button onClick={() => removeEducationItem(edu.id)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-slate-400">Degree / Major</label>
-                          <input type="text" value={edu.degree || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, degree: e.target.value } : ed)))} placeholder="e.g. B.S. in Computer Science" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                  {education.map((edu, idx) => {
+                    const itemKey = edu.id || `edu-${idx}`;
+                    return (
+                      <div key={itemKey} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-orange-400">{edu.degree || `Education #${idx + 1}`}</span>
+                          <button onClick={() => removeEducationItem(edu.id)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-slate-400">University / School</label>
-                          <input type="text" value={edu.institution || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, institution: e.target.value } : ed)))} placeholder="e.g. University of California, Berkeley" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-semibold text-slate-400">Degree / Major</label>
+                            <input
+                              type="text"
+                              value={edu.degree || ''}
+                              onChange={(e) => updateEducation(education.map((ed, i) => (i === idx || (ed.id && ed.id === edu.id) ? { ...ed, degree: e.target.value } : ed)))}
+                              placeholder="e.g. Bachelor of Computer Applications"
+                              className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-semibold text-slate-400">University / School</label>
+                            <input
+                              type="text"
+                              value={edu.institution || edu.college || ''}
+                              onChange={(e) => updateEducation(education.map((ed, i) => (i === idx || (ed.id && ed.id === edu.id) ? { ...ed, institution: e.target.value, college: e.target.value } : ed)))}
+                              placeholder="e.g. Babu Banarasi Das University"
+                              className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-slate-400">Start Date</label>
-                          <input type="text" value={edu.startDate || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, startDate: e.target.value } : ed)))} placeholder="e.g. 2017-08" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-semibold text-slate-400">Start Date</label>
+                            <input
+                              type="text"
+                              value={edu.startDate || ''}
+                              onChange={(e) => updateEducation(education.map((ed, i) => (i === idx || (ed.id && ed.id === edu.id) ? { ...ed, startDate: e.target.value } : ed)))}
+                              placeholder="e.g. 2017-08"
+                              className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-semibold text-slate-400">End Date</label>
+                            <input
+                              type="text"
+                              value={edu.endDate || ''}
+                              onChange={(e) => updateEducation(education.map((ed, i) => (i === idx || (ed.id && ed.id === edu.id) ? { ...ed, endDate: e.target.value } : ed)))}
+                              placeholder="e.g. 2021-05 or Present"
+                              className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-semibold text-slate-400">GPA / Score</label>
+                            <input
+                              type="text"
+                              value={edu.gpa || edu.cgpa || ''}
+                              onChange={(e) => updateEducation(education.map((ed, i) => (i === idx || (ed.id && ed.id === edu.id) ? { ...ed, gpa: e.target.value } : ed)))}
+                              placeholder="e.g. 3.88 / 4.0"
+                              className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                            />
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-slate-400">End Date</label>
-                          <input type="text" value={edu.endDate || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, endDate: e.target.value } : ed)))} placeholder="e.g. 2021-05 or Present" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-slate-400">GPA / Score</label>
-                          <input type="text" value={edu.gpa || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, gpa: e.target.value } : ed)))} placeholder="e.g. 3.88 / 4.0" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
-                        </div>
-                      </div>
 
-                      <div className="space-y-1 pt-1">
-                        <label className="text-[11px] font-semibold text-slate-400">Relevant Coursework</label>
-                        <input type="text" value={edu.relevantCoursework || ''} onChange={(e) => updateEducation(education.map((ed) => (ed.id === edu.id ? { ...ed, relevantCoursework: e.target.value } : ed)))} placeholder="e.g. Algorithms & Data Structures, Operating Systems, Machine Learning" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                        <div className="space-y-1 pt-1">
+                          <label className="text-[11px] font-semibold text-slate-400">Relevant Coursework</label>
+                          <input
+                            type="text"
+                            value={edu.relevantCoursework || ''}
+                            onChange={(e) => updateEducation(education.map((ed, i) => (i === idx || (ed.id && ed.id === edu.id) ? { ...ed, relevantCoursework: e.target.value } : ed)))}
+                            placeholder="e.g. Algorithms & Data Structures, Operating Systems, Machine Learning"
+                            className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -908,59 +957,62 @@ export const ResumeBuilderPage = () => {
                 </div>
 
                 <div className="space-y-4">
-                  {projects.map((proj, idx) => (
-                    <div key={proj.id} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-orange-400">{proj.name || proj.title || `Project #${idx + 1}`}</span>
-                        <button onClick={() => removeProjectItem(proj.id)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
-                      </div>
+                  {projects.map((proj, idx) => {
+                    const itemKey = proj.id || `proj-${idx}`;
+                    return (
+                      <div key={itemKey} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-orange-400">{proj.name || proj.title || `Project #${idx + 1}`}</span>
+                          <button onClick={() => removeProjectItem(proj.id, idx)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-semibold text-slate-400">Project Title / Name *</label>
+                            <input
+                              type="text"
+                              value={proj.name || proj.title || ''}
+                              onChange={(e) => updateProjects(projects.map((p, i) => (i === idx || (p.id && p.id === proj.id) ? { ...p, name: e.target.value, title: e.target.value } : p)))}
+                              placeholder="e.g. OpportunityX AI Career Platform"
+                              className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-semibold text-slate-400">Project Link / GitHub URL</label>
+                            <input
+                              type="text"
+                              value={proj.link || proj.url || proj.htmlUrl || ''}
+                              onChange={(e) => updateProjects(projects.map((p, i) => (i === idx || (p.id && p.id === proj.id) ? { ...p, link: e.target.value, url: e.target.value, htmlUrl: e.target.value } : p)))}
+                              placeholder="e.g. https://github.com/user/project"
+                              className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                            />
+                          </div>
+                        </div>
+
                         <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-slate-400">Project Title / Name *</label>
+                          <label className="text-[11px] font-semibold text-slate-400">Technologies Used (Tech Stack)</label>
                           <input
                             type="text"
-                            value={proj.name || proj.title || ''}
-                            onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, name: e.target.value, title: e.target.value } : p)))}
-                            placeholder="e.g. OpportunityX AI Career Platform"
+                            value={proj.techStack || (Array.isArray(proj.technologies) ? proj.technologies.join(', ') : '') || ''}
+                            onChange={(e) => updateProjects(projects.map((p, i) => (i === idx || (p.id && p.id === proj.id) ? { ...p, techStack: e.target.value } : p)))}
+                            placeholder="e.g. React.js, Node.js, PostgreSQL, Tailwind CSS, AWS"
                             className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                           />
                         </div>
+
                         <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-slate-400">Project Link / GitHub URL</label>
-                          <input
-                            type="text"
-                            value={proj.link || proj.url || proj.htmlUrl || ''}
-                            onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, link: e.target.value, url: e.target.value, htmlUrl: e.target.value } : p)))}
-                            placeholder="e.g. https://github.com/user/project"
-                            className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                          <label className="text-[11px] font-semibold text-slate-400">Project Description / Details</label>
+                          <textarea
+                            rows={2}
+                            value={proj.description || ''}
+                            onChange={(e) => updateProjects(projects.map((p, i) => (i === idx || (p.id && p.id === proj.id) ? { ...p, description: e.target.value } : p)))}
+                            placeholder="e.g. Built an AI-powered career platform that helps students discover internships and scholarships with ATS scoring..."
+                            className="w-full bg-[#080B12] border border-slate-800 rounded-lg p-2 text-xs text-white"
                           />
                         </div>
                       </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-slate-400">Technologies Used (Tech Stack)</label>
-                        <input
-                          type="text"
-                          value={proj.techStack || (Array.isArray(proj.technologies) ? proj.technologies.join(', ') : '') || ''}
-                          onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, techStack: e.target.value } : p)))}
-                          placeholder="e.g. React.js, Node.js, PostgreSQL, Tailwind CSS, AWS"
-                          className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-slate-400">Project Description / Details</label>
-                        <textarea
-                          rows={2}
-                          value={proj.description || ''}
-                          onChange={(e) => updateProjects(projects.map((p) => (p.id === proj.id ? { ...p, description: e.target.value } : p)))}
-                          placeholder="e.g. Built an AI-powered career platform that helps students discover internships and scholarships with ATS scoring..."
-                          className="w-full bg-[#080B12] border border-slate-800 rounded-lg p-2 text-xs text-white"
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1010,23 +1062,23 @@ export const ResumeBuilderPage = () => {
                   <button onClick={addCertificateItem} className="px-3 py-1.5 text-xs font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> Add Certification</button>
                 </div>
                 {certificates.map((cert, idx) => (
-                  <div key={cert.id || idx} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
+                  <div key={cert.id || `cert-${idx}`} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-orange-400">{cert.name || `Certification #${idx + 1}`}</span>
-                      <button onClick={() => removeCertificateItem(cert.id)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => removeCertificateItem(cert.id, idx)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-[11px] font-semibold text-slate-400">Certification Name</label>
-                        <input type="text" value={cert.name || ''} onChange={(e) => updateCertificates(certificates.map((c) => (c.id === cert.id ? { ...c, name: e.target.value } : c)))} placeholder="e.g. AWS Certified Solutions Architect" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                        <input type="text" value={cert.name || ''} onChange={(e) => updateCertificates(certificates.map((c, i) => (i === idx || (c.id && c.id === cert.id) ? { ...c, name: e.target.value } : c)))} placeholder="e.g. AWS Certified Solutions Architect" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[11px] font-semibold text-slate-400">Issuing Organization</label>
-                        <input type="text" value={cert.issuer || ''} onChange={(e) => updateCertificates(certificates.map((c) => (c.id === cert.id ? { ...c, issuer: e.target.value } : c)))} placeholder="e.g. Amazon Web Services" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                        <input type="text" value={cert.issuer || ''} onChange={(e) => updateCertificates(certificates.map((c, i) => (i === idx || (c.id && c.id === cert.id) ? { ...c, issuer: e.target.value } : c)))} placeholder="e.g. Amazon Web Services" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[11px] font-semibold text-slate-400">Issue Date / Year</label>
-                        <input type="text" value={cert.date || ''} onChange={(e) => updateCertificates(certificates.map((c) => (c.id === cert.id ? { ...c, date: e.target.value } : c)))} placeholder="e.g. 2023" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                        <input type="text" value={cert.date || ''} onChange={(e) => updateCertificates(certificates.map((c, i) => (i === idx || (c.id && c.id === cert.id) ? { ...c, date: e.target.value } : c)))} placeholder="e.g. 2023" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                       </div>
                     </div>
                   </div>
@@ -1042,19 +1094,19 @@ export const ResumeBuilderPage = () => {
                   <button onClick={addAchievementItem} className="px-3 py-1.5 text-xs font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> Add Achievement</button>
                 </div>
                 {achievements.map((ach, idx) => (
-                  <div key={ach.id || idx} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
+                  <div key={ach.id || `ach-${idx}`} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-orange-400">{ach.title || `Achievement #${idx + 1}`}</span>
-                      <button onClick={() => removeAchievementItem(ach.id)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => removeAchievementItem(ach.id, idx)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                     <div className="space-y-2">
                       <div className="space-y-1">
                         <label className="text-[11px] font-semibold text-slate-400">Title / Award Name</label>
-                        <input type="text" value={ach.title || ''} onChange={(e) => updateAchievements(achievements.map((a) => (a.id === ach.id ? { ...a, title: e.target.value } : a)))} placeholder="e.g. 1st Place Winner - OpportunityX Global Hackathon" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                        <input type="text" value={ach.title || ''} onChange={(e) => updateAchievements(achievements.map((a, i) => (i === idx || (a.id && a.id === ach.id) ? { ...a, title: e.target.value } : a)))} placeholder="e.g. 1st Place Winner - OpportunityX Global Hackathon" className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[11px] font-semibold text-slate-400">Description / Details</label>
-                        <input type="text" value={ach.description || ''} onChange={(e) => updateAchievements(achievements.map((a) => (a.id === ach.id ? { ...a, description: e.target.value } : a)))} placeholder="e.g. Awarded top honor among 400+ international teams for building an accessible tech portal." className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
+                        <input type="text" value={ach.description || ''} onChange={(e) => updateAchievements(achievements.map((a, i) => (i === idx || (a.id && a.id === ach.id) ? { ...a, description: e.target.value } : a)))} placeholder="e.g. Awarded top honor among 400+ international teams for building an accessible tech portal." className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" />
                       </div>
                     </div>
                   </div>
