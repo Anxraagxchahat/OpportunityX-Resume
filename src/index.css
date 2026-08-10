@@ -148,6 +148,50 @@ html, body {
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
 }
 
+/* Mobile Safe Area & Touch UX Utilities */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+.mb-safe {
+  margin-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.h-dvh {
+  height: 100dvh;
+}
+.min-h-dvh {
+  min-height: 100dvh;
+}
+.max-h-dvh {
+  max-height: 100dvh;
+}
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Hide desktop scrollbars on touch containers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
 /* Global Light Mode Structural & High Contrast Overrides */
 [data-theme='light'] .bg-black,
 [data-theme='light'] .bg-slate-950,
