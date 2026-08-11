@@ -78,6 +78,7 @@ function AppContent() {
           <Route path="/u/:slug" element={<PublicRecruiterViewPage />} />
           <Route path="/legal" element={<LegalPage />} />
           <Route path="/legal/:slug" element={<LegalPage />} />
+          <Route path="/founder" element={<LegalPage />} />
           <Route path="/401" element={<UnauthorizedPage />} />
           <Route path="/403" element={<ForbiddenPage />} />
           <Route path="/500" element={<ServerErrorPage />} />
