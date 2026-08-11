@@ -252,7 +252,7 @@ export const DashboardPage = () => {
   return (
     <motion.div
       variants={containerVariants} initial="hidden" animate="visible"
-      className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6"
+      className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 pb-[calc(96px+env(safe-area-inset-bottom,0px))] md:pb-8"
     >
       {/* ─── Top Row: Hero + Metrics ────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -685,17 +685,17 @@ export const DashboardPage = () => {
                       </button>
 
                       {openMenuId === id && (
-                        <div className="absolute right-0 top-full mt-1 z-50 bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-xl shadow-2xl py-1 min-w-[160px] animate-fadeIn">
-                          <button onClick={() => { setEditingTitleId(id); setTitleInput(res.metadata?.title || ''); setOpenMenuId(null); }} className="w-full px-3.5 py-2 text-left text-[11px] text-slate-300 hover:bg-slate-900 hover:text-white flex items-center gap-2 transition-colors">
-                            <Pencil className="w-3 h-3" /> Rename
+                        <div className="absolute right-0 bottom-full sm:bottom-auto sm:top-full mb-1 sm:mt-1 z-50 bg-[var(--ox-card-bg,#0B0D14)] border border-[var(--ox-border,#1F1F1F)] rounded-xl shadow-2xl py-1 min-w-[160px] animate-fadeIn text-[var(--ox-text-primary)]">
+                          <button onClick={() => { setEditingTitleId(id); setTitleInput(res.metadata?.title || ''); setOpenMenuId(null); }} className="w-full px-3.5 py-2 text-left text-[11px] text-[var(--ox-text-primary)] hover:bg-[var(--ox-surface-secondary)] flex items-center gap-2 transition-colors">
+                            <Pencil className="w-3 h-3 text-orange-400" /> Rename
                           </button>
-                          <button onClick={() => { duplicateResume(id); setOpenMenuId(null); }} className="w-full px-3.5 py-2 text-left text-[11px] text-slate-300 hover:bg-slate-900 hover:text-white flex items-center gap-2 transition-colors">
-                            <Copy className="w-3 h-3" /> Duplicate
+                          <button onClick={() => { duplicateResume(id); setOpenMenuId(null); }} className="w-full px-3.5 py-2 text-left text-[11px] text-[var(--ox-text-primary)] hover:bg-[var(--ox-surface-secondary)] flex items-center gap-2 transition-colors">
+                            <Copy className="w-3 h-3 text-orange-400" /> Duplicate
                           </button>
-                          <button onClick={() => { toggleArchive(id); setOpenMenuId(null); }} className="w-full px-3.5 py-2 text-left text-[11px] text-slate-300 hover:bg-slate-900 hover:text-white flex items-center gap-2 transition-colors">
-                            <Archive className="w-3 h-3" /> {res.metadata?.isArchived ? 'Unarchive' : 'Archive'}
+                          <button onClick={() => { toggleArchive(id); setOpenMenuId(null); }} className="w-full px-3.5 py-2 text-left text-[11px] text-[var(--ox-text-primary)] hover:bg-[var(--ox-surface-secondary)] flex items-center gap-2 transition-colors">
+                            <Archive className="w-3 h-3 text-orange-400" /> {res.metadata?.isArchived ? 'Unarchive' : 'Archive'}
                           </button>
-                          <div className="border-t border-slate-800 my-1" />
+                          <div className="border-t border-[var(--ox-border)] my-1" />
                           <button onClick={() => { deleteResume(id); setOpenMenuId(null); }} className="w-full px-3.5 py-2 text-left text-[11px] text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors">
                             <Trash2 className="w-3 h-3" /> Delete
                           </button>
