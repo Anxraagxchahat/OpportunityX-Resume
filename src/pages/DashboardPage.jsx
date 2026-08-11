@@ -612,7 +612,7 @@ export const DashboardPage = () => {
         {/* Resume Cards */}
         <AnimatePresence mode="popLayout">
           <div className="space-y-2">
-            {filteredResumes.map((res) => {
+            {filteredResumes.map((res, idx) => {
               const health = calculateResumeHealth(res);
               const ats = calculateATSScore(res);
               const id = res.metadata?.id || res.metadata?.uuid;
@@ -693,7 +693,9 @@ export const DashboardPage = () => {
                       </button>
 
                       {openMenuId === id && (
-                        <div className="absolute right-0 bottom-full sm:bottom-auto sm:top-full mb-1 sm:mt-1 z-50 bg-[var(--ox-card-bg,#0B0D14)] border border-[var(--ox-border,#1F1F1F)] rounded-xl shadow-2xl py-1 min-w-[160px] animate-fadeIn text-[var(--ox-text-primary)]">
+                        <div className={`absolute right-0 z-[100] bg-[var(--ox-card-bg,#0B0D14)] border border-[var(--ox-border,#1F1F1F)] rounded-xl shadow-2xl py-1 min-w-[160px] animate-fadeIn text-[var(--ox-text-primary)] ${
+                          idx > 0 || filteredResumes.length > 2 ? 'bottom-full mb-1' : 'top-full mt-1'
+                        }`}>
                           <button onClick={() => { setEditingTitleId(id); setTitleInput(res.metadata?.title || ''); setOpenMenuId(null); }} className="w-full px-3.5 py-2 text-left text-[11px] text-[var(--ox-text-primary)] hover:bg-[var(--ox-surface-secondary)] flex items-center gap-2 transition-colors">
                             <Pencil className="w-3 h-3 text-orange-400" /> Rename
                           </button>

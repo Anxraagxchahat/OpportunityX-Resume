@@ -201,7 +201,7 @@ export const TabletHomeDashboard = () => {
             </div>
 
             <div className="space-y-2">
-              {filteredResumes.map((res) => {
+              {filteredResumes.map((res, idx) => {
                 const id = res.metadata?.id || res.metadata?.uuid;
                 const isActive = id === activeResumeId;
                 return (
@@ -216,16 +216,37 @@ export const TabletHomeDashboard = () => {
                       <div className="text-xs font-bold text-white truncate">{res.metadata?.title || 'Untitled'}</div>
                       <div className="text-[10px] text-slate-400 capitalize">{res.metadata?.template || 'modern'}</div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <button onClick={(e) => { e.stopPropagation(); handleEdit(id); }} className="p-1.5 text-slate-400 hover:text-orange-400">
+                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={() => handleEdit(id)} className="p-1.5 rounded-lg text-slate-400 hover:text-orange-400 hover:bg-orange-500/10 transition-all">
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); duplicateResume(id); }} className="p-1.5 text-slate-400 hover:text-white">
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteResume(id); }} className="p-1.5 text-slate-500 hover:text-red-400">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+
+                      {/* More dropdown menu */}
+                      <div className="relative">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === id ? null : id); }}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-all"
+                        >
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </button>
+
+                        {openMenuId === id && (
+                          <div className={`absolute right-0 z-[100] bg-[var(--ox-card-bg,#0B0D14)] border border-[var(--ox-border,#1F1F1F)] rounded-xl shadow-2xl py-1 min-w-[150px] text-[var(--ox-text-primary)] ${
+                            idx > 0 || filteredResumes.length > 2 ? 'bottom-full mb-1' : 'top-full mt-1'
+                          }`}>
+                            <button onClick={() => { duplicateResume(id); setOpenMenuId(null); }} className="w-full px-3 py-2 text-left text-[11px] hover:bg-[var(--ox-surface-secondary)] flex items-center gap-2">
+                              <Copy className="w-3 h-3 text-orange-400" /> Duplicate
+                            </button>
+                            <button onClick={() => { toggleArchive(id); setOpenMenuId(null); }} className="w-full px-3 py-2 text-left text-[11px] hover:bg-[var(--ox-surface-secondary)] flex items-center gap-2">
+                              <Archive className="w-3 h-3 text-orange-400" /> {res.metadata?.isArchived ? 'Unarchive' : 'Archive'}
+                            </button>
+                            <div className="border-t border-[var(--ox-border)] my-1" />
+                            <button onClick={() => { deleteResume(id); setOpenMenuId(null); }} className="w-full px-3 py-2 text-left text-[11px] text-red-400 hover:bg-red-500/10 flex items-center gap-2">
+                              <Trash2 className="w-3 h-3" /> Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
