@@ -8,11 +8,19 @@ import { useResume } from '../context/ResumeContext';
 import { TEMPLATE_CATEGORIES, getTemplateCapabilities, OPPORTUNITYX_TEMPLATES_METADATA } from '../templates';
 import { RealTemplateThumbnail } from '../components/template/RealTemplateThumbnail';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDeviceType } from '../hooks/useDeviceType';
+import { TabletTemplateGallery } from '../components/tablet/TabletTemplateGallery';
 
 const FAVORITES_KEY = 'opportunityx_favorite_templates_v1';
 const RECENT_KEY = 'opportunityx_recent_templates_v1';
 
 export const TemplatesPage = () => {
+  const { isTablet, orientation } = useDeviceType();
+
+  if (isTablet) {
+    return <TabletTemplateGallery orientation={orientation} />;
+  }
+
   const navigate = useNavigate();
   const { setTemplate, setAccentColor, activeResume } = useResume();
   const [searchQuery, setSearchQuery] = useState('');

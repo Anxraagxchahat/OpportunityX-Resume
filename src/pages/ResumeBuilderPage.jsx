@@ -18,8 +18,9 @@ import { ThemeCustomizerModal } from '../components/ThemeCustomizerModal';
 import { PhotoCropModal } from '../components/PhotoCropModal';
 import { DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS, isPhotoTemplate } from '../utils/photoDefaults';
 import { getTemplateCapabilities } from '../templates';
-import { useIsMobile } from '../hooks/useIsMobile';
+import { useDeviceType } from '../hooks/useDeviceType';
 import { MobileResumeBuilder } from '../components/mobile/MobileResumeBuilder';
+import { TabletAppShell } from '../components/tablet/TabletAppShell';
 
 import {
   Plus, Trash2, ChevronDown, ChevronUp, MoveUp, MoveDown, User, FileText,
@@ -40,7 +41,7 @@ const LinkedinIcon = ({ className = "w-3.5 h-3.5" }) => (
 );
 
 export const ResumeBuilderPage = () => {
-  const isMobile = useIsMobile(768);
+  const { isMobile, isTablet } = useDeviceType();
 
   const {
     activeResume,
@@ -204,6 +205,10 @@ export const ResumeBuilderPage = () => {
 
   if (isMobile) {
     return <MobileResumeBuilder />;
+  }
+
+  if (isTablet) {
+    return <TabletAppShell />;
   }
 
   const { personal = {}, experience = [], education = [], projects = [], skills = {}, certificates = [], achievements = [], languages = [], socialLinks = {}, customSections = [], metadata = {}, assets = {} } = activeResume;

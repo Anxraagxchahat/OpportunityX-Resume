@@ -15,6 +15,8 @@ import { GithubIcon as Github } from '../components/GithubIcon';
 import { useResume } from '../context/ResumeContext';
 import { calculateResumeHealth } from '../utils/resumeHealth';
 import { calculateATSScore } from '../utils/atsEngine';
+import { useDeviceType } from '../hooks/useDeviceType';
+import { TabletHomeDashboard } from '../components/tablet/TabletHomeDashboard';
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
@@ -112,6 +114,12 @@ function ScoreRing({ score, size = 52, strokeWidth = 4, className = '' }) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 export const DashboardPage = () => {
+  const { isTablet } = useDeviceType();
+
+  if (isTablet) {
+    return <TabletHomeDashboard />;
+  }
+
   const navigate = useNavigate();
   const {
     resumes, activeResume, activeResumeId, setActiveResumeId,

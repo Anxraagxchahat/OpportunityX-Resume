@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Sparkles,
   LayoutDashboard,
@@ -17,14 +17,16 @@ import { AuthModal } from './AuthModal';
 import { ThemeTogglePill } from './ThemeTogglePill';
 import { UserAvatar } from './UserAvatar';
 import { MobileTopBar } from './mobile/MobileTopBar';
+import { TabletTopBar } from './tablet/TabletTopBar';
+import { useDeviceType } from '../hooks/useDeviceType';
 
 export const Navbar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const { isMobile, isTablet, isDesktop } = useDeviceType();
+
   const {
     session,
     aiCredits,
-    loadDemoResume,
     setIsUnlockAIModalOpen,
     setIsAICreditsModalOpen,
     isAuthOpen,
@@ -40,27 +42,32 @@ export const Navbar = () => {
     { label: 'AI Suite', to: '/ai-assistant', icon: Wand2 }
   ];
 
-  return (
-    <>
-      {/* Mobile Top Bar (<768px) - Always renders on mobile viewports */}
-      <div className="md:hidden sticky top-0 z-50 w-full no-print">
+  // 1. MOBILE PRESENTATION LAYER (< 768px)
+  if (isMobile) {
+    return (
+      <div className="sticky top-0 z-50 w-full no-print">
         <MobileTopBar />
       </div>
+    );
+  }
 
-      {/* Desktop Navbar (>=768px) - Always renders on desktop viewports */}
-      <header className="hidden md:block sticky top-0 z-50 w-full bg-[var(--ox-surface-primary)] backdrop-blur-md border-b border-[var(--ox-border)] transition-colors duration-300 no-print">
+  // 2. TABLET PRESENTATION LAYER (768px – 1023px)
+  if (isTablet) {
+    // Dedicated Tablet Shells (/builder, /dashboard, /templates) own their TabletTopBar.
+    const isTabletShellPage = ['/builder', '/dashboard', '/templates'].includes(location.pathname);
+    if (isTabletShellPage) {
+      return null;
+    }
+    return <TabletTopBar />;
+  }
+
+  // 3. DESKTOP PRESENTATION LAYER (>= 1024px)
+  return (
+    <header className="sticky top-0 z-50 w-full bg-[var(--ox-surface-primary)] backdrop-blur-md border-b border-[var(--ox-border)] transition-colors duration-300 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-3">
 
-        {/* Mobile Left Hamburger */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-xl text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] flex-shrink-0"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-
         {/* Brand Area */}
-        <Link to="/" className="flex items-center gap-3 group flex-shrink-0 mx-auto md:mx-0">
+        <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
           <img
             src="/favicon.png"
             alt="OpportunityX Logo"
@@ -78,7 +85,7 @@ export const Navbar = () => {
         </Link>
 
         {/* Navigation Bar */}
-        <nav className="hidden md:flex items-center gap-1 bg-[var(--ox-surface-secondary)] p-1.5 rounded-[16px] border border-[var(--ox-border)] relative transition-colors duration-300">
+        <nav className="flex items-center gap-1 bg-[var(--ox-surface-secondary)] p-1.5 rounded-[16px] border border-[var(--ox-border)] relative transition-colors duration-300">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.to;
@@ -109,10 +116,8 @@ export const Navbar = () => {
 
         {/* Right Actions: Theme Toggle + AI Credits Pill + Auth User Profile */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
-          {/* Theme Toggle Pill Switch */}
           <ThemeTogglePill />
 
-          {/* AI Credits Pill Button */}
           <button
             onClick={() => {
               if (!session.isAuthenticated || session.isGuest) {
@@ -149,41 +154,9 @@ export const Navbar = () => {
 
       </div>
 
-      {/* Mobile Drawer */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[var(--ox-surface-secondary)] border-b border-[var(--ox-border)] px-4 py-4 space-y-3"
-          >
-            {navItems.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-colors ${
-                  location.pathname === item.to
-                    ? 'bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30'
-                    : 'text-[var(--ox-text-primary)] hover:bg-slate-900/40'
-                }`}
-              >
-                <item.icon className="w-4 h-4 text-[#F97316]" />
-                <span>{item.label}</span>
-              </Link>
-            ))}
-
-            <div className="pt-2 border-t border-[var(--ox-border)] flex items-center justify-between">
-              <span className="text-xs text-[var(--ox-text-secondary)] font-semibold">App Theme:</span>
-              <ThemeTogglePill />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </header>
-    </>
   );
 };
+
+export default Navbar;
