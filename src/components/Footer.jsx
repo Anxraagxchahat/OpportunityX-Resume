@@ -301,13 +301,13 @@ export const Footer = () => {
                   <div className="p-3.5 rounded-xl bg-[var(--ox-card-bg)] border border-[var(--ox-border)] space-y-1.5 flex flex-col justify-between">
                     <div>
                       <Link
-                        to="/founder"
+                        to="/meet-the-founder"
                         className="text-xs font-bold text-[var(--ox-text-primary)] hover:text-orange-400 flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded"
                         aria-label="Meet the Founder page"
                       >
                         <UserCheck className="w-3.5 h-3.5 text-orange-500 shrink-0" aria-hidden="true" />
                         <span>Meet the Founder</span>
-                        <ExternalLink className="w-3 h-3 text-[var(--ox-text-muted)] shrink-0" aria-hidden="true" />
+                        <ChevronDown className="w-3 h-3 text-orange-500 -rotate-90 shrink-0" aria-hidden="true" />
                       </Link>
                       <p className="text-[11px] text-[var(--ox-text-muted)] leading-relaxed mt-1">
                         Meet the founder, explore the vision behind OpportunityX, and follow the journey of building the ecosystem.
@@ -452,13 +452,13 @@ export const Footer = () => {
                   >
                     <div className="space-y-1">
                       <Link
-                        to="/founder"
+                        to="/meet-the-founder"
                         className="font-bold text-[var(--ox-text-primary)] hover:text-orange-400 flex items-center gap-1.5 py-1"
                         aria-label="Meet the Founder page"
                       >
                         <UserCheck className="w-3.5 h-3.5 text-orange-500 shrink-0" aria-hidden="true" />
                         <span>Meet the Founder</span>
-                        <ExternalLink className="w-3 h-3 text-[var(--ox-text-muted)] shrink-0" aria-hidden="true" />
+                        <ChevronDown className="w-3 h-3 text-orange-500 -rotate-90 shrink-0" aria-hidden="true" />
                       </Link>
                       <p className="text-[11px] text-[var(--ox-text-muted)] leading-relaxed">
                         Meet the founder, explore the vision behind OpportunityX, and follow the journey of building the ecosystem.
