@@ -464,6 +464,7 @@ export const DashboardPage = () => {
                 { label: 'Templates', desc: 'Browse designs', icon: LayoutTemplate, action: () => navigate('/templates'), accent: 'purple' },
                 { label: 'ATS Checker', desc: 'Score analysis', icon: ScanLine, action: () => navigate('/ats-checker'), accent: 'emerald' },
                 { label: 'AI Assistant', desc: 'Smart improve', icon: Bot, action: () => navigate('/ai-assistant'), accent: 'amber' },
+                { label: 'Sample Resume', desc: 'Try demo data', icon: PlayCircle, action: handleLoadSample, accent: 'teal' },
               ].map((action) => {
                 const colorMap = {
                   orange: 'bg-orange-500/10 border-orange-500/20 text-orange-400 group-hover:border-orange-500/40 group-hover:bg-orange-500/15',
