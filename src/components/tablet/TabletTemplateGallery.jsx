@@ -33,6 +33,10 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
     return true;
   };
 
+  const totalFilteredCount = TEMPLATE_CATEGORIES
+    .filter((c) => selectedCategory === 'all' || selectedCategory === c.id)
+    .reduce((acc, c) => acc + c.templates.filter(filterTemplateItem).length, 0);
+
   const isLandscape = orientation === 'landscape';
   const gridClass = isLandscape
     ? 'grid grid-cols-2 min-[900px]:grid-cols-3 gap-4'
@@ -71,7 +75,7 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
               />
             </div>
             <div className="text-xs text-slate-400 font-medium">
-              Showing <span className="font-bold text-white">{filteredTemplates.length}</span> templates
+              Showing <span className="font-bold text-white">{totalFilteredCount}</span> templates
             </div>
           </div>
 

@@ -102,6 +102,10 @@ export const TemplatesPage = () => {
     return true;
   };
 
+  const totalFilteredCount = TEMPLATE_CATEGORIES
+    .filter((c) => selectedCategory === 'all' || selectedCategory === c.id)
+    .reduce((acc, c) => acc + c.templates.filter(filterTemplateItem).length, 0);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header Banner */}
@@ -159,7 +163,7 @@ export const TemplatesPage = () => {
           </div>
 
           <div className="text-xs text-slate-400 font-medium">
-            Showing <span className="font-bold text-white">{filteredTemplates.length}</span> templates
+            Showing <span className="font-bold text-white">{totalFilteredCount}</span> templates
           </div>
         </div>
 
