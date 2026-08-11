@@ -43,16 +43,16 @@ export const MobileTopBar = () => {
     <header className="w-full max-w-full bg-[var(--ox-surface-primary)] border-b border-[var(--ox-border)] transition-colors duration-200 no-print select-none box-border">
 
       {/* ═══ Row 1: Primary Navigation Bar ═══ */}
-      <div className="px-2.5 h-14 flex items-center justify-between gap-2 w-full max-w-full box-border">
+      <div className="px-2 h-14 flex items-center justify-between gap-1 sm:gap-2 w-full max-w-full box-border">
 
         {/* LEFT: Menu + Brand */}
-        <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
           {/* Menu Button — 44×44 touch target */}
           <button
             onClick={() => setIsMoreMenuOpen(true)}
-            className="w-10 h-10 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] active:scale-95 transition-transform flex items-center justify-center cursor-pointer shrink-0"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] active:scale-95 transition-transform flex items-center justify-center cursor-pointer shrink-0"
             aria-label="Open Navigation Menu"
-            style={{ minWidth: 40, minHeight: 40 }}
+            style={{ minWidth: 36, minHeight: 36 }}
           >
             <Menu className="w-5 h-5 text-orange-500" />
           </button>
@@ -62,14 +62,14 @@ export const MobileTopBar = () => {
             <img
               src="/favicon.png"
               alt="OpportunityX Logo"
-              className="w-7 h-7 rounded-full object-cover shrink-0 shadow-[0_0_10px_rgba(249,115,22,0.3)]"
+              className="w-8 h-8 rounded-full object-cover shrink-0 shadow-[0_0_12px_rgba(249,115,22,0.35)]"
             />
             <div className="flex flex-col min-w-0 leading-none">
-              <span className="font-black tracking-tight text-[var(--ox-text-primary)] truncate text-sm">
+              <span className="font-black tracking-tight text-[var(--ox-text-primary)] truncate text-base">
                 <span className="mobile-brand-full">Opportunity<span className="text-[#F97316]">X</span></span>
                 <span className="mobile-brand-short">OX</span>
               </span>
-              <span className="text-[8px] uppercase tracking-widest font-extrabold text-[#F97316] leading-none mt-0.5">
+              <span className="text-[9px] uppercase tracking-widest font-extrabold text-[#F97316] leading-none mt-0.5">
                 RESUME
               </span>
             </div>
@@ -79,14 +79,14 @@ export const MobileTopBar = () => {
         {/* RIGHT: Theme + Credits + Account — Never wraps, never shrinks */}
         <div className="flex items-center gap-1 shrink-0">
 
-          {/* Theme Toggle — icon only, 36px visual / 44px touch */}
+          {/* Theme Toggle — icon only */}
           <button
             onClick={toggleTheme}
             type="button"
-            className="w-9 h-9 rounded-full bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0"
             title={`Toggle Theme (${isDark ? 'Dark' : 'Light'})`}
             aria-label="Toggle theme"
-            style={{ minWidth: 36, minHeight: 36 }}
+            style={{ minWidth: 32, minHeight: 32 }}
           >
             {isDark ? (
               <Moon className="w-4 h-4 text-amber-400 fill-amber-400/20" />
@@ -104,10 +104,10 @@ export const MobileTopBar = () => {
                 setIsAICreditsModalOpen(true);
               }
             }}
-            className="h-9 px-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold flex items-center gap-1 cursor-pointer active:scale-95 transition-transform shrink-0"
+            className="h-8 sm:h-9 px-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold flex items-center gap-1 cursor-pointer active:scale-95 transition-transform shrink-0"
             title="AI Credits"
             aria-label="AI Credits Balance"
-            style={{ minHeight: 36 }}
+            style={{ minHeight: 32 }}
           >
             <Sparkles className="w-3.5 h-3.5 animate-pulse text-amber-400 shrink-0" />
             <span className="mobile-credits-full font-extrabold">{session.isAuthenticated && !session.isGuest ? `${aiCredits.remaining} Cr` : '5 Cr'}</span>
@@ -117,10 +117,10 @@ export const MobileTopBar = () => {
           {/* Account / Profile / Login — ALWAYS visible */}
           <button
             onClick={() => setIsAuthOpen(true)}
-            className="w-10 h-10 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0"
             aria-label="Account"
             title={session?.isAuthenticated && !session?.isGuest ? session.user?.name || 'User Account' : 'Sign In / Account'}
-            style={{ minWidth: 40, minHeight: 40 }}
+            style={{ minWidth: 36, minHeight: 36 }}
           >
             {session?.isAuthenticated && !session?.isGuest && session?.user ? (
               <UserAvatar user={session.user} size="w-5 h-5" />
