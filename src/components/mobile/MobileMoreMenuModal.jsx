@@ -22,7 +22,7 @@ export const MobileMoreMenuModal = () => {
     setIsGitHubImportModalOpen
   } = useResume();
 
-  const { isMoreMenuOpen, setIsMoreMenuOpen, setActiveTab } = useMobileNavigation();
+  const { isMoreMenuOpen, setIsMoreMenuOpen, setActiveTab, isInstallable, installPWA } = useMobileNavigation();
 
   if (!isMoreMenuOpen) return null;
 
@@ -53,6 +53,26 @@ export const MobileMoreMenuModal = () => {
 
         {/* Scrollable Content */}
         <div className="p-4 space-y-5 overflow-y-auto custom-scrollbar flex-1 pb-safe">
+
+          {/* PWA Install Banner Option (Only when installable and not already installed) */}
+          {isInstallable && (
+            <button
+              onClick={() => {
+                installPWA();
+                setIsMoreMenuOpen(false);
+              }}
+              className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-xs shadow-lg cursor-pointer active:scale-95 transition-transform"
+            >
+              <div className="flex items-center gap-2.5">
+                <Download className="w-4 h-4 text-white animate-bounce" />
+                <div className="text-left">
+                  <span className="block font-black leading-none">Install OpportunityX Resume</span>
+                  <span className="text-[10px] opacity-85 font-medium leading-none mt-1 block">App-like Standalone Mobile Mode</span>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded-md bg-white/20 text-[10px] uppercase tracking-wider">Install</span>
+            </button>
+          )}
           
           {/* Quick SaaS Tools */}
           <div className="space-y-2">
