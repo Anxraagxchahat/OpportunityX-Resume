@@ -145,13 +145,15 @@ export const TemplatesPage = () => {
 
       {/* Advanced Filter & Search Bar */}
       <div className="space-y-4 pb-4 border-b border-slate-800">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Category Chips */}
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto custom-scrollbar pb-1 sm:pb-0 text-xs font-semibold">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Category Chips Container */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 min-w-0 py-1 text-xs font-semibold">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-3.5 py-1.5 rounded-xl border transition-all ${
-                selectedCategory === 'all' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' : 'bg-slate-900 text-slate-400 border-slate-800'
+              className={`px-3.5 py-2 rounded-xl border transition-all whitespace-nowrap cursor-pointer ${
+                selectedCategory === 'all'
+                  ? 'bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-sm'
+                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
               }`}
             >
               All Templates
@@ -161,23 +163,25 @@ export const TemplatesPage = () => {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl border transition-all whitespace-nowrap ${
-                  selectedCategory === cat.id ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' : 'bg-slate-900 text-slate-400 border-slate-800'
+                className={`px-3.5 py-2 rounded-xl border transition-all whitespace-nowrap cursor-pointer ${
+                  selectedCategory === cat.id
+                    ? 'bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-sm'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
                 }`}
               >
-                {cat.categoryName}
+                {cat.shortName || cat.categoryName}
               </button>
             ))}
           </div>
 
-          {/* Search Input */}
-          <div className="relative w-full sm:w-72">
+          {/* Search Input Box */}
+          <div className="relative shrink-0 w-full md:w-64">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by role, tag, layout..."
+              placeholder="Search layout, role, tag..."
               className="w-full bg-[#0B0D14] border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs font-medium text-white focus:outline-none focus:border-orange-500"
             />
           </div>

@@ -111,36 +111,43 @@ export const TEMPLATE_CATEGORIES = [
   {
     id: 'ats',
     categoryName: 'ATS Optimized Core Layouts',
+    shortName: 'ATS Core',
     templates: ['modern', 'minimal', 'executive', 'corporate', 'recruiter', 'fullstack', 'ats-classic', 'asia-compact'].map(buildTemplateCard)
   },
   {
     id: 'tech',
     categoryName: 'Software & Technology Layouts',
+    shortName: 'Software & Tech',
     templates: ['fullstack', 'developer-dark', 'technical-grid', 'bre-material-dark'].map(buildTemplateCard)
   },
   {
     id: 'creative',
     categoryName: 'Creative & Visual Sidebar Layouts',
+    shortName: 'Creative & Visual',
     templates: ['creative-sidebar', 'marketing-accent', 'accent-column', 'whitespace-modern', 'bre-cool', 'bre-creative', 'bre-left-right', 'bre-oblique'].map(buildTemplateCard)
   },
   {
     id: 'executive',
     categoryName: 'Executive & Management Layouts',
+    shortName: 'Executive',
     templates: ['executive', 'executive-minimal', 'senior-enterprise', 'executive-bold'].map(buildTemplateCard)
   },
   {
     id: 'business',
     categoryName: 'Business, Consulting & Finance',
+    shortName: 'Business & Finance',
     templates: ['corporate', 'business-analyst', 'bre-sidebar'].map(buildTemplateCard)
   },
   {
     id: 'student',
     categoryName: 'Student & Entry Level Layouts',
+    shortName: 'Student & Entry',
     templates: ['compact-entry', 'minimal', 'recruiter'].map(buildTemplateCard)
   },
   {
     id: 'academic',
     categoryName: 'Academic, Research & Healthcare',
+    shortName: 'Academic & Healthcare',
     templates: ['healthcare-calm', 'jsonresume-modern', 'bre-green'].map(buildTemplateCard)
   }
 ];

@@ -57,34 +57,34 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
         </div>
 
         {/* Search & Category Chips */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pb-4 border-b border-[var(--ox-border)]">
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 text-xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-4 border-b border-[var(--ox-border)]">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 min-w-0 py-1 text-xs font-semibold">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-3 py-1.5 rounded-xl border font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-xl border font-bold transition-all whitespace-nowrap cursor-pointer ${
                 selectedCategory === 'all'
-                  ? 'bg-orange-500/15 text-orange-400 border-orange-500/30'
-                  : 'bg-slate-900 text-slate-400 border-slate-800'
+                  ? 'bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-sm'
+                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
               }`}
             >
-              All
+              All Templates
             </button>
             {TEMPLATE_CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-xl border font-bold whitespace-nowrap transition-all ${
+                className={`px-3 py-1.5 rounded-xl border font-bold whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat.id
-                    ? 'bg-orange-500/15 text-orange-400 border-orange-500/30'
-                    : 'bg-slate-900 text-slate-400 border-slate-800'
+                    ? 'bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-sm'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
                 }`}
               >
-                {cat.categoryName}
+                {cat.shortName || cat.categoryName}
               </button>
             ))}
           </div>
 
-          <div className="relative w-full sm:w-60">
+          <div className="relative shrink-0 w-full sm:w-60">
             <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
             <input
               type="text"
