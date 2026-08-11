@@ -186,45 +186,53 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const isLoading = isSubmitting;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn no-print">
-      <div className="bg-[var(--ox-card-bg,#0B0D14)] border border-[var(--ox-border,#1F1F1F)] rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4 relative max-h-[90vh] overflow-y-auto custom-scrollbar transition-colors duration-300">
-        {/* Close */}
-        <button
-          onClick={onClose}
-          disabled={isLoading}
-          className="absolute top-4 right-4 text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] p-1.5 rounded-lg bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] transition-colors cursor-pointer disabled:opacity-40"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        {/* Reassurance */}
-        <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-400 font-semibold text-center">
-          Resume Builder remains free forever. Login unlocks AI & Cloud sync.
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="relative p-1 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center flex-shrink-0">
-            <img
-              src="/favicon.png"
-              alt="OpportunityX Logo"
-              className="w-10 h-10 rounded-full object-cover shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-            <div className="hidden w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 items-center justify-center text-white font-black text-sm shadow-md">
-              OX
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn no-print pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
+      <div className="bg-[var(--ox-card-bg,#0B0D14)] border border-[var(--ox-border,#1F1F1F)] rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[85vh] transition-colors duration-300 relative">
+        
+        {/* Sticky Header with Title & 44×44px Touch Target Close Button */}
+        <div className="sticky top-0 z-20 flex items-center justify-between p-4 pb-3 bg-[var(--ox-card-bg,#0B0D14)] border-b border-[var(--ox-border,#1F1F1F)] shrink-0">
+          <div className="flex items-center gap-3 min-w-0 pr-2">
+            <div className="relative p-1 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shrink-0">
+              <img
+                src="/favicon.png"
+                alt="OpportunityX Logo"
+                className="w-9 h-9 rounded-full object-cover shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div className="hidden w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 items-center justify-center text-white font-black text-sm shadow-md">
+                OX
+              </div>
+            </div>
+            <div className="truncate">
+              <h3 className="text-base font-black text-[var(--ox-text-primary)] flex items-center gap-1 truncate">
+                Opportunity<span className="text-orange-500">X</span> Account
+              </h3>
+              <p className="text-[11px] text-[var(--ox-text-secondary)] truncate">Central ecosystem authentication</p>
             </div>
           </div>
-          <div>
-            <h3 className="text-base font-extrabold text-[var(--ox-text-primary)] flex items-center gap-1">
-              Opportunity<span className="text-orange-500">X</span> Account
-            </h3>
-            <p className="text-xs text-[var(--ox-text-secondary)]">Central ecosystem authentication</p>
-          </div>
+
+          {/* Close Button — 44x44px minimum touch target, always visible */}
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="w-11 h-11 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] flex items-center justify-center transition-colors cursor-pointer shrink-0 disabled:opacity-40 active:scale-95 shadow-sm"
+            aria-label="Close authentication modal"
+            style={{ minWidth: 44, minHeight: 44 }}
+          >
+            <X className="w-5 h-5 text-orange-500" />
+          </button>
         </div>
+
+        {/* Internal Scrollable Content */}
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+
+          {/* Reassurance Banner */}
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-400 font-semibold text-center">
+            Resume Builder remains free forever. Login unlocks AI & Cloud sync.
+          </div>
 
         {/* Authenticated State */}
         {isAuthenticated && user && (
@@ -448,6 +456,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
           </>
         )}
+        </div>
       </div>
     </div>,
     document.body
