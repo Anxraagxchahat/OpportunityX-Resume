@@ -102,27 +102,36 @@ export const MobileSectionEditor = () => {
   };
 
   return (
-    <div className="w-full bg-[var(--ox-bg)] p-4 space-y-5 pb-32 select-none no-print">
+    <div className="w-full bg-[var(--ox-bg)] p-4 space-y-4 pb-[calc(96px+env(safe-area-inset-bottom,0px))] select-none no-print">
       
       {/* Mobile Section Header */}
-      <div className="p-4 rounded-3xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] space-y-2 shadow-sm">
+      <div className="p-3 rounded-2xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrevSection}
               disabled={currentSectionIdx === 0}
-              className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] disabled:opacity-30 min-h-[40px] min-w-[40px] flex items-center justify-center cursor-pointer"
+              className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] disabled:opacity-30 min-h-[36px] min-w-[36px] flex items-center justify-center cursor-pointer"
+              aria-label="Previous section"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <h2 className="text-base font-black text-[var(--ox-text-primary)] capitalize">
+            <h2 className="text-sm font-black text-[var(--ox-text-primary)] capitalize">
               {builderSections.find((s) => s.id === activeSection)?.label || activeSection}
             </h2>
+            <button
+              onClick={handleNextSection}
+              disabled={currentSectionIdx === builderSections.length - 1}
+              className="p-2 rounded-xl bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] disabled:opacity-30 min-h-[36px] min-w-[36px] flex items-center justify-center cursor-pointer"
+              aria-label="Next section"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
 
           <button
             onClick={() => toggleSectionVisibility(activeSection)}
-            className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 min-h-[40px] cursor-pointer transition-colors ${
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 min-h-[36px] cursor-pointer transition-colors ${
               isHidden
                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
