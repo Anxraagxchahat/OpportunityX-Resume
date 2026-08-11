@@ -1,4 +1,23 @@
-# Python
+# ==========================================
+# Environment & Secret Files (CRITICAL SECURITY)
+# ==========================================
+.env
+.env.*
+*.env
+!.env.example
+!*.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.id_rsa
+secrets/
+
+# ==========================================
+# Python & Backend (FastAPI / Pytest / Virtual Envs)
+# ==========================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,26 +35,60 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
 
 # Virtual Environments
 .venv/
 venv/
 env/
 ENV/
+env.bak/
+venv.bak/
+backend/venv/
+backend/env/
+backend/.venv/
 
-# Node & Build Outputs
+# Testing & Quality Tools
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.ipynb_checkpoints/
+
+# ==========================================
+# Databases, Local Storage & Temp Files
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+uploads/
+storage/
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ==========================================
+# Node.js, Frontend & Build Outputs (Vite / React)
+# ==========================================
 node_modules/
 dist/
 dist-ssr/
-*.lcov
+out/
+.vite/
+.cache/
+.parcel-cache/
+.turbo/
+.vercel/
+.netlify/
+.pnpm-store/
 
 # Logs
 logs/
@@ -46,24 +99,27 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Environment & Secret Files
-.env
-.env.local
-.env.*.local
-*.pem
-
-# Editor & OS files
+# ==========================================
+# Editor & OS / System Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
 .idea/
-.DS_Store
-Thumbs.db
 *.suo
 *.user
+*.userosv
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 *.bak
-*.tmp
-*.temp
+
