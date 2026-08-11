@@ -28,6 +28,66 @@ export const MobileNavigationProvider = ({ children }) => {
   const [isCardEditorOpen, setIsCardEditorOpen] = useState(false);
   const [cardEditorConfig, setCardEditorConfig] = useState({ section: null, item: null, index: -1 });
 
+  // PWA Install Prompt State & Display Mode Detection
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    const checkStandalone = () => {
+      const isStandaloneMode =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.matchMedia('(display-mode: fullscreen)').matches ||
+        window.navigator.standalone === true;
+      setIsStandalone(isStandaloneMode);
+    };
+
+    checkStandalone();
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    const handleMediaChange = () => checkStandalone();
+    
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange);
+    }
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange);
+      }
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const installPWA = useCallback(async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const choiceResult = await deferredInstallPrompt.userChoice;
+    if (choiceResult.outcome === 'accepted') {
+      setDeferredInstallPrompt(null);
+    }
+  }, [deferredInstallPrompt]);
+
+  // Drawer / Modal setters with History PushState for Android Back Button support
+  const handleSetSectionDrawerOpen = useCallback((open) => {
+    setIsSectionDrawerOpen(open);
+    if (open && window.history.state?.modal !== 'sectionDrawer') {
+      window.history.pushState({ modal: 'sectionDrawer' }, '');
+    }
+  }, []);
+
+  const handleSetMoreMenuOpen = useCallback((open) => {
+    setIsMoreMenuOpen(open);
+    if (open && window.history.state?.modal !== 'moreMenu') {
+      window.history.pushState({ modal: 'moreMenu' }, '');
+    }
+  }, []);
+
   // AI Confirmation modal state
   const [aiModalConfig, setAiModalConfig] = useState({ isOpen: false, type: '', initialPrompt: '', field: '', onApply: null });
 
@@ -73,7 +133,6 @@ export const MobileNavigationProvider = ({ children }) => {
     setCardEditorConfig({ section, item, index });
     setIsCardEditorOpen(true);
 
-    // Push state into browser history for back button closing
     if (window.history.state?.modal !== 'cardEditor') {
       window.history.pushState({ modal: 'cardEditor' }, '');
     }
@@ -84,9 +143,9 @@ export const MobileNavigationProvider = ({ children }) => {
     setCardEditorConfig({ section: null, item: null, index: -1 });
   }, []);
 
-  // Browser back button handling
+  // Android hardware / gesture back button handling
   useEffect(() => {
-    const handlePopState = (e) => {
+    const handlePopState = () => {
       if (isCardEditorOpen) {
         setIsCardEditorOpen(false);
         setCardEditorConfig({ section: null, item: null, index: -1 });
@@ -111,9 +170,9 @@ export const MobileNavigationProvider = ({ children }) => {
         activeSection,
         setActiveSection: changeSection,
         isSectionDrawerOpen,
-        setIsSectionDrawerOpen,
+        setIsSectionDrawerOpen: handleSetSectionDrawerOpen,
         isMoreMenuOpen,
-        setIsMoreMenuOpen,
+        setIsMoreMenuOpen: handleSetMoreMenuOpen,
         isCardEditorOpen,
         cardEditorConfig,
         openCardEditor,
@@ -122,7 +181,11 @@ export const MobileNavigationProvider = ({ children }) => {
         setAiModalConfig,
         toasts,
         addToast,
-        removeToast
+        removeToast,
+        deferredInstallPrompt,
+        isInstallable: Boolean(deferredInstallPrompt) && !isStandalone,
+        installPWA,
+        isStandalone
       }}
     >
       {children}
