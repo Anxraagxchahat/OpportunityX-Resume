@@ -57,11 +57,29 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
         </div>
 
         {/* Search & Category Chips */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-4 border-b border-[var(--ox-border)]">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 min-w-0 py-1 text-xs font-semibold">
+        <div className="space-y-3 pb-4 border-b border-[var(--ox-border)]">
+          {/* Row 1: Search Box & Filter Count */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="relative w-full sm:w-72">
+              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search template..."
+                className="w-full bg-[#080B12] border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+              />
+            </div>
+            <div className="text-xs text-slate-400 font-medium">
+              Showing <span className="font-bold text-white">{filteredTemplates.length}</span> templates
+            </div>
+          </div>
+
+          {/* Row 2: Wrap-Enabled Category Chips */}
+          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs font-semibold">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-3 py-1.5 rounded-xl border font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl border font-bold transition-all cursor-pointer ${
                 selectedCategory === 'all'
                   ? 'bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-sm'
                   : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
@@ -73,7 +91,7 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-xl border font-bold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl border font-bold transition-all cursor-pointer ${
                   selectedCategory === cat.id
                     ? 'bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-sm'
                     : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
@@ -82,17 +100,6 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
                 {cat.shortName || cat.categoryName}
               </button>
             ))}
-          </div>
-
-          <div className="relative shrink-0 w-full sm:w-60">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search template..."
-              className="w-full bg-[#080B12] border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
-            />
           </div>
         </div>
 
