@@ -34,7 +34,7 @@ export const MobileHomeDashboard = () => {
   };
 
   return (
-    <div className="w-full min-h-dvh bg-[var(--ox-bg)] p-4 space-y-5 pb-28 select-none no-print">
+    <div className="w-full min-h-dvh bg-[var(--ox-bg)] p-4 space-y-5 pb-[calc(96px+env(safe-area-inset-bottom,0px))] select-none no-print">
       
       {/* Hero Card: Active Resume & Health Progress */}
       <div className="p-5 rounded-3xl bg-gradient-to-br from-[var(--ox-surface-primary)] to-[var(--ox-surface-secondary)] border border-orange-500/30 space-y-4 shadow-xl relative overflow-hidden">
