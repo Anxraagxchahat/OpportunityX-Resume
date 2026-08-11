@@ -39,6 +39,7 @@ import { AIAssistantPage } from './pages/AIAssistantPage';
 import { EcosystemDashboardPage } from './pages/EcosystemDashboardPage';
 import { PublicRecruiterViewPage } from './pages/PublicRecruiterViewPage';
 import { LegalPage } from './pages/LegalPage';
+import { FounderPage } from './pages/FounderPage';
 
 /**
  * AuthGate — Prevents rendering the app until Firebase resolves initial auth state.
@@ -78,7 +79,8 @@ function AppContent() {
           <Route path="/u/:slug" element={<PublicRecruiterViewPage />} />
           <Route path="/legal" element={<LegalPage />} />
           <Route path="/legal/:slug" element={<LegalPage />} />
-          <Route path="/founder" element={<LegalPage />} />
+          <Route path="/founder" element={<FounderPage />} />
+          <Route path="/meet-the-founder" element={<FounderPage />} />
           <Route path="/401" element={<UnauthorizedPage />} />
           <Route path="/403" element={<ForbiddenPage />} />
           <Route path="/500" element={<ServerErrorPage />} />
