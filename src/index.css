@@ -192,10 +192,10 @@ html, body {
 }
 
 /* ═══ Mobile Top Bar Responsive Toggles ═══ */
-/* Brand: Show "OX" below 390px, "OpportunityX" at 390px+ */
+/* Brand: Show "OX" below 360px, "OpportunityX" at 360px+ */
 .mobile-brand-full { display: none; }
 .mobile-brand-short { display: inline; }
-@media (min-width: 390px) {
+@media (min-width: 360px) {
   .mobile-brand-full { display: inline; }
   .mobile-brand-short { display: none; }
 }
