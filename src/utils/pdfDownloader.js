@@ -9,7 +9,13 @@ import html2pdf from 'html2pdf.js';
  * @returns {Promise<boolean>} Resolves to true when download completes
  */
 export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candidateName = 'Resume') => {
-  let element = document.getElementById(elementId);
+  // Handle case where elementId is passed as activeResume object
+  const targetId = typeof elementId === 'string' ? elementId : 'resume-a4-preview';
+  const nameStr = typeof candidateName === 'string'
+    ? candidateName
+    : (typeof elementId === 'object' && elementId?.personal?.fullName ? elementId.personal.fullName : 'Resume');
+
+  let element = document.getElementById(targetId);
 
   // Robust Fallback: search for .a4-paper-container if target ID is not directly matched
   if (!element) {
@@ -17,14 +23,14 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   }
 
   if (!element) {
-    console.error(`Target resume element #${elementId} or .a4-paper-container not found for PDF download.`);
+    console.error(`Target resume element #${targetId} or .a4-paper-container not found for PDF download.`);
     window.print();
     return false;
   }
 
   // Clean filename: e.g. "Anurag_Verma_Resume.pdf"
-  const safeName = candidateName && candidateName.trim()
-    ? candidateName.trim().replace(/[^a-zA-Z0-9\s_-]/g, '').replace(/\s+/g, '_')
+  const safeName = nameStr && nameStr.trim()
+    ? nameStr.trim().replace(/[^a-zA-Z0-9\s_-]/g, '').replace(/\s+/g, '_')
     : 'OpportunityX';
   const filename = `${safeName}_Resume.pdf`;
 
@@ -39,7 +45,24 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
       letterRendering: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 794 // 210mm @ 96 DPI
+      windowWidth: 794, // 210mm @ 96 DPI
+      onclone: (clonedDoc) => {
+        // Position cloned element at (0, 0) inside cloned document so canvas captures full content!
+        const clonedEl = clonedDoc.getElementById(targetId) || clonedDoc.querySelector('.a4-paper-container');
+        if (clonedEl) {
+          clonedEl.style.position = 'static';
+          clonedEl.style.left = '0px';
+          clonedEl.style.top = '0px';
+          clonedEl.style.transform = 'none';
+          clonedEl.style.visibility = 'visible';
+          clonedEl.style.opacity = '1';
+          clonedEl.style.zIndex = '99999';
+
+          // Remove any no-print controls from cloned PDF
+          const noPrintEls = clonedEl.querySelectorAll('.no-print');
+          noPrintEls.forEach((np) => np.remove());
+        }
+      }
     },
     jsPDF: {
       unit: 'mm',

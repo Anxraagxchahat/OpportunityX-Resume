@@ -19,7 +19,7 @@ export const MobileResumePreview = () => {
   const handleDownloadPDF = async () => {
     setIsDownloading(true);
     try {
-      await downloadDirectPDF(activeResume, activeResume.metadata?.title || 'Resume');
+      await downloadDirectPDF('resume-a4-preview', activeResume.personal?.fullName || activeResume.metadata?.title || 'Resume');
     } catch (err) {
       console.error('PDF download error:', err);
     } finally {

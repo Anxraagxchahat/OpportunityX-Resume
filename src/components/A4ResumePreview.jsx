@@ -740,7 +740,7 @@ export const A4ResumePreview = () => {
       </div>
 
       {/* PRINT-ONLY RESUME CONTAINER (Active ONLY during window.print()) */}
-      <div id="resume-a4-preview" className="printable-resume-page hidden print:block">
+      <div id="resume-print-target" className="printable-resume-page hidden print:block">
         <Suspense fallback={null}>
           <SelectedTemplateComponent
             resumeData={activeResume}
