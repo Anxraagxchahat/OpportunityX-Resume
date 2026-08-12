@@ -81,6 +81,55 @@ export const Footer = () => {
     }
   };
 
+  const renderBrandBlock = () => (
+    <div className="space-y-3">
+      <Link
+        to="/"
+        className="flex items-center gap-2.5 group w-max focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-xl p-1 -m-1"
+        aria-label="OpportunityX Resume Home"
+      >
+        <img
+          src="/favicon.png"
+          alt="OpportunityX Logo"
+          className="w-7 h-7 rounded-full object-cover shrink-0 shadow-[0_0_10px_rgba(249,115,22,0.3)] group-hover:scale-105 transition-transform"
+        />
+        <div className="flex items-baseline gap-1.5 text-left">
+          <span className="text-sm font-black tracking-tight text-[var(--ox-text-primary)] font-sans leading-none">
+            Opportunity<span className="text-[#F97316]">X</span> Resume
+          </span>
+          <span className="text-[8px] uppercase tracking-widest font-extrabold px-1.5 py-0.5 rounded-full bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30 leading-none">
+            ECOSYSTEM
+          </span>
+        </div>
+      </Link>
+
+      <p className="text-[11px] text-[var(--ox-text-secondary)] leading-relaxed max-w-xs">
+        Official Ecosystem Product by OpportunityX. Build professional, ATS-friendly resumes completely free with zero watermark & privacy.
+      </p>
+
+      {/* Compact Social Media Icons */}
+      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+        {SOCIAL_LINKS.map((s) => {
+          const Icon = s.icon;
+          return (
+            <a
+              key={s.name}
+              href={s.url}
+              target={s.url.startsWith('mailto:') ? '_self' : '_blank'}
+              rel="noopener noreferrer"
+              aria-label={s.ariaLabel}
+              title={s.name}
+              onClick={(e) => handleEmailClick(e, s.url)}
+              className={`w-7.5 h-7.5 p-1.5 rounded-lg bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-secondary)] flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${s.colorHover}`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <footer className="bg-[var(--ox-surface-primary)] border-t border-[var(--ox-border)] text-xs text-[var(--ox-text-secondary)] transition-colors duration-300 no-print select-none">
 
@@ -98,51 +147,8 @@ export const Footer = () => {
         <div className="hidden md:grid md:grid-cols-12 gap-6 lg:gap-8 items-start">
 
           {/* 1. BRAND BLOCK (col-span-4) */}
-          <div className="md:col-span-4 space-y-3">
-            <Link
-              to="/"
-              className="flex items-center gap-2.5 group w-max focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-xl p-1 -m-1"
-              aria-label="OpportunityX Resume Home"
-            >
-              <img
-                src="/favicon.png"
-                alt="OpportunityX Logo"
-                className="w-7 h-7 rounded-full object-cover shrink-0 shadow-[0_0_10px_rgba(249,115,22,0.3)] group-hover:scale-105 transition-transform"
-              />
-              <div className="flex items-baseline gap-1.5 text-left">
-                <span className="text-sm font-black tracking-tight text-[var(--ox-text-primary)] font-sans leading-none">
-                  Opportunity<span className="text-[#F97316]">X</span> Resume
-                </span>
-                <span className="text-[8px] uppercase tracking-widest font-extrabold px-1.5 py-0.5 rounded-full bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30 leading-none">
-                  ECOSYSTEM
-                </span>
-              </div>
-            </Link>
-
-            <p className="text-[11px] text-[var(--ox-text-secondary)] leading-relaxed max-w-xs">
-              Official Ecosystem Product by OpportunityX. Build professional, ATS-friendly resumes completely free with zero watermark & privacy.
-            </p>
-
-            {/* Compact Social Media Icons */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-              {SOCIAL_LINKS.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <a
-                    key={s.name}
-                    href={s.url}
-                    target={s.url.startsWith('mailto:') ? '_self' : '_blank'}
-                    rel="noopener noreferrer"
-                    aria-label={s.ariaLabel}
-                    title={s.name}
-                    onClick={(e) => handleEmailClick(e, s.url)}
-                    className={`w-7.5 h-7.5 p-1.5 rounded-lg bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-secondary)] flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${s.colorHover}`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                  </a>
-                );
-              })}
-            </div>
+          <div className="md:col-span-4">
+            {renderBrandBlock()}
           </div>
 
           {/* 2. RESUME TOOLS (col-span-3) */}
@@ -260,8 +266,13 @@ export const Footer = () => {
 
         </div>
 
-        {/* ═══ MOBILE ACCORDIONS (<768px) ═══ */}
-        <div className="space-y-2 md:hidden">
+        {/* ═══ MOBILE BRAND & ACCORDIONS (<768px) ═══ */}
+        <div className="space-y-4 md:hidden">
+          {/* Mobile Brand Block */}
+          <div className="pb-3 border-b border-[var(--ox-border)]/50">
+            {renderBrandBlock()}
+          </div>
+
           {/* Accordion 1: Resume Tools */}
           <div className="rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] overflow-hidden">
             <button
