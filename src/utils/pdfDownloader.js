@@ -36,7 +36,7 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   tempWrapper.style.left = '0';
   tempWrapper.style.top = '0';
   tempWrapper.style.width = '210mm';
-  tempWrapper.style.zIndex = '999999';
+  tempWrapper.style.zIndex = '-99999';
   tempWrapper.style.backgroundColor = '#ffffff';
   tempWrapper.style.color = '#0f172a';
   tempWrapper.style.opacity = '1';
