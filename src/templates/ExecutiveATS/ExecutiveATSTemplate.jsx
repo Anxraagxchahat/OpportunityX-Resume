@@ -2,8 +2,9 @@ import React from 'react';
 import { TemplateSkills } from '../../components/template/TemplateSkills';
 import { CustomSectionsBlock } from '../reactive/shared/MiscBlocks';
 import { SocialLinksBlock } from '../reactive/shared/SocialLinksBlock';
+import { shouldRenderBlock } from '../../utils/paginationEngine';
 
-export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFamily = 'Inter' }) => {
+export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFamily = 'Inter', visibleBlockIds = null }) => {
   const {
     personal = {},
     experience = [],
@@ -16,21 +17,25 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
     customSections = []
   } = resumeData || {};
 
+  const isVisible = (id) => shouldRenderBlock(id, visibleBlockIds);
+
   return (
     <div className="space-y-4 text-slate-800 leading-normal" style={{ fontFamily: `'${fontFamily}', sans-serif` }}>
       
       {/* 1. HEADER */}
-      <div className="text-center pb-3 border-b-2 border-double" style={{ borderColor: accentHex }}>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">{personal.fullName || 'Executive Name'}</h1>
-        {personal.jobTitle && <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: accentHex }}>{personal.jobTitle}</p>}
-        <p className="text-xs text-slate-600 font-medium mt-1">
-          {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' • ')}
-        </p>
-      </div>
+      {isVisible('header') && (
+        <div data-block-id="header" className="text-center pb-3 border-b-2 border-double" style={{ borderColor: accentHex }}>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{personal.fullName || 'Executive Name'}</h1>
+          {personal.jobTitle && <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: accentHex }}>{personal.jobTitle}</p>}
+          <p className="text-xs text-slate-600 font-medium mt-1">
+            {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' • ')}
+          </p>
+        </div>
+      )}
 
       {/* 2. SUMMARY */}
-      {personal.summary && (
-        <div className="space-y-1">
+      {personal.summary && isVisible('summary') && (
+        <div data-block-id="summary" className="space-y-1">
           <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
             Executive Summary
           </h2>
@@ -41,18 +46,20 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
       {/* 3. EXPERIENCE */}
       {experience.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
-            Leadership & Professional Experience
-          </h2>
-          {experience.map((exp) => (
-            <div key={exp.id || exp.role} className="space-y-1 text-xs">
+          {experience.some((_, i) => isVisible(`exp-${i}`)) && (
+            <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+              Leadership & Professional Experience
+            </h2>
+          )}
+          {experience.map((exp, i) => isVisible(`exp-${i}`) && (
+            <div key={exp.id || i} data-block-id={`exp-${i}`} className="space-y-1 text-xs">
               <div className="flex justify-between font-extrabold text-slate-900">
                 <span>{exp.role} <span className="font-semibold text-slate-600">— {exp.company}</span></span>
                 <span className="text-slate-500 font-medium text-[11px]">{exp.period || `${exp.startDate || ''} ${exp.endDate ? `– ${exp.endDate}` : ''}`}</span>
               </div>
               {Array.isArray(exp.bullets) && exp.bullets.length > 0 ? (
                 <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
-                  {exp.bullets.map((b, i) => <li key={i} className="leading-relaxed">{b}</li>)}
+                  {exp.bullets.map((b, idx) => <li key={idx} className="leading-relaxed">{b}</li>)}
                 </ul>
               ) : exp.description ? (
                 <p className="text-slate-700 leading-relaxed">{exp.description}</p>
@@ -65,11 +72,13 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
       {/* 4. PROJECTS */}
       {projects.length > 0 && (
         <div className="space-y-2 text-xs">
-          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
-            Key Initiatives & Projects
-          </h2>
-          {projects.map((p) => (
-            <div key={p.id || p.title} className="space-y-0.5">
+          {projects.some((_, i) => isVisible(`proj-${i}`)) && (
+            <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+              Key Initiatives & Projects
+            </h2>
+          )}
+          {projects.map((p, i) => isVisible(`proj-${i}`) && (
+            <div key={p.id || i} data-block-id={`proj-${i}`} className="space-y-0.5">
               <div className="flex justify-between font-bold text-slate-900">
                 <span>
                   {p.title || p.name}
@@ -82,7 +91,7 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
               </div>
               {Array.isArray(p.bullets) && p.bullets.length > 0 ? (
                 <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
-                  {p.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                  {p.bullets.map((b, idx) => <li key={idx}>{b}</li>)}
                 </ul>
               ) : p.description ? (
                 <p className="text-slate-700">{p.description}</p>
@@ -93,8 +102,8 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
       )}
 
       {/* 5. SKILLS */}
-      {skills && (
-        <div className="space-y-1 text-xs">
+      {skills && isVisible('skills') && (
+        <div data-block-id="skills" className="space-y-1 text-xs">
           <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
             Core Competencies & Skills
           </h2>
@@ -105,11 +114,13 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
       {/* 6. EDUCATION */}
       {education.length > 0 && (
         <div className="space-y-2 text-xs">
-          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
-            Education
-          </h2>
-          {education.map((edu) => (
-            <div key={edu.id || edu.degree} className="space-y-0.5">
+          {education.some((_, i) => isVisible(`edu-${i}`)) && (
+            <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+              Education
+            </h2>
+          )}
+          {education.map((edu, i) => isVisible(`edu-${i}`) && (
+            <div key={edu.id || i} data-block-id={`edu-${i}`} className="space-y-0.5">
               <div className="flex justify-between">
                 <div><strong className="text-slate-900">{edu.degree}</strong> — {edu.institution || edu.college}</div>
                 <span className="text-slate-500 text-[11px]">{edu.period || `${edu.startDate || ''} ${edu.endDate ? `– ${edu.endDate}` : ''}`}</span>
@@ -128,11 +139,13 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
       {/* 7. CERTIFICATES */}
       {certificates.length > 0 && (
         <div className="space-y-1 text-xs">
-          <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
-            Executive Certifications
-          </h2>
-          {certificates.map((cert) => (
-            <div key={cert.id || cert.name} className="flex justify-between text-slate-700 font-medium">
+          {certificates.some((_, i) => isVisible(`cert-${i}`)) && (
+            <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
+              Executive Certifications
+            </h2>
+          )}
+          {certificates.map((cert, i) => isVisible(`cert-${i}`) && (
+            <div key={cert.id || i} data-block-id={`cert-${i}`} className="flex justify-between text-slate-700 font-medium">
               <span><strong className="text-slate-900">{cert.name}</strong> — {cert.issuer}</span>
               <span className="text-slate-500 text-[11px]">{cert.date}</span>
             </div>
@@ -141,22 +154,22 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
       )}
 
       {/* 8. ACHIEVEMENTS */}
-      {achievements.length > 0 && (
-        <div className="space-y-1 text-xs">
+      {achievements.length > 0 && isVisible('achievements') && (
+        <div data-block-id="achievements" className="space-y-1 text-xs">
           <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
             Honors & Board Positions
           </h2>
           <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
-            {achievements.map((a) => (
-              <li key={a.id || a.title}><strong>{a.title}: </strong><span>{a.description}</span></li>
+            {achievements.map((a, i) => (
+              <li key={a.id || i}><strong>{a.title}: </strong><span>{a.description}</span></li>
             ))}
           </ul>
         </div>
       )}
 
       {/* 9. LANGUAGES */}
-      {languages.length > 0 && (
-        <div className="space-y-1 text-xs">
+      {languages.length > 0 && isVisible('languages') && (
+        <div data-block-id="languages" className="space-y-1 text-xs">
           <h2 className="font-extrabold uppercase tracking-widest text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
             Languages
           </h2>
@@ -168,11 +181,15 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
 
       {/* 10. CUSTOM SECTIONS */}
       {Array.isArray(customSections) && customSections.length > 0 && (
-        <CustomSectionsBlock customSections={customSections} accentHex={accentHex} />
+        <CustomSectionsBlock customSections={customSections} accentHex={accentHex} isVisible={isVisible} />
       )}
 
       {/* 11. SOCIAL & PORTFOLIO LINKS */}
-      <SocialLinksBlock personal={personal} accentHex={accentHex} />
+      {isVisible('profiles') && (
+        <div data-block-id="profiles">
+          <SocialLinksBlock personal={personal} accentHex={accentHex} />
+        </div>
+      )}
     </div>
   );
 };
