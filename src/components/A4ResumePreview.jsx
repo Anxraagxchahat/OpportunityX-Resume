@@ -434,7 +434,7 @@ export const A4ResumePreview = () => {
         id="resume-a4-preview"
         ref={measureRef}
         aria-hidden="true"
-        className="fixed left-[-9999px] top-0 pointer-events-none z-[-100] bg-white text-slate-900"
+        className="absolute left-0 top-0 pointer-events-none z-[-9999] bg-white text-slate-900 opacity-100"
         style={{
           width: '210mm',
           backgroundColor: paperBgColor || '#ffffff',

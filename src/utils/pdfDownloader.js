@@ -34,6 +34,24 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
     : 'OpportunityX';
   const filename = `${safeName}_Resume.pdf`;
 
+  // Temporarily store original styles
+  const origPosition = element.style.position;
+  const origLeft = element.style.left;
+  const origTop = element.style.top;
+  const origVisibility = element.style.visibility;
+  const origOpacity = element.style.opacity;
+  const origZIndex = element.style.zIndex;
+  const origTransform = element.style.transform;
+
+  // Bring target element into 0,0 viewport coordinates with full visibility for html2canvas
+  element.style.position = 'absolute';
+  element.style.left = '0px';
+  element.style.top = '0px';
+  element.style.visibility = 'visible';
+  element.style.opacity = '1';
+  element.style.zIndex = '-999';
+  element.style.transform = 'none';
+
   const opt = {
     margin: [0, 0, 0, 0], // Precise A4 edge alignment
     filename: filename,
@@ -46,23 +64,10 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
       logging: false,
       backgroundColor: '#ffffff',
       windowWidth: 794, // 210mm @ 96 DPI
-      onclone: (clonedDoc) => {
-        // Position cloned element at (0, 0) inside cloned document so canvas captures full content!
-        const clonedEl = clonedDoc.getElementById(targetId) || clonedDoc.querySelector('.a4-paper-container');
-        if (clonedEl) {
-          clonedEl.style.position = 'static';
-          clonedEl.style.left = '0px';
-          clonedEl.style.top = '0px';
-          clonedEl.style.transform = 'none';
-          clonedEl.style.visibility = 'visible';
-          clonedEl.style.opacity = '1';
-          clonedEl.style.zIndex = '99999';
-
-          // Remove any no-print controls from cloned PDF
-          const noPrintEls = clonedEl.querySelectorAll('.no-print');
-          noPrintEls.forEach((np) => np.remove());
-        }
-      }
+      x: 0,
+      y: 0,
+      scrollX: 0,
+      scrollY: 0
     },
     jsPDF: {
       unit: 'mm',
@@ -92,5 +97,14 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
     console.warn('Direct PDF download fallback triggered:', err);
     window.print();
     return true;
+  } finally {
+    // Restore original inline styles
+    element.style.position = origPosition;
+    element.style.left = origLeft;
+    element.style.top = origTop;
+    element.style.visibility = origVisibility;
+    element.style.opacity = origOpacity;
+    element.style.zIndex = origZIndex;
+    element.style.transform = origTransform;
   }
 };
