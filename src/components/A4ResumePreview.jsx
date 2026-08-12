@@ -417,116 +417,42 @@ export const A4ResumePreview = () => {
 
       {/* 2. PDF Export Target Node (#resume-a4-preview) */}
       {/* Renders exact 1-to-1 paginated A4 sheets matching editor cards */}
+      {/* Off-screen PDF Export Target & Measurement Node */}
       <div
         id="resume-a4-preview"
+        ref={measureRef}
         aria-hidden="true"
         className="absolute left-0 top-0 pointer-events-none z-[-9999] bg-white text-slate-900 opacity-100"
         style={{
           width: '210mm',
           backgroundColor: paperBgColor || '#ffffff',
+          padding: `${topPadMm}mm ${sidePadMm}mm`,
           fontFamily: `'${fontFamily}', sans-serif`,
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          color: '#0f172a'
         }}
       >
-        {Array.from({ length: totalPages }).map((_, pageIdx) => {
-          const page1CutoffMm = 297 + Math.min(0, pageBreakOffset);
-          const page1ContentHeightMm = Math.max(10, page1CutoffMm - topPadMm);
-          const page2TextStartYMm = pageIdx > 0
-            ? (showPage2Header ? topPadMm + 14 + Math.max(0, page2TopMargin - 10) : topPadMm + Math.max(0, page2TopMargin - 10))
-            : 0;
-          const effectiveTopOffsetMm = pageIdx === 0 ? 0 : -(page1ContentHeightMm * pageIdx);
+        <Suspense fallback={null}>
+          <SelectedTemplateComponent
+            resumeData={activeResume}
+            accentHex={accentHex}
+            fontFamily={fontFamily}
+          />
+        </Suspense>
 
-          return (
-            <div
-              key={`pdf-export-page-${pageIdx}`}
-              className="pdf-a4-page relative overflow-hidden"
-              style={{
-                width: '210mm',
-                height: '297mm',
-                backgroundColor: paperBgColor || '#ffffff',
-                fontFamily: `'${fontFamily}', sans-serif`,
-                boxSizing: 'border-box',
-                pageBreakAfter: pageIdx < totalPages - 1 ? 'always' : 'auto',
-                breakAfter: pageIdx < totalPages - 1 ? 'page' : 'auto'
-              }}
-            >
-              {/* Page 2 Mini Running Header */}
-              {pageIdx > 0 && showPage2Header && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: `${topPadMm}mm`,
-                    left: `${sidePadMm}mm`,
-                    right: `${sidePadMm}mm`,
-                    zIndex: 20
-                  }}
-                  className="border-b border-slate-300/80 pb-1.5 flex items-center justify-between text-[11px] font-bold text-slate-700 select-none bg-inherit"
-                >
-                  <span className="flex items-center gap-1.5 text-orange-600 font-extrabold uppercase tracking-wide text-[10px]">
-                    <FileText className="w-3.5 h-3.5 text-orange-500" />
-                    {personal?.fullName || 'Candidate Name'} — Resume (Page {pageIdx + 1})
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-normal font-mono">
-                    {personal?.email || personal?.phone || 'OpportunityX Engine'}
-                  </span>
-                </div>
-              )}
-
-              {/* Active Printable Viewport Frame */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: pageIdx === 0 ? 0 : `${page2TextStartYMm}mm`,
-                  left: 0,
-                  width: '210mm',
-                  height: pageIdx === 0 ? `${page1CutoffMm}mm` : `${297 - page2TextStartYMm}mm`,
-                  overflow: 'hidden'
-                }}
-              >
-                {/* Clipped Offset View of Resume Template */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: `${effectiveTopOffsetMm}mm`,
-                    left: 0,
-                    width: '210mm',
-                    paddingTop: pageIdx === 0 ? `${topPadMm}mm` : 0,
-                    paddingLeft: `${sidePadMm}mm`,
-                    paddingRight: `${sidePadMm}mm`,
-                    paddingBottom: `${topPadMm}mm`,
-                    boxSizing: 'border-box'
-                  }}
-                >
-                  <Suspense fallback={null}>
-                    <SelectedTemplateComponent
-                      resumeData={activeResume}
-                      accentHex={accentHex}
-                      fontFamily={fontFamily}
-                    />
-                  </Suspense>
-
-                  {/* Signature & Watermark on Last Page */}
-                  {pageIdx === totalPages - 1 && (
-                    <>
-                      {assets?.digitalSignature && (
-                        <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
-                          <div className="text-center">
-                            <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
-                            <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
-                          </div>
-                        </div>
-                      )}
-                      <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
-                        <span>OpportunityX Resume Engine</span>
-                        <span>resume.opportunityx.co.in</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
+        {/* Signature & Watermark */}
+        {assets?.digitalSignature && (
+          <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end pdf-block pdf-keep-together">
+            <div className="text-center">
+              <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
+              <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
             </div>
-          );
-        })}
+          </div>
+        )}
+        <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400 pdf-block pdf-keep-together">
+          <span>OpportunityX Resume Engine</span>
+          <span>resume.opportunityx.co.in</span>
+        </div>
       </div>      
 
       {/* Screen Interactive Workspace Viewport (Non-printable) */}

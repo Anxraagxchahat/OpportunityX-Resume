@@ -89,7 +89,7 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
     pagebreak: {
       mode: ['avoid-all', 'css', 'legacy'],
       before: '.pdf-page-break-before',
-      after: ['.pdf-page-break-after', '.pdf-a4-page'],
+      after: '.pdf-page-break-after',
       avoid: [
         '.pdf-block',
         '.pdf-item',
