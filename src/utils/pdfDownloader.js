@@ -9,20 +9,15 @@ import html2pdf from 'html2pdf.js';
  * @returns {Promise<boolean>} Resolves to true when download completes
  */
 export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candidateName = 'Resume') => {
-  // Handle case where elementId is passed as activeResume object
   const targetId = typeof elementId === 'string' ? elementId : 'resume-a4-preview';
   const nameStr = typeof candidateName === 'string'
     ? candidateName
     : (typeof elementId === 'object' && elementId?.personal?.fullName ? elementId.personal.fullName : 'Resume');
 
-  let element = document.getElementById(targetId);
+  // Find source resume element
+  let sourceEl = document.getElementById(targetId) || document.querySelector('.a4-paper-container');
 
-  // Robust Fallback: search for .a4-paper-container if target ID is not directly matched
-  if (!element) {
-    element = document.querySelector('.a4-paper-container');
-  }
-
-  if (!element) {
+  if (!sourceEl) {
     console.error(`Target resume element #${targetId} or .a4-paper-container not found for PDF download.`);
     window.print();
     return false;
@@ -34,23 +29,42 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
     : 'OpportunityX';
   const filename = `${safeName}_Resume.pdf`;
 
-  // Temporarily store original styles
-  const origPosition = element.style.position;
-  const origLeft = element.style.left;
-  const origTop = element.style.top;
-  const origVisibility = element.style.visibility;
-  const origOpacity = element.style.opacity;
-  const origZIndex = element.style.zIndex;
-  const origTransform = element.style.transform;
+  // Create isolated, top-level export container directly attached to document.body
+  const tempWrapper = document.createElement('div');
+  tempWrapper.id = 'ox-pdf-export-standalone-wrapper';
+  tempWrapper.style.position = 'fixed';
+  tempWrapper.style.left = '0';
+  tempWrapper.style.top = '0';
+  tempWrapper.style.width = '210mm';
+  tempWrapper.style.zIndex = '999999';
+  tempWrapper.style.backgroundColor = '#ffffff';
+  tempWrapper.style.color = '#0f172a';
+  tempWrapper.style.opacity = '1';
+  tempWrapper.style.visibility = 'visible';
+  tempWrapper.style.pointerEvents = 'none';
+  tempWrapper.style.overflow = 'visible';
 
-  // Bring target element into 0,0 viewport coordinates with full visibility for html2canvas
-  element.style.position = 'absolute';
-  element.style.left = '0px';
-  element.style.top = '0px';
-  element.style.visibility = 'visible';
-  element.style.opacity = '1';
-  element.style.zIndex = '-999';
-  element.style.transform = 'none';
+  // Clone source DOM node to preserve layout and styles without mutating screen view
+  const clonedContent = sourceEl.cloneNode(true);
+
+  // Strip any no-print controls from clone
+  const noPrintEls = clonedContent.querySelectorAll('.no-print');
+  noPrintEls.forEach((np) => np.remove());
+
+  // Force clean, visible, unclipped styles on cloned node
+  clonedContent.style.position = 'relative';
+  clonedContent.style.left = '0';
+  clonedContent.style.top = '0';
+  clonedContent.style.visibility = 'visible';
+  clonedContent.style.opacity = '1';
+  clonedContent.style.display = 'block';
+  clonedContent.style.transform = 'none';
+  clonedContent.style.width = '210mm';
+  clonedContent.style.boxSizing = 'border-box';
+  clonedContent.style.backgroundColor = '#ffffff';
+
+  tempWrapper.appendChild(clonedContent);
+  document.body.appendChild(tempWrapper);
 
   const opt = {
     margin: [0, 0, 0, 0], // Precise A4 edge alignment
@@ -64,8 +78,6 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
       logging: false,
       backgroundColor: '#ffffff',
       windowWidth: 794, // 210mm @ 96 DPI
-      x: 0,
-      y: 0,
       scrollX: 0,
       scrollY: 0
     },
@@ -91,20 +103,16 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   };
 
   try {
-    await html2pdf().set(opt).from(element).save();
+    await html2pdf().set(opt).from(clonedContent).save();
     return true;
   } catch (err) {
     console.warn('Direct PDF download fallback triggered:', err);
     window.print();
     return true;
   } finally {
-    // Restore original inline styles
-    element.style.position = origPosition;
-    element.style.left = origLeft;
-    element.style.top = origTop;
-    element.style.visibility = origVisibility;
-    element.style.opacity = origOpacity;
-    element.style.zIndex = origZIndex;
-    element.style.transform = origTransform;
+    // Clean up temporary export container from DOM
+    if (tempWrapper && tempWrapper.parentNode) {
+      tempWrapper.parentNode.removeChild(tempWrapper);
+    }
   }
 };
