@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileText, Sparkles, AlertTriangle, CheckCircle2, ArrowRight, RefreshCw, ArrowLeft, X } from 'lucide-react';
 import { useResume } from '../../context/ResumeContext';
-import { apiService } from '../../services/api';
+import { parseResumeFile } from '../../utils/resumeParserEngine';
 
 export const MobileImportWizard = () => {
   const navigate = useNavigate();
@@ -26,11 +26,11 @@ export const MobileImportWizard = () => {
     setErrorMessage('');
 
     try {
-      // Call backend API to parse PDF/DOCX resume
-      const response = await apiService.parseResume(file);
+      // Call production client-side & AI resume extraction engine
+      const response = await parseResumeFile(file);
 
-      if (response && response.success && response.data) {
-        setExtractedData(response.data);
+      if (response && response.success !== false && response.schema) {
+        setExtractedData(response.schema);
         setStep(3); // Review stage
       } else {
         // Strict: Never silently load demo data on failure!
