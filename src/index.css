@@ -334,6 +334,41 @@ p, li, ul, ol, blockquote, span {
   page-break-after: always !important;
 }
 
+/* ==========================================================================
+   SECTION HEADING / DIVIDER SPACING — PROFESSIONAL BREATHING ROOM
+   Scoped to resume rendering containers only (preview + PDF export).
+   All templates share the pattern: <h2 className="... border-b pb-0.5 ...">
+   where border-bottom IS the accent-colored divider line.
+   ========================================================================== */
+
+/* 6a. Section top margin: push heading away from previous section's content */
+#resume-a4-preview h2[style],
+.a4-paper-container h2[style],
+#ox-pdf-export-standalone-wrapper h2[style] {
+  margin-top: 14px !important;   /* comfortable gap above the section title */
+  padding-bottom: 5px !important; /* 5px gap between title text and the border-bottom (divider) */
+  margin-bottom: 8px !important;  /* 8px gap between divider line and the section content below */
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  break-after: avoid !important;
+  page-break-after: avoid !important;
+}
+
+/* 6b. First section heading after the header should not have excessive top margin */
+#resume-a4-preview > div > div:first-child + div > h2[style],
+.a4-paper-container > div > div:first-child + div > h2[style],
+#ox-pdf-export-standalone-wrapper > div > div:first-child + div > h2[style] {
+  margin-top: 4px !important;
+}
+
+/* 6c. Keep section heading + its immediate next sibling together (no orphaned headings at page bottom) */
+#resume-a4-preview h2[style] + *,
+.a4-paper-container h2[style] + *,
+#ox-pdf-export-standalone-wrapper h2[style] + * {
+  break-before: avoid !important;
+  page-break-before: avoid !important;
+}
+
 /* 5. Standard A4 Printable Margins & Print Stylesheet */
 @media print {
   @page {
