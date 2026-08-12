@@ -165,13 +165,15 @@ export const A4ResumePreview = () => {
   // Dynamic Selected Template Component
   const SelectedTemplateComponent = TEMPLATE_REGISTRY[template] || TEMPLATE_REGISTRY.modern;
 
-  // Measure content height and calculate total A4 pages
+  // Measure content height and calculate total A4 pages based on user page break offset
   useEffect(() => {
     const calculatePages = () => {
       if (measureRef.current) {
         const heightPx = measureRef.current.scrollHeight;
-        const A4_HEIGHT_PX = 1100;
-        const computedPages = Math.max(1, Math.ceil(heightPx / A4_HEIGHT_PX));
+        const heightMm = heightPx / 3.7795; // 1mm ~ 3.7795px at 96 DPI
+        const page1CutoffMm = 297 + Math.min(0, pageBreakOffset);
+        const page1ContentHeightMm = Math.max(10, page1CutoffMm - topPadMm);
+        const computedPages = Math.max(1, Math.ceil(heightMm / page1ContentHeightMm));
         setTotalPages(computedPages);
       }
     };
@@ -179,7 +181,7 @@ export const A4ResumePreview = () => {
     calculatePages();
     const timer = setTimeout(calculatePages, 200);
     return () => clearTimeout(timer);
-  }, [activeResume, template, fontFamily, accentHex, style]);
+  }, [activeResume, template, fontFamily, accentHex, style, pageBreakOffset, topPadMm]);
 
   return (
     <div className={`flex-1 flex flex-col h-full bg-[var(--ox-bg)] overflow-hidden relative transition-colors duration-300 ${isDraggingLine ? 'select-none cursor-ns-resize' : ''}`}>
@@ -301,143 +303,99 @@ export const A4ResumePreview = () => {
                 </div>
                 <input
                   type="range"
-                  min={-140}
-                  max={50}
-                  step={1}
+                  min="-140"
+                  max="50"
                   value={pageBreakOffset}
                   onChange={(e) => updateStyle('pageBreakOffset', Number(e.target.value))}
-                  className="w-full accent-orange-500 cursor-pointer h-2 bg-[var(--ox-surface-secondary)] rounded-lg"
+                  className="w-full accent-orange-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
                 />
-                <div className="grid grid-cols-5 gap-1">
-                  {[-100, -60, -30, 0, 20].map((off) => (
-                    <button
-                      key={off}
-                      onClick={() => updateStyle('pageBreakOffset', off)}
-                      className={`py-1 rounded-lg border text-center font-mono font-bold text-[10px] cursor-pointer ${
-                        pageBreakOffset === off ? 'bg-orange-500 text-white border-orange-500' : 'bg-[var(--ox-surface-secondary)] border-[var(--ox-border)] text-[var(--ox-text-secondary)]'
-                      }`}
-                    >
-                      {off > 0 ? `+${off}` : off}mm
-                    </button>
-                  ))}
-                </div>
+                <p className="text-[10px] text-[var(--ox-text-muted)] leading-tight">
+                  Drag left (-) to push section to Page 2 cleanly, right (+) to pull section up.
+                </p>
               </div>
 
-              {/* Page 2 Header & Top Push Spacing */}
-              <div className="space-y-1.5 pt-2 border-t border-[var(--ox-border)]">
+              {/* Page 2 Top Margin */}
+              <div className="space-y-2 pt-2 border-t border-[var(--ox-border)]">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-semibold text-[var(--ox-text-secondary)]">Page 2 Header & Spacing</span>
-                  <button
-                    onClick={() => updateStyle('showPage2Header', !showPage2Header)}
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${
-                      showPage2Header ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    Header: {showPage2Header ? 'ON ✓' : 'OFF ✕'}
-                  </button>
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-[var(--ox-text-muted)]">
-                  <span>Page 2 Top Push Spacing:</span>
+                  <span className="font-semibold text-[var(--ox-text-secondary)]">Page 2 Top Margin Offset</span>
                   <span className="text-amber-400 font-mono font-bold">{page2TopMargin}mm</span>
                 </div>
-                <div className="grid grid-cols-5 gap-1">
-                  {[0, 5, 10, 15, 20].map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => updateStyle('page2TopMargin', m)}
-                      className={`py-1 rounded-lg border text-center font-mono font-bold text-[10px] cursor-pointer ${
-                        page2TopMargin === m ? 'bg-amber-500 text-black border-amber-500' : 'bg-[var(--ox-surface-secondary)] border-[var(--ox-border)] text-[var(--ox-text-secondary)]'
-                      }`}
-                    >
-                      {m}mm
-                    </button>
-                  ))}
-                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="40"
+                  value={page2TopMargin}
+                  onChange={(e) => updateStyle('page2TopMargin', Number(e.target.value))}
+                  className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                />
+                <p className="text-[10px] text-[var(--ox-text-muted)] leading-tight">
+                  Adjust top vertical spacing on Page 2 for clean section placement.
+                </p>
               </div>
             </div>
           )}
         </div>
 
-        {/* View Mode Toggle (Multi-Page A4 Cards vs Continuous) */}
-        <div className="flex items-center bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-lg p-0.5 text-[11px] font-semibold">
+        {/* View Mode Toggle */}
+        <div className="flex items-center bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-lg p-0.5">
           <button
             onClick={() => setViewMode('cards')}
-            className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer ${
-              viewMode === 'cards' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' : 'text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)]'
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 ${
+              viewMode === 'cards' ? 'bg-orange-500 text-white shadow-sm' : 'text-[var(--ox-text-secondary)] hover:text-white'
             }`}
-            title="View as Multi-Page A4 Cards"
           >
-            <Layers className="w-3 h-3" />
-            <span>A4 Cards ({totalPages})</span>
+            <Layers className="w-3 h-3" /> A4 Sheets ({totalPages})
           </button>
           <button
             onClick={() => setViewMode('continuous')}
-            className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer ${
-              viewMode === 'continuous' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' : 'text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)]'
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 ${
+              viewMode === 'continuous' ? 'bg-orange-500 text-white shadow-sm' : 'text-[var(--ox-text-secondary)] hover:text-white'
             }`}
-            title="Continuous Canvas with A4 Page Breaks"
           >
-            <Scissors className="w-3 h-3" />
-            <span>Guide Lines</span>
-          </button>
-        </div>
-
-        {/* Customizer & Tools */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setIsThemeCustomizerOpen(true)}
-            className="p-1.5 rounded-lg text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] cursor-pointer"
-            title="Theme Customizer"
-          >
-            <Sliders className="w-3.5 h-3.5 text-amber-500" />
-          </button>
-          <button
-            onClick={() => setIsAssetManagerOpen(true)}
-            className="p-1.5 rounded-lg text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] cursor-pointer"
-            title="Asset Manager"
-          >
-            <ImageIcon className="w-3.5 h-3.5 text-emerald-500" />
-          </button>
-          <button
-            onClick={() => setIsInspectorOpen(true)}
-            className="p-1.5 rounded-lg text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] cursor-pointer"
-            title="Resume Inspector"
-          >
-            <Activity className="w-3.5 h-3.5 text-orange-500" />
+            <FileText className="w-3 h-3" /> Continuous
           </button>
         </div>
 
         {/* Zoom Controls */}
-        <div className="flex items-center gap-1 bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-lg p-1">
-          <button onClick={handleZoomOut} className="p-1 text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] cursor-pointer" title="Zoom Out">
-            <ZoomOut className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-1 border-l border-[var(--ox-border)] pl-3">
+          <button
+            onClick={handleZoomOut}
+            className="p-1 rounded-lg hover:bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] transition-colors cursor-pointer"
+            title="Zoom Out"
+          >
+            <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-[11px] font-semibold text-[var(--ox-text-primary)] w-9 text-center">{zoomLevel}%</span>
-          <button onClick={handleZoomIn} className="p-1 text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] cursor-pointer" title="Zoom In">
-            <ZoomIn className="w-3.5 h-3.5" />
+          <span className="text-xs font-mono font-bold text-[var(--ox-text-primary)] w-9 text-center">{zoomLevel}%</span>
+          <button
+            onClick={handleZoomIn}
+            className="p-1 rounded-lg hover:bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] transition-colors cursor-pointer"
+            title="Zoom In"
+          >
+            <ZoomIn className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Download PDF Button */}
-        <button
-          onClick={handleDownloadPDF}
-          disabled={isDownloading}
-          className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 disabled:opacity-75 cursor-pointer"
-        >
-          <Download className={`w-3.5 h-3.5 stroke-[2.5] ${isDownloading ? 'animate-bounce' : ''}`} />
-          <span>{isDownloading ? 'Downloading...' : 'Download PDF'}</span>
-        </button>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isDownloading}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-lg font-extrabold flex items-center gap-1.5 shadow-md shadow-orange-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{isDownloading ? 'Exporting PDF...' : 'Download PDF'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Off-screen PDF Export Target & Measurement Node */}
+      {/* 1. Unclipped Content Measurement Node (Invisible, used only for measureRef scrollHeight) */}
       <div
-        id="resume-a4-preview"
+        id="resume-measure-node"
         ref={measureRef}
         aria-hidden="true"
-        className="absolute left-0 top-0 pointer-events-none z-[-9999] bg-white text-slate-900 opacity-100"
+        className="absolute left-[-9999px] top-0 pointer-events-none opacity-0 overflow-visible"
         style={{
           width: '210mm',
-          backgroundColor: paperBgColor || '#ffffff',
           padding: `${topPadMm}mm ${sidePadMm}mm`,
           fontFamily: `'${fontFamily}', sans-serif`,
           boxSizing: 'border-box'
@@ -456,6 +414,120 @@ export const A4ResumePreview = () => {
           </div>
         )}
       </div>
+
+      {/* 2. PDF Export Target Node (#resume-a4-preview) */}
+      {/* Renders exact 1-to-1 paginated A4 sheets matching editor cards */}
+      <div
+        id="resume-a4-preview"
+        aria-hidden="true"
+        className="absolute left-0 top-0 pointer-events-none z-[-9999] bg-white text-slate-900 opacity-100"
+        style={{
+          width: '210mm',
+          backgroundColor: paperBgColor || '#ffffff',
+          fontFamily: `'${fontFamily}', sans-serif`,
+          boxSizing: 'border-box'
+        }}
+      >
+        {Array.from({ length: totalPages }).map((_, pageIdx) => {
+          const page1CutoffMm = 297 + Math.min(0, pageBreakOffset);
+          const page1ContentHeightMm = Math.max(10, page1CutoffMm - topPadMm);
+          const page2TextStartYMm = pageIdx > 0
+            ? (showPage2Header ? topPadMm + 14 + Math.max(0, page2TopMargin - 10) : topPadMm + Math.max(0, page2TopMargin - 10))
+            : 0;
+          const effectiveTopOffsetMm = pageIdx === 0 ? 0 : -(page1ContentHeightMm * pageIdx);
+
+          return (
+            <div
+              key={`pdf-export-page-${pageIdx}`}
+              className="pdf-a4-page relative overflow-hidden"
+              style={{
+                width: '210mm',
+                height: '297mm',
+                backgroundColor: paperBgColor || '#ffffff',
+                fontFamily: `'${fontFamily}', sans-serif`,
+                boxSizing: 'border-box',
+                pageBreakAfter: pageIdx < totalPages - 1 ? 'always' : 'auto',
+                breakAfter: pageIdx < totalPages - 1 ? 'page' : 'auto'
+              }}
+            >
+              {/* Page 2 Mini Running Header */}
+              {pageIdx > 0 && showPage2Header && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: `${topPadMm}mm`,
+                    left: `${sidePadMm}mm`,
+                    right: `${sidePadMm}mm`,
+                    zIndex: 20
+                  }}
+                  className="border-b border-slate-300/80 pb-1.5 flex items-center justify-between text-[11px] font-bold text-slate-700 select-none bg-inherit"
+                >
+                  <span className="flex items-center gap-1.5 text-orange-600 font-extrabold uppercase tracking-wide text-[10px]">
+                    <FileText className="w-3.5 h-3.5 text-orange-500" />
+                    {personal?.fullName || 'Candidate Name'} — Resume (Page {pageIdx + 1})
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal font-mono">
+                    {personal?.email || personal?.phone || 'OpportunityX Engine'}
+                  </span>
+                </div>
+              )}
+
+              {/* Active Printable Viewport Frame */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: pageIdx === 0 ? 0 : `${page2TextStartYMm}mm`,
+                  left: 0,
+                  width: '210mm',
+                  height: pageIdx === 0 ? `${page1CutoffMm}mm` : `${297 - page2TextStartYMm}mm`,
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Clipped Offset View of Resume Template */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: `${effectiveTopOffsetMm}mm`,
+                    left: 0,
+                    width: '210mm',
+                    paddingTop: pageIdx === 0 ? `${topPadMm}mm` : 0,
+                    paddingLeft: `${sidePadMm}mm`,
+                    paddingRight: `${sidePadMm}mm`,
+                    paddingBottom: `${topPadMm}mm`,
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <Suspense fallback={null}>
+                    <SelectedTemplateComponent
+                      resumeData={activeResume}
+                      accentHex={accentHex}
+                      fontFamily={fontFamily}
+                    />
+                  </Suspense>
+
+                  {/* Signature & Watermark on Last Page */}
+                  {pageIdx === totalPages - 1 && (
+                    <>
+                      {assets?.digitalSignature && (
+                        <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
+                          <div className="text-center">
+                            <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
+                            <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                          </div>
+                        </div>
+                      )}
+                      <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+                        <span>OpportunityX Resume Engine</span>
+                        <span>resume.opportunityx.co.in</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>      
 
       {/* Screen Interactive Workspace Viewport (Non-printable) */}
       <div className="flex-1 overflow-auto p-6 flex flex-col items-center bg-[var(--ox-surface-secondary)] transition-colors duration-300 custom-scrollbar no-print">
