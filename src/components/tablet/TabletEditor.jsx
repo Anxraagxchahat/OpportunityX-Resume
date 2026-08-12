@@ -167,7 +167,11 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
   const updateProjectField = (id, targetIdx, field, value) =>
     updateProjects(
       projects.map((p, idx) =>
-        (p.id && id ? p.id === id : idx === targetIdx) ? { ...p, [field]: value } : p
+        (p.id && id ? p.id === id : idx === targetIdx)
+          ? field === 'techStack'
+            ? { ...p, techStack: value, technologies: typeof value === 'string' ? value.split(',').map(s => s.trim()).filter(Boolean) : value }
+            : { ...p, [field]: value }
+          : p
       )
     );
 

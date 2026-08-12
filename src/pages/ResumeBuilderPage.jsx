@@ -998,8 +998,8 @@ export const ResumeBuilderPage = () => {
                           <label className="text-[11px] font-semibold text-slate-400">Technologies Used (Tech Stack)</label>
                           <input
                             type="text"
-                            value={proj.techStack || (Array.isArray(proj.technologies) ? proj.technologies.join(', ') : '') || ''}
-                            onChange={(e) => updateProjects(projects.map((p, i) => (i === idx || (p.id && p.id === proj.id) ? { ...p, techStack: e.target.value } : p)))}
+                            value={proj.techStack || (Array.isArray(proj.technologies) ? proj.technologies.join(', ') : proj.technologies) || ''}
+                            onChange={(e) => updateProjects(projects.map((p, i) => (i === idx || (p.id && p.id === proj.id) ? { ...p, techStack: e.target.value, technologies: e.target.value.split(',').map(s => s.trim()).filter(Boolean) } : p)))}
                             placeholder="e.g. React.js, Node.js, PostgreSQL, Tailwind CSS, AWS"
                             className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                           />

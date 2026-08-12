@@ -104,9 +104,10 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
               <div className="flex justify-between items-baseline font-bold text-slate-900">
                 <span>
                   {p.title || p.name}
-                  {p.technologies && Array.isArray(p.technologies) && p.technologies.length > 0 && (
-                    <span className="text-slate-500 font-normal ml-1">({p.technologies.join(', ')})</span>
-                  )}
+                  {(() => {
+                    const techStr = p.techStack || (Array.isArray(p.technologies) ? p.technologies.join(', ') : p.technologies) || '';
+                    return techStr ? <span className="text-slate-500 font-normal ml-1">({techStr})</span> : null;
+                  })()}
                 </span>
                 {p.link && <span className="text-[10px] text-slate-500 font-mono">{p.link}</span>}
               </div>

@@ -71,7 +71,13 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
           {projects.map((p) => (
             <div key={p.id || p.title} className="space-y-0.5">
               <div className="flex justify-between font-bold text-slate-900">
-                <span>{p.title || p.name}</span>
+                <span>
+                  {p.title || p.name}
+                  {(() => {
+                    const techStr = p.techStack || (Array.isArray(p.technologies) ? p.technologies.join(', ') : p.technologies) || '';
+                    return techStr ? <span className="text-slate-500 font-normal ml-1">({techStr})</span> : null;
+                  })()}
+                </span>
                 {p.link && <span className="font-mono text-slate-500 text-[10px]">{p.link}</span>}
               </div>
               {Array.isArray(p.bullets) && p.bullets.length > 0 ? (
