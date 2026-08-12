@@ -47,9 +47,9 @@ export const SocialLinksBlock = ({ personal, accentHex, variant = 'default' }) =
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 pt-1 text-[11px]">
         {linksList.map((item) => (
-          <div key={item.id} className="flex items-center gap-1.5 text-slate-700">
-            <span className="font-bold text-slate-900">{item.label}:</span>
-            <span className="font-mono text-[10px] text-slate-600 truncate">{item.url}</span>
+          <div key={item.id} className="flex items-center gap-1.5 text-slate-700 min-w-0">
+            <span className="font-bold text-slate-900 shrink-0">{item.label}:</span>
+            <span className="font-mono text-[10px] text-slate-600 break-all">{item.url}</span>
           </div>
         ))}
       </div>
