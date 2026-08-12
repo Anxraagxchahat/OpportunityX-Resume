@@ -18,7 +18,7 @@ function MobileAppShellContent() {
   const { activeTab } = useMobileNavigation();
 
   return (
-    <div className="w-full min-h-dvh bg-[var(--ox-bg)] flex flex-col overflow-x-hidden text-[var(--ox-text-primary)] font-sans relative select-none">
+    <div className="w-full min-h-dvh bg-[var(--ox-bg)] flex flex-col text-[var(--ox-text-primary)] font-sans relative select-none">
       
       {/* 2. SECTION CHIPS (Edit mode only) */}
       {activeTab === 'edit' && <MobileSectionNav />}
