@@ -73,17 +73,19 @@ export const LanguagesBlock = ({ languages, variant = 'default' }) => {
   );
 };
 
-export const CustomSectionsBlock = ({ customSections, accentHex = '#F97316' }) => {
+export const CustomSectionsBlock = ({ customSections, accentHex = '#F97316', isVisible = null }) => {
   if (!customSections || customSections.length === 0) return null;
 
   return (
     <div className="space-y-3">
       {customSections.map((cs, sIdx) => {
+        const blockId = `custom-${sIdx}`;
+        if (isVisible && !isVisible(blockId)) return null;
         if (!cs.title && (!cs.items || cs.items.length === 0)) return null;
         const validItems = Array.isArray(cs.items) ? cs.items.filter((item) => item.name || item.description) : [];
 
         return (
-          <div key={cs.id || sIdx} className="space-y-1 pdf-block pdf-keep-together">
+          <div key={cs.id || sIdx} data-block-id={blockId} className="space-y-1 pdf-block pdf-keep-together">
             {cs.title && (
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b pdf-section-header mb-1" style={{ borderColor: accentHex }}>
                 {cs.title}
