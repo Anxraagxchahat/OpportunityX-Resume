@@ -167,12 +167,37 @@ export const MobileCardEditorModal = () => {
                   <label className="text-xs font-bold text-[var(--ox-text-secondary)]">End Date</label>
                   <input
                     type="text"
-                    placeholder="e.g. Present"
-                    value={formData.endDate || ''}
-                    onChange={(e) => handleChange('endDate', e.target.value)}
-                    className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-3 py-3 text-xs text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
+                    disabled={Boolean(formData.current || formData.isCurrent)}
+                    placeholder={Boolean(formData.current || formData.isCurrent) ? 'Present' : 'e.g. Dec 2024'}
+                    value={Boolean(formData.current || formData.isCurrent) ? 'Present' : formData.endDate || ''}
+                    onChange={(e) => {
+                      handleChange('endDate', e.target.value);
+                      handleChange('current', false);
+                      handleChange('isCurrent', false);
+                    }}
+                    className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-3 py-3 text-xs text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px] disabled:opacity-60"
                   />
                 </div>
+              </div>
+
+              {/* Present Checkbox */}
+              <div className="flex items-center gap-2 pt-1">
+                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--ox-text-primary)] cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(formData.current || formData.isCurrent)}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      handleChange('current', isChecked);
+                      handleChange('isCurrent', isChecked);
+                      if (isChecked) {
+                        handleChange('endDate', '');
+                      }
+                    }}
+                    className="w-4 h-4 rounded border-slate-700 text-orange-500 focus:ring-orange-500 accent-orange-500 cursor-pointer"
+                  />
+                  <span>Currently working in this role</span>
+                </label>
               </div>
 
               <div className="space-y-1.5">
