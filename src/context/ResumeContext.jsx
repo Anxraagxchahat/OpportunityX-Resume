@@ -26,7 +26,212 @@ const AI_CREDITS_KEY = 'opportunityx_ai_credits_v1';
 const BYOK_KEY = 'opportunityx_byok_keys_v1';
 const SELECTED_MODEL_KEY = 'opportunityx_selected_ai_model_v1';
 
-// Helper function to guarantee IDs and date fields on array items
+// Helper function to sanitize raw or malformed date strings
+export const cleanDateString = (str) => {
+  if (!str || typeof str !== 'string') return '';
+  const trimmed = str.trim();
+  if (!trimmed) return '';
+
+  // If it's a huge string of repeated numbers like "44524242424242424", extract year/month or clean it
+  if (/^\d{8,}$/.test(trimmed)) {
+    const yearMatch = trimmed.match(/(19|20)\d{2}/);
+    if (yearMatch) return yearMatch[0];
+    return '';
+  }
+
+  // If it matches standard Present/Current keywords
+  if (/^(present|current|till date|now|today|ongoing)$/i.test(trimmed)) {
+    return 'Present';
+  }
+
+  return trimmed;
+};
+
+// One-time hydration function run on import / load to parse initial fields and remove stale fallbacks
+export const hydrateAndNormalizeResume = (resume) => {
+  if (!resume || typeof resume !== 'object') return resume;
+
+  const fixArray = (arr, prefix) => {
+    if (!Array.isArray(arr)) return [];
+    return arr.map((item, idx) => {
+      if (typeof item === 'string') {
+        return { id: `${prefix}-${idx}-${Date.now()}`, name: item, title: item };
+      }
+      if (typeof item === 'object' && item !== null) {
+        const itemCopy = { ...item };
+        if (!itemCopy.id) {
+          itemCopy.id = `${prefix}-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`;
+        }
+
+        // Normalize Experience items
+        if (prefix === 'exp') {
+          itemCopy.role = itemCopy.role || itemCopy.title || itemCopy.jobTitle || '';
+          itemCopy.title = itemCopy.role;
+          itemCopy.company = itemCopy.company || itemCopy.organization || itemCopy.employer || '';
+          itemCopy.location = itemCopy.location || '';
+
+          const periodRaw = itemCopy.period || '';
+          delete itemCopy.period; // Delete stale period property so runtime editing never re-parses it!
+
+          let sDate = cleanDateString(itemCopy.startDate || itemCopy.start_date || '');
+          let eDate = cleanDateString(itemCopy.endDate || itemCopy.end_date || '');
+          delete itemCopy.start_date;
+          delete itemCopy.end_date;
+
+          const isCurrentMentioned =
+            itemCopy.current === true ||
+            itemCopy.isCurrent === true ||
+            /present|current|till date|now|ongoing/i.test(periodRaw) ||
+            /present|current|till date|now|ongoing/i.test(eDate);
+
+          if (periodRaw && (!sDate || (!eDate && !isCurrentMentioned))) {
+            const parts = periodRaw.split(/\s*[-–—]| to \s*/i);
+            if (parts.length >= 2) {
+              if (!sDate) sDate = cleanDateString(parts[0]);
+              if (!eDate) eDate = cleanDateString(parts.slice(1).join(' - '));
+            } else if (!sDate) {
+              sDate = cleanDateString(periodRaw);
+            }
+          }
+
+          const finalIsCurrent = isCurrentMentioned || eDate === 'Present' || /present|current/i.test(eDate);
+          itemCopy.startDate = sDate;
+          itemCopy.endDate = finalIsCurrent ? '' : (eDate === 'Present' ? '' : eDate);
+          itemCopy.current = finalIsCurrent;
+          itemCopy.isCurrent = finalIsCurrent;
+
+          // Bullets normalization
+          if (!Array.isArray(itemCopy.bullets)) {
+            if (typeof itemCopy.description === 'string' && itemCopy.description.trim()) {
+              itemCopy.bullets = itemCopy.description
+                .split(/\n|•|;/)
+                .map((b) => b.trim().replace(/^[-•*]\s*/, ''))
+                .filter(Boolean);
+            } else if (typeof itemCopy.highlights === 'string' && itemCopy.highlights.trim()) {
+              itemCopy.bullets = itemCopy.highlights.split(/\n|•/).map((b) => b.trim()).filter(Boolean);
+            } else {
+              itemCopy.bullets = [];
+            }
+          } else {
+            itemCopy.bullets = itemCopy.bullets.map((b) => (typeof b === 'string' ? b : String(b || ''))).filter(Boolean);
+          }
+        }
+
+        // Normalize Education items
+        if (prefix === 'edu') {
+          itemCopy.degree = itemCopy.degree || itemCopy.title || itemCopy.major || '';
+          itemCopy.institution = itemCopy.institution || itemCopy.college || itemCopy.school || itemCopy.university || '';
+          itemCopy.college = itemCopy.institution;
+          itemCopy.gpa = itemCopy.gpa || itemCopy.cgpa || itemCopy.grade || '';
+
+          const periodRaw = itemCopy.period || '';
+          delete itemCopy.period;
+
+          let sDate = cleanDateString(itemCopy.startDate || itemCopy.start_date || '');
+          let eDate = cleanDateString(itemCopy.endDate || itemCopy.end_date || '');
+          delete itemCopy.start_date;
+          delete itemCopy.end_date;
+
+          if (periodRaw && (!sDate || !eDate)) {
+            const parts = periodRaw.split(/\s*[-–—]| to \s*/i);
+            if (parts.length >= 2) {
+              if (!sDate) sDate = cleanDateString(parts[0]);
+              if (!eDate) eDate = cleanDateString(parts.slice(1).join(' - '));
+            } else if (!sDate) {
+              sDate = cleanDateString(periodRaw);
+            }
+          }
+
+          itemCopy.startDate = sDate;
+          itemCopy.endDate = eDate;
+        }
+
+        // Normalize Projects items
+        if (prefix === 'proj') {
+          itemCopy.title = itemCopy.title || itemCopy.name || '';
+          itemCopy.name = itemCopy.title;
+          itemCopy.link = itemCopy.link || itemCopy.url || itemCopy.htmlUrl || '';
+
+          if (Array.isArray(itemCopy.technologies)) {
+            itemCopy.techStack = itemCopy.technologies.join(', ');
+          } else if (typeof itemCopy.techStack === 'string') {
+            itemCopy.technologies = itemCopy.techStack.split(',').map((s) => s.trim()).filter(Boolean);
+          } else {
+            itemCopy.technologies = [];
+            itemCopy.techStack = '';
+          }
+        }
+
+        return itemCopy;
+      }
+      return item;
+    });
+  };
+
+  // Personal Info Hydration
+  const personalRaw = resume.personal || {};
+  const personalSync = {
+    ...personalRaw,
+    fullName: personalRaw.fullName || personalRaw.name || '',
+    jobTitle: personalRaw.jobTitle || personalRaw.targetRole || personalRaw.role || '',
+    email: personalRaw.email || '',
+    phone: personalRaw.phone || '',
+    location: personalRaw.location || '',
+    linkedin: personalRaw.linkedin || '',
+    github: personalRaw.github || '',
+    website: personalRaw.website || personalRaw.portfolio || '',
+    summary: personalRaw.summary || ''
+  };
+
+  // Skills Hydration
+  let skillsSync = { languages: [], frameworks: [], tools: [] };
+  const rawSkills = resume.skills;
+  if (rawSkills) {
+    if (Array.isArray(rawSkills)) {
+      rawSkills.forEach((s) => {
+        if (typeof s === 'string') {
+          skillsSync.tools.push(s);
+        } else if (typeof s === 'object' && s !== null) {
+          const items = Array.isArray(s.items) ? s.items : (Array.isArray(s.skills) ? s.skills : []);
+          const catLower = (s.category || s.name || '').toLowerCase();
+          if (catLower.includes('lang')) {
+            skillsSync.languages.push(...items.map(String));
+          } else if (catLower.includes('frame') || catLower.includes('lib') || catLower.includes('tech')) {
+            skillsSync.frameworks.push(...items.map(String));
+          } else {
+            skillsSync.tools.push(...items.map(String));
+          }
+        }
+      });
+    } else if (typeof rawSkills === 'object') {
+      skillsSync = {
+        languages: Array.isArray(rawSkills.languages) ? rawSkills.languages.map(String) : [],
+        frameworks: Array.isArray(rawSkills.frameworks) ? rawSkills.frameworks.map(String) : [],
+        tools: Array.isArray(rawSkills.tools) ? rawSkills.tools.map(String) : []
+      };
+      Object.keys(rawSkills).forEach((key) => {
+        if (!['languages', 'frameworks', 'tools'].includes(key) && Array.isArray(rawSkills[key])) {
+          skillsSync[key] = rawSkills[key].map(String);
+        }
+      });
+    }
+  }
+
+  return {
+    ...resume,
+    personal: personalSync,
+    skills: skillsSync,
+    education: fixArray(resume.education, 'edu'),
+    experience: fixArray(resume.experience, 'exp'),
+    projects: fixArray(resume.projects, 'proj'),
+    certificates: fixArray(resume.certificates, 'cert'),
+    achievements: fixArray(resume.achievements, 'ach'),
+    languages: fixArray(resume.languages, 'lang'),
+    customSections: fixArray(resume.customSections, 'cust')
+  };
+};
+
+// Pure runtime pass-through for useMemo: ONLY guarantees IDs & array shapes without overwriting user edits/empty strings
 export const ensureResumeItemIds = (resume) => {
   if (!resume || typeof resume !== 'object') return resume;
 
@@ -34,21 +239,15 @@ export const ensureResumeItemIds = (resume) => {
     if (!Array.isArray(arr)) return [];
     return arr.map((item, idx) => {
       if (typeof item === 'string') {
-        return { id: `${prefix}-${idx}-${Date.now()}`, name: item };
+        return { id: `${prefix}-${idx}-${Date.now()}`, name: item, title: item };
       }
       if (typeof item === 'object' && item !== null) {
-        const itemCopy = { ...item };
+        let itemCopy = { ...item };
         if (!itemCopy.id) {
           itemCopy.id = `${prefix}-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`;
         }
-        if (prefix === 'edu' && itemCopy.period && (!itemCopy.startDate || !itemCopy.endDate)) {
-          const parts = itemCopy.period.split(/\s*[-–—]\s*/);
-          if (parts.length >= 2) {
-            if (!itemCopy.startDate) itemCopy.startDate = parts[0];
-            if (!itemCopy.endDate) itemCopy.endDate = parts.slice(1).join(' - ');
-          } else if (!itemCopy.startDate) {
-            itemCopy.startDate = itemCopy.period;
-          }
+        if (prefix === 'exp' && !Array.isArray(itemCopy.bullets)) {
+          itemCopy.bullets = [];
         }
         return itemCopy;
       }
@@ -58,6 +257,8 @@ export const ensureResumeItemIds = (resume) => {
 
   return {
     ...resume,
+    personal: resume.personal || {},
+    skills: resume.skills || { languages: [], frameworks: [], tools: [] },
     education: fixArray(resume.education, 'edu'),
     experience: fixArray(resume.experience, 'exp'),
     projects: fixArray(resume.projects, 'proj'),
@@ -167,13 +368,17 @@ export const ResumeProvider = ({ children }) => {
       const saved = localStorage.getItem(STORAGE_COLLECTION_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((r) => hydrateAndNormalizeResume(r));
+        }
       }
     } catch (e) {}
-    return [{
-      ...emptyResumeSchema,
-      metadata: { ...emptyResumeSchema.metadata, id: 'ox-resume-initial', uuid: 'ox-resume-initial', title: 'My Resume' }
-    }];
+    return [
+      hydrateAndNormalizeResume({
+        ...emptyResumeSchema,
+        metadata: { ...emptyResumeSchema.metadata, id: 'ox-resume-initial', uuid: 'ox-resume-initial', title: 'My Resume' }
+      })
+    ];
   });
 
   // 2. Active Resume ID State
@@ -441,7 +646,7 @@ export const ResumeProvider = ({ children }) => {
 
   const importResumeData = useCallback((importedSchema) => {
     if (!importedSchema || !importedSchema.metadata) return;
-    const normalizedSchema = ensureResumeItemIds(importedSchema);
+    const normalizedSchema = hydrateAndNormalizeResume(importedSchema);
     const newId = normalizedSchema.metadata.id || `ox-resume-import-${Date.now()}`;
     const formatted = {
       ...normalizedSchema,
