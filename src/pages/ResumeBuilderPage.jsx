@@ -788,35 +788,85 @@ export const ResumeBuilderPage = () => {
                         {!isCollapsed && (
                           <div className="space-y-3 pt-2">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <input
-                                type="text"
-                                value={exp.role || ''}
-                                onChange={(e) => updateExperienceField(exp.id, idx, 'role', e.target.value)}
-                                placeholder="e.g. Senior Full Stack Engineer"
-                                className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
-                              />
-                              <input
-                                type="text"
-                                value={exp.company || ''}
-                                onChange={(e) => updateExperienceField(exp.id, idx, 'company', e.target.value)}
-                                placeholder="e.g. Nexus Technologies"
-                                className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
-                              />
-                              <input
-                                type="text"
-                                value={exp.startDate || ''}
-                                onChange={(e) => updateExperienceField(exp.id, idx, 'startDate', e.target.value)}
-                                placeholder="e.g. 2023-01"
-                                className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
-                              />
-                              <input
-                                type="text"
-                                disabled={exp.current}
-                                value={exp.current ? 'Present' : exp.endDate || ''}
-                                onChange={(e) => updateExperienceField(exp.id, idx, 'endDate', e.target.value)}
-                                placeholder="e.g. Present or 2024-12"
-                                className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white disabled:opacity-60"
-                              />
+                              <div>
+                                <label className="text-[11px] font-semibold text-slate-400 block mb-1">Job Title / Role *</label>
+                                <input
+                                  type="text"
+                                  value={exp.role || exp.title || ''}
+                                  onChange={(e) => updateExperienceField(exp.id, idx, 'role', e.target.value)}
+                                  placeholder="e.g. Senior Full Stack Engineer"
+                                  className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] font-semibold text-slate-400 block mb-1">Company / Organization *</label>
+                                <input
+                                  type="text"
+                                  value={exp.company || ''}
+                                  onChange={(e) => updateExperienceField(exp.id, idx, 'company', e.target.value)}
+                                  placeholder="e.g. Nexus Technologies"
+                                  className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] font-semibold text-slate-400 block mb-1">Start Date</label>
+                                <input
+                                  type="text"
+                                  value={exp.startDate || ''}
+                                  onChange={(e) => updateExperienceField(exp.id, idx, 'startDate', e.target.value)}
+                                  placeholder="e.g. 2023-01 or Jan 2023"
+                                  className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] font-semibold text-slate-400 block mb-1">End Date</label>
+                                <input
+                                  type="text"
+                                  disabled={Boolean(exp.current || exp.isCurrent)}
+                                  value={Boolean(exp.current || exp.isCurrent) ? 'Present' : exp.endDate || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    updateExperience(
+                                      experience.map((item, i) => {
+                                        if ((item.id && exp.id && item.id === exp.id) || i === idx) {
+                                          return { ...item, endDate: val, current: false, isCurrent: false };
+                                        }
+                                        return item;
+                                      })
+                                    );
+                                  }}
+                                  placeholder={Boolean(exp.current || exp.isCurrent) ? 'Present' : 'e.g. 2024-12 or Dec 2024'}
+                                  className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white disabled:opacity-60"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Present Toggle Checkbox */}
+                            <div className="flex items-center gap-2 pt-1">
+                              <label className="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(exp.current || exp.isCurrent)}
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    updateExperience(
+                                      experience.map((item, i) => {
+                                        if ((item.id && exp.id && item.id === exp.id) || i === idx) {
+                                          return {
+                                            ...item,
+                                            current: isChecked,
+                                            isCurrent: isChecked,
+                                            endDate: isChecked ? '' : item.endDate
+                                          };
+                                        }
+                                        return item;
+                                      })
+                                    );
+                                  }}
+                                  className="w-4 h-4 rounded border-slate-800 text-orange-500 focus:ring-orange-500 accent-orange-500 cursor-pointer"
+                                />
+                                <span>Currently working in this role</span>
+                              </label>
                             </div>
 
                             <div className="space-y-2 pt-2 border-t border-slate-800/80">
