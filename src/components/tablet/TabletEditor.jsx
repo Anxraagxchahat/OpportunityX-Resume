@@ -395,7 +395,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                         <div className={formGridClass}>
                           <input
                             type="text"
-                            value={exp.role || ''}
+                            value={exp.role || exp.title || ''}
                             onChange={(e) => updateExperienceField(exp.id, idx, 'role', e.target.value)}
                             placeholder="Role / Title"
                             className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
@@ -416,11 +416,50 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                           />
                           <input
                             type="text"
-                            value={exp.endDate || ''}
-                            onChange={(e) => updateExperienceField(exp.id, idx, 'endDate', e.target.value)}
-                            placeholder="End Date (e.g. Present)"
-                            className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                            disabled={Boolean(exp.current || exp.isCurrent)}
+                            value={Boolean(exp.current || exp.isCurrent) ? 'Present' : exp.endDate || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              updateExperience(
+                                experience.map((item, i) => {
+                                  if ((item.id && exp.id && item.id === exp.id) || i === idx) {
+                                    return { ...item, endDate: val, current: false, isCurrent: false };
+                                  }
+                                  return item;
+                                })
+                              );
+                            }}
+                            placeholder={Boolean(exp.current || exp.isCurrent) ? 'Present' : 'End Date (e.g. Dec 2024)'}
+                            className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white disabled:opacity-60"
                           />
+                        </div>
+
+                        {/* Present Toggle Checkbox */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <label className="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(exp.current || exp.isCurrent)}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                updateExperience(
+                                  experience.map((item, i) => {
+                                    if ((item.id && exp.id && item.id === exp.id) || i === idx) {
+                                      return {
+                                        ...item,
+                                        current: isChecked,
+                                        isCurrent: isChecked,
+                                        endDate: isChecked ? '' : item.endDate
+                                      };
+                                    }
+                                    return item;
+                                  })
+                                );
+                              }}
+                              className="w-4 h-4 rounded border-slate-800 text-orange-500 focus:ring-orange-500 accent-orange-500 cursor-pointer"
+                            />
+                            <span>Currently working in this role</span>
+                          </label>
                         </div>
 
                         {/* Bullets */}
