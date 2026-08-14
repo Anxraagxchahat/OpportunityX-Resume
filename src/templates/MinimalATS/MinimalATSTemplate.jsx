@@ -51,8 +51,14 @@ export const MinimalATSTemplate = ({ resumeData, accentHex = '#000000', fontFami
           {experience.map((exp, i) => isVisible(`exp-${i}`) && (
             <div key={exp.id || i} data-block-id={`exp-${i}`} className="text-xs space-y-1 pdf-block pdf-item pdf-keep-together break-inside-avoid">
               <div className="flex justify-between font-bold text-slate-900">
-                <span>{exp.role}, {exp.company}</span>
-                <span className="font-normal text-slate-500 text-[11px]">{exp.period || `${exp.startDate || ''} ${exp.endDate ? `– ${exp.endDate}` : ''}`}</span>
+                <span>{exp.role || exp.title}{exp.company ? `, ${exp.company}` : ''}</span>
+                <span className="font-normal text-slate-500 text-[11px]">
+                  {exp.current || exp.isCurrent
+                    ? (exp.startDate ? `${exp.startDate} – Present` : 'Present')
+                    : (exp.startDate && exp.endDate
+                        ? `${exp.startDate} – ${exp.endDate}`
+                        : (exp.startDate || exp.endDate || exp.period || ''))}
+                </span>
               </div>
               {Array.isArray(exp.bullets) && exp.bullets.length > 0 ? (
                 <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
