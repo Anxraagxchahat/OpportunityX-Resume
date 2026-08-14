@@ -153,13 +153,13 @@ export const FounderPage = () => {
       <section className="founder-hero-section p-6 sm:p-10 rounded-3xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] shadow-2xl mb-8">
         <div className="founder-hero-grid">
           <div className="founder-hero-content">
-            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/10 border border-orange-500/30">
+            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400 bg-orange-500/10 border border-orange-500/30">
               Founder & Full Stack Developer
             </span>
             <h1 className="founder-title text-3xl sm:text-5xl font-black tracking-tight text-[var(--ox-text-primary)]">
               Meet the <span className="text-orange-500">Founder</span>
             </h1>
-            <h2 className="founder-name text-xl sm:text-2xl font-extrabold text-amber-400">Anurag Verma</h2>
+            <h2 className="founder-name text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400">Anurag Verma</h2>
             <p className="founder-tagline-text text-sm sm:text-base text-[var(--ox-text-secondary)] leading-relaxed">
               Building products that help students discover opportunities, apply smarter, and grow their careers with AI.
             </p>
