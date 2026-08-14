@@ -142,28 +142,43 @@ function validatePhone(phone = '') {
 function sanitizeExperienceList(expList) {
   if (!Array.isArray(expList)) return [];
   return expList
-    .filter((exp) => exp && (exp.role || exp.company))
-    .map((exp, idx) => ({
-      id: `exp-${Date.now()}-${idx}`,
-      role: exp.role || '',
-      company: exp.company || '',
-      location: exp.location || '',
-      period: exp.period || '',
-      bullets: Array.isArray(exp.bullets) ? exp.bullets : []
-    }));
+    .filter((exp) => exp && (exp.role || exp.title || exp.company || exp.organization))
+    .map((exp, idx) => {
+      const bullets = Array.isArray(exp.bullets)
+        ? exp.bullets
+        : typeof exp.description === 'string' && exp.description.trim()
+        ? exp.description.split(/\n|•|;/).map((b) => b.trim().replace(/^[-•*]\s*/, '')).filter(Boolean)
+        : [];
+      return {
+        id: `exp-${Date.now()}-${idx}`,
+        role: exp.role || exp.title || exp.jobTitle || '',
+        title: exp.role || exp.title || exp.jobTitle || '',
+        company: exp.company || exp.organization || exp.employer || '',
+        location: exp.location || '',
+        period: exp.period || '',
+        startDate: exp.startDate || exp.start_date || '',
+        endDate: exp.endDate || exp.end_date || '',
+        current: Boolean(exp.current || exp.isCurrent || (exp.period && /present|current/i.test(exp.period))),
+        isCurrent: Boolean(exp.current || exp.isCurrent || (exp.period && /present|current/i.test(exp.period))),
+        bullets
+      };
+    });
 }
 
 function sanitizeEducationList(eduList) {
   if (!Array.isArray(eduList)) return [];
   return eduList
-    .filter((edu) => edu && (edu.degree || edu.institution))
+    .filter((edu) => edu && (edu.degree || edu.institution || edu.college || edu.school))
     .map((edu, idx) => ({
       id: `edu-${Date.now()}-${idx}`,
-      degree: edu.degree || '',
-      institution: edu.institution || '',
+      degree: edu.degree || edu.title || edu.major || '',
+      institution: edu.institution || edu.college || edu.school || edu.university || '',
+      college: edu.institution || edu.college || edu.school || edu.university || '',
       location: edu.location || '',
       period: edu.period || '',
-      gpa: edu.gpa || ''
+      startDate: edu.startDate || edu.start_date || '',
+      endDate: edu.endDate || edu.end_date || '',
+      gpa: edu.gpa || edu.cgpa || edu.grade || ''
     }));
 }
 
@@ -192,13 +207,18 @@ function sanitizeSkillsList(skillsList, fullResumeText = '') {
 function sanitizeProjectsList(projList) {
   if (!Array.isArray(projList)) return [];
   return projList
-    .filter((p) => p && p.title)
+    .filter((p) => p && (p.title || p.name))
     .map((p, idx) => ({
       id: `proj-${Date.now()}-${idx}`,
-      title: p.title,
+      title: p.title || p.name || '',
+      name: p.title || p.name || '',
       description: p.description || '',
-      technologies: Array.isArray(p.technologies) ? p.technologies : [],
-      link: p.link || ''
+      technologies: Array.isArray(p.technologies)
+        ? p.technologies
+        : typeof p.techStack === 'string'
+        ? p.techStack.split(',').map((s) => s.trim()).filter(Boolean)
+        : [],
+      link: p.link || p.url || p.htmlUrl || ''
     }));
 }
 
