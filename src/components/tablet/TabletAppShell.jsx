@@ -5,7 +5,6 @@ import { TabletWorkspace } from './TabletWorkspace';
 import { TabletBottomActionBar } from './TabletBottomActionBar';
 import { ExportCenterModal } from '../ExportCenterModal';
 import { VersionHistoryModal } from '../VersionHistoryModal';
-import { KeyboardShortcutsModal } from '../KeyboardShortcutsModal';
 import { ResumeRecoveryBanner } from '../ResumeRecoveryBanner';
 import { useDeviceType } from '../../hooks/useDeviceType';
 
@@ -15,7 +14,7 @@ export const TabletAppShell = () => {
 
   const [activeSection, setActiveSection] = useState('personal');
   const [viewMode, setViewMode] = useState('editor'); // 'editor' | 'preview'
-  const [isSplitView, setIsSplitView] = useState(false);
+  const [isSplitView, setIsSplitView] = useState(true); // Split view on by default for tablet landscape
 
   const [isExportCenterOpen, setIsExportCenterOpen] = useState(false);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
@@ -37,7 +36,10 @@ export const TabletAppShell = () => {
       <TabletTopBar />
 
       {/* 2. TABLET DOCUMENT HEADER */}
-      <TabletDocumentHeader />
+      <TabletDocumentHeader
+        onOpenVersionHistory={() => setIsVersionHistoryOpen(true)}
+        onOpenExportModal={() => setIsExportCenterOpen(true)}
+      />
 
       {/* 3. TABLET WORKSPACE (Two-Pane) */}
       <TabletWorkspace
