@@ -3,51 +3,71 @@ import { getTemplateCapabilities, OPPORTUNITYX_TEMPLATES_METADATA } from '../uti
 
 export { getTemplateCapabilities, OPPORTUNITYX_TEMPLATES_METADATA };
 
+/**
+ * Resilient lazy loader that intercepts chunk loading failures after deployments
+ * and prompts a clean hard-reload instead of failing silently or crashing.
+ */
+function safeLazy(importFn) {
+  return lazy(() =>
+    importFn().catch((err) => {
+      if (typeof window !== 'undefined') {
+        const lastReload = parseInt(sessionStorage.getItem('ox_chunk_reload_ts') || '0', 10);
+        const now = Date.now();
+        if (now - lastReload > 10000) {
+          sessionStorage.setItem('ox_chunk_reload_ts', String(now));
+          window.location.reload();
+        }
+      }
+      throw err;
+    })
+  );
+}
+
 // ──────────────────────────────────────────
 // OpportunityX Core Templates (Lazy Loaded)
 // ──────────────────────────────────────────
-export const LazyModernATS = lazy(() => import('./ModernATS/ModernATSTemplate').then(m => ({ default: m.ModernATSTemplate })));
-export const LazyMinimalATS = lazy(() => import('./MinimalATS/MinimalATSTemplate').then(m => ({ default: m.MinimalATSTemplate })));
-export const LazyExecutiveATS = lazy(() => import('./ExecutiveATS/ExecutiveATSTemplate').then(m => ({ default: m.ExecutiveATSTemplate })));
-export const LazyCorporateATS = lazy(() => import('./CorporateATS/CorporateATSTemplate').then(m => ({ default: m.CorporateATSTemplate })));
-export const LazyRecruiterATS = lazy(() => import('./RecruiterATS/RecruiterATSTemplate').then(m => ({ default: m.RecruiterATSTemplate })));
-export const LazyFullStack = lazy(() => import('./FullStack/FullStackTemplate').then(m => ({ default: m.FullStackTemplate })));
+export const LazyModernATS = safeLazy(() => import('./ModernATS/ModernATSTemplate').then(m => ({ default: m.ModernATSTemplate })));
+export const LazyMinimalATS = safeLazy(() => import('./MinimalATS/MinimalATSTemplate').then(m => ({ default: m.MinimalATSTemplate })));
+export const LazyExecutiveATS = safeLazy(() => import('./ExecutiveATS/ExecutiveATSTemplate').then(m => ({ default: m.ExecutiveATSTemplate })));
+export const LazyCorporateATS = safeLazy(() => import('./CorporateATS/CorporateATSTemplate').then(m => ({ default: m.CorporateATSTemplate })));
+export const LazyRecruiterATS = safeLazy(() => import('./RecruiterATS/RecruiterATSTemplate').then(m => ({ default: m.RecruiterATSTemplate })));
+export const LazyFullStack = safeLazy(() => import('./FullStack/FullStackTemplate').then(m => ({ default: m.FullStackTemplate })));
 
 // ──────────────────────────────────────────
 // Reactive Templates (Lazy Loaded)
 // ──────────────────────────────────────────
-export const LazyCreativeSidebar = lazy(() => import('./reactive/CreativeSidebar').then(m => ({ default: m.CreativeSidebarTemplate })));
-export const LazyProfessionalClean = lazy(() => import('./reactive/ProfessionalClean').then(m => ({ default: m.ProfessionalCleanTemplate })));
-export const LazyMarketingAccent = lazy(() => import('./reactive/MarketingAccent').then(m => ({ default: m.MarketingAccentTemplate })));
-export const LazyDeveloperDark = lazy(() => import('./reactive/DeveloperDark').then(m => ({ default: m.DeveloperDarkTemplate })));
-export const LazyATSClassic = lazy(() => import('./reactive/ATSClassic').then(m => ({ default: m.ATSClassicTemplate })));
-export const LazyBusinessAnalyst = lazy(() => import('./reactive/BusinessAnalyst').then(m => ({ default: m.BusinessAnalystTemplate })));
-export const LazyExecutiveMinimal = lazy(() => import('./reactive/ExecutiveMinimal').then(m => ({ default: m.ExecutiveMinimalTemplate })));
-export const LazyCompactEntry = lazy(() => import('./reactive/CompactEntry').then(m => ({ default: m.CompactEntryTemplate })));
-export const LazySeniorEnterprise = lazy(() => import('./reactive/SeniorEnterprise').then(m => ({ default: m.SeniorEnterpriseTemplate })));
-export const LazyHealthcareCalm = lazy(() => import('./reactive/HealthcareCalm').then(m => ({ default: m.HealthcareCalmTemplate })));
-export const LazyAsiaCompact = lazy(() => import('./reactive/AsiaCompact').then(m => ({ default: m.AsiaCompactTemplate })));
-export const LazyTechnicalGrid = lazy(() => import('./reactive/TechnicalGrid').then(m => ({ default: m.TechnicalGridTemplate })));
-export const LazyAccentColumn = lazy(() => import('./reactive/AccentColumn').then(m => ({ default: m.AccentColumnTemplate })));
-export const LazyWhitespaceModern = lazy(() => import('./reactive/WhitespaceModern').then(m => ({ default: m.WhitespaceModernTemplate })));
-export const LazyExecutiveBold = lazy(() => import('./reactive/ExecutiveBold').then(m => ({ default: m.ExecutiveBoldTemplate })));
+export const LazyCreativeSidebar = safeLazy(() => import('./reactive/CreativeSidebar').then(m => ({ default: m.CreativeSidebarTemplate })));
+export const LazyProfessionalClean = safeLazy(() => import('./reactive/ProfessionalClean').then(m => ({ default: m.ProfessionalCleanTemplate })));
+export const LazyMarketingAccent = safeLazy(() => import('./reactive/MarketingAccent').then(m => ({ default: m.MarketingAccentTemplate })));
+export const LazyDeveloperDark = safeLazy(() => import('./reactive/DeveloperDark').then(m => ({ default: m.DeveloperDarkTemplate })));
+export const LazyATSClassic = safeLazy(() => import('./reactive/ATSClassic').then(m => ({ default: m.ATSClassicTemplate })));
+export const LazyBusinessAnalyst = safeLazy(() => import('./reactive/BusinessAnalyst').then(m => ({ default: m.BusinessAnalystTemplate })));
+export const LazyExecutiveMinimal = safeLazy(() => import('./reactive/ExecutiveMinimal').then(m => ({ default: m.ExecutiveMinimalTemplate })));
+export const LazyCompactEntry = safeLazy(() => import('./reactive/CompactEntry').then(m => ({ default: m.CompactEntryTemplate })));
+export const LazySeniorEnterprise = safeLazy(() => import('./reactive/SeniorEnterprise').then(m => ({ default: m.SeniorEnterpriseTemplate })));
+export const LazyHealthcareCalm = safeLazy(() => import('./reactive/HealthcareCalm').then(m => ({ default: m.HealthcareCalmTemplate })));
+export const LazyAsiaCompact = safeLazy(() => import('./reactive/AsiaCompact').then(m => ({ default: m.AsiaCompactTemplate })));
+export const LazyTechnicalGrid = safeLazy(() => import('./reactive/TechnicalGrid').then(m => ({ default: m.TechnicalGridTemplate })));
+export const LazyAccentColumn = safeLazy(() => import('./reactive/AccentColumn').then(m => ({ default: m.AccentColumnTemplate })));
+export const LazyWhitespaceModern = safeLazy(() => import('./reactive/WhitespaceModern').then(m => ({ default: m.WhitespaceModernTemplate })));
+export const LazyExecutiveBold = safeLazy(() => import('./reactive/ExecutiveBold').then(m => ({ default: m.ExecutiveBoldTemplate })));
 
 // ──────────────────────────────────────────
 // Best-Resume-Ever Templates (Lazy Loaded)
 // ──────────────────────────────────────────
-export const LazyBRECool = lazy(() => import('./bre-cool/Template').then(m => ({ default: m.BRECoolTemplate })));
-export const LazyBRECreative = lazy(() => import('./bre-creative/Template').then(m => ({ default: m.BRECreativeTemplate })));
-export const LazyBREGreen = lazy(() => import('./bre-green/Template').then(m => ({ default: m.BREGreenTemplate })));
-export const LazyBRELeftRight = lazy(() => import('./bre-left-right/Template').then(m => ({ default: m.BRELeftRightTemplate })));
-export const LazyBREMaterialDark = lazy(() => import('./bre-material-dark/Template').then(m => ({ default: m.BREMaterialDarkTemplate })));
-export const LazyBREOblique = lazy(() => import('./bre-oblique/Template').then(m => ({ default: m.BREObliqueTemplate })));
-export const LazyBREPurple = lazy(() => import('./bre-purple/Template').then(m => ({ default: m.BREPurpleTemplate })));
-export const LazyBRESidebar = lazy(() => import('./bre-sidebar/Template').then(m => ({ default: m.BRESidebarTemplate })));
+export const LazyBRECool = safeLazy(() => import('./bre-cool/Template').then(m => ({ default: m.BRECoolTemplate })));
+export const LazyBRECreative = safeLazy(() => import('./bre-creative/Template').then(m => ({ default: m.BRECreativeTemplate })));
+export const LazyBREGreen = safeLazy(() => import('./bre-green/Template').then(m => ({ default: m.BREGreenTemplate })));
+export const LazyBRELeftRight = safeLazy(() => import('./bre-left-right/Template').then(m => ({ default: m.BRELeftRightTemplate })));
+export const LazyBREMaterialDark = safeLazy(() => import('./bre-material-dark/Template').then(m => ({ default: m.BREMaterialDarkTemplate })));
+export const LazyBREOblique = safeLazy(() => import('./bre-oblique/Template').then(m => ({ default: m.BREObliqueTemplate })));
+export const LazyBREPurple = safeLazy(() => import('./bre-purple/Template').then(m => ({ default: m.BREPurpleTemplate })));
+export const LazyBRESidebar = safeLazy(() => import('./bre-sidebar/Template').then(m => ({ default: m.BRESidebarTemplate })));
 
 // ──────────────────────────────────────────
 // JSONResume Theme Modern (Lazy Loaded)
 // ──────────────────────────────────────────
-export const LazyJSONResumeModern = lazy(() => import('./jsonresume-modern/Template').then(m => ({ default: m.JSONResumeModernTemplate })));
+export const LazyJSONResumeModern = safeLazy(() => import('./jsonresume-modern/Template').then(m => ({ default: m.JSONResumeModernTemplate })));
 
 // ──────────────────────────────────────────
 // Flat Template Registry (ID → Lazy Component)

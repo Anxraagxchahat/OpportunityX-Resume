@@ -1,6 +1,7 @@
 /**
  * PWA Service Worker Registration Utility
  * Registers /sw.js in production or HTTPS environments safely without blocking main thread.
+ * Cleanly unregisters during local development to prevent stale HMR caching.
  */
 
 export function registerServiceWorker() {
@@ -8,29 +9,37 @@ export function registerServiceWorker() {
     return;
   }
 
+  // Only register service worker in production to avoid interfering with Vite HMR in dev
+  if (import.meta.env.DEV) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const reg of registrations) {
+        reg.unregister();
+      }
+    });
+    return;
+  }
+
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
-        // Service worker registered successfully
+        // Check for updates on page load
+        registration.update().catch(() => {});
+
         registration.onupdatefound = () => {
           const installingWorker = registration.installing;
           if (installingWorker == null) return;
           installingWorker.onstatechange = () => {
             if (installingWorker.state === 'installed') {
               if (navigator.serviceWorker.controller) {
-                // New content is available; please refresh.
-                console.log('[PWA] New content is available and will be used when all tabs are closed.');
-              } else {
-                // Content is cached for offline use.
-                console.log('[PWA] Content is cached for offline use.');
+                console.log('[PWA] New version ready.');
               }
             }
           };
         };
       })
       .catch((error) => {
-        console.warn('[PWA] ServiceWorker registration failed:', error);
+        console.warn('[PWA] ServiceWorker registration warning:', error);
       });
   });
 }
