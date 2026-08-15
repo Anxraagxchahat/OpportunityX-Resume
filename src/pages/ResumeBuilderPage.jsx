@@ -153,7 +153,7 @@ export const ResumeBuilderPage = () => {
     }
   }, [activeResume?.metadata?.id]);
 
-  // Auto-enable photo & visible position when template supports photo
+  // Auto-align photo capability and section when template changes
   useEffect(() => {
     const currentTemplate = activeResume?.metadata?.template;
     const caps = getTemplateCapabilities(currentTemplate);
@@ -166,6 +166,8 @@ export const ResumeBuilderPage = () => {
       if (!activeResume?.assets?.profilePhoto) {
         updateAssets('profilePhoto', DEFAULT_PROFILE_PHOTO);
       }
+    } else if (activeSection === 'photo') {
+      setActiveSection('personal');
     }
   }, [activeResume?.metadata?.template]);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);

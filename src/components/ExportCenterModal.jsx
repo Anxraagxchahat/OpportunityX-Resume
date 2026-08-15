@@ -19,7 +19,7 @@ export const ExportCenterModal = () => {
     duplicateResume,
     activeResumeId,
     updateUserPreferences,
-    setIsDonationModalOpen
+    setIsDownloadSuccessModalOpen
   } = useResume();
 
   const [selectedPreset, setSelectedPreset] = useState('Corporate');
@@ -33,9 +33,9 @@ export const ExportCenterModal = () => {
     // Direct Client PDF Download (No print window)
     await downloadDirectPDF('resume-a4-preview', candidateName);
 
-    // Trigger Post-Download Support & Donation Pop-up
+    // Trigger Post-Download Success Confirmation Pop-up
     setTimeout(() => {
-      setIsDonationModalOpen(true);
+      setIsDownloadSuccessModalOpen(true);
     }, 400);
   };
 

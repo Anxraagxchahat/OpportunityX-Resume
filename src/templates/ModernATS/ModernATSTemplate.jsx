@@ -4,6 +4,7 @@ import { CustomSectionsBlock } from '../reactive/shared/MiscBlocks';
 import { ProfilePhoto } from '../reactive/shared/ProfilePhoto';
 import { SocialLinksBlock } from '../reactive/shared/SocialLinksBlock';
 import { shouldRenderBlock } from '../../utils/paginationEngine';
+import { getTemplateCapabilities } from '../../utils/templateCapabilities';
 
 export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamily = 'Inter', visibleBlockIds = null }) => {
   const {
@@ -20,7 +21,7 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
     assets = {}
   } = resumeData || {};
 
-  const showPhoto = assets?.profilePhoto && assets?.photoPosition !== 'hidden';
+  const showPhoto = Boolean(assets?.profilePhoto && assets?.photoPosition !== 'hidden' && getTemplateCapabilities('modern').supportsPhoto);
 
   const headerContactItems = [
     personal.email,

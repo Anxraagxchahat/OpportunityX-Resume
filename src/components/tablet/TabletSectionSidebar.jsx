@@ -1,12 +1,14 @@
 import React from 'react';
 import {
-  User, FileText, Briefcase, GraduationCap, FolderGit2, Cpu, Award,
+  User, Camera, FileText, Briefcase, GraduationCap, FolderGit2, Cpu, Award,
   Trophy, Languages, Share2, Layers, CheckCircle2, AlertCircle, Eye, EyeOff
 } from 'lucide-react';
 import { useResume } from '../../context/ResumeContext';
+import { isPhotoTemplate } from '../../utils/photoDefaults';
 
-const SECTIONS = [
+const ALL_SECTIONS = [
   { id: 'personal', label: 'Personal Info', icon: User },
+  { id: 'photo', label: 'Profile Photo', icon: Camera },
   { id: 'summary', label: 'Summary', icon: FileText },
   { id: 'experience', label: 'Experience', icon: Briefcase },
   { id: 'education', label: 'Education', icon: GraduationCap },
@@ -23,12 +25,16 @@ export const TabletSectionSidebar = ({ activeSection, onSelectSection }) => {
   const { activeResume, toggleSectionVisibility } = useResume();
 
   const hiddenSections = activeResume?.metadata?.hiddenSections || [];
+  const templateId = activeResume?.metadata?.template || 'modern';
+  const hasPhotoSupport = isPhotoTemplate(templateId);
+  const visibleSections = ALL_SECTIONS.filter((sec) => sec.id !== 'photo' || hasPhotoSupport);
 
   // Determine section completion status dynamically
   const isSectionComplete = (secId) => {
     if (!activeResume) return false;
     const p = activeResume.personal || {};
     if (secId === 'personal') return Boolean(p.fullName && p.email);
+    if (secId === 'photo') return Boolean(activeResume.assets?.profilePhoto);
     if (secId === 'summary') return Boolean(p.summary && p.summary.trim().length >= 20);
     if (secId === 'experience') return Array.isArray(activeResume.experience) && activeResume.experience.length > 0;
     if (secId === 'education') return Array.isArray(activeResume.education) && activeResume.education.length > 0;
@@ -52,7 +58,7 @@ export const TabletSectionSidebar = ({ activeSection, onSelectSection }) => {
           Sections
         </div>
 
-        {SECTIONS.map((sec) => {
+        {visibleSections.map((sec) => {
           const Icon = sec.icon;
           const isActive = activeSection === sec.id;
           const complete = isSectionComplete(sec.id);

@@ -7,7 +7,8 @@ import { ResumeProvider, useResume } from './context/ResumeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { AuthLoadingScreen } from './components/AuthLoadingScreen';
-import { DonationSupportModal } from './components/DonationSupportModal';
+import { SupportOpportunityXModal } from './components/SupportOpportunityXModal';
+import { DownloadSuccessModal } from './components/DownloadSuccessModal';
 import { UnlockAIModal } from './components/UnlockAIModal';
 import { BuyCreditsModal } from './components/BuyCreditsModal';
 import { AICreditsModal } from './components/AICreditsModal';
@@ -127,7 +128,8 @@ export function App() {
                 <ScrollToTop />
                 <AppContent />
                 <MobileMoreMenuModal />
-                <DonationSupportModal />
+                <SupportOpportunityXModal />
+                <DownloadSuccessModal />
                 <UnlockAIModal />
                 <BuyCreditsModal />
                 <AICreditsModal />

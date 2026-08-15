@@ -9,6 +9,7 @@ export const TabletWorkspace = ({
   viewMode,
   onBackToEdit,
   onOpenExportModal,
+  onOpenPhotoCrop,
   isLandscape = false,
   isSplitView = true,
   viewportWidth = 800
@@ -40,6 +41,8 @@ export const TabletWorkspace = ({
             <div className="w-[45%] border-r border-[var(--ox-border)] overflow-y-auto custom-scrollbar bg-[var(--ox-surface-primary)]">
               <TabletEditor
                 activeSection={activeSection}
+                onSelectSection={onSelectSection}
+                onOpenPhotoCrop={onOpenPhotoCrop}
                 isLandscape={true}
               />
             </div>
@@ -58,6 +61,8 @@ export const TabletWorkspace = ({
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--ox-surface-primary)]">
             <TabletEditor
               activeSection={activeSection}
+              onSelectSection={onSelectSection}
+              onOpenPhotoCrop={onOpenPhotoCrop}
               isLandscape={false}
             />
           </div>

@@ -63,7 +63,7 @@ const SOCIAL_LINKS = [
 ];
 
 export const Footer = () => {
-  const { setIsDonationModalOpen } = useResume();
+  const { setIsSupportModalOpen } = useResume();
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [openSection, setOpenSection] = useState(null);
 
@@ -241,7 +241,7 @@ export const Footer = () => {
 
               {/* Support / Donate button */}
               <button
-                onClick={() => setIsDonationModalOpen(true)}
+                onClick={() => setIsSupportModalOpen(true)}
                 className="w-full p-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold flex items-center justify-between transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-2">
@@ -329,7 +329,7 @@ export const Footer = () => {
                   <span>Meet the Founder</span>
                 </Link>
                 <button
-                  onClick={() => setIsDonationModalOpen(true)}
+                  onClick={() => setIsSupportModalOpen(true)}
                   className="w-full py-2 px-3 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/30 text-xs font-bold cursor-pointer text-center min-h-[44px]"
                 >
                   Support / Donate

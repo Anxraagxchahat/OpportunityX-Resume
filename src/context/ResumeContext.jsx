@@ -212,6 +212,14 @@ export const hydrateAndNormalizeResume = (resume) => {
       ...emptyResumeSchema.socialLinks,
       ...(resume.socialLinks || {})
     },
+    assets: {
+      ...(emptyResumeSchema.assets || {}),
+      ...(resume.assets || {})
+    },
+    style: {
+      ...(emptyResumeSchema.style || {}),
+      ...(resume.style || {})
+    },
     skills: {
       languages: Array.isArray(resume.skills?.languages) ? resume.skills.languages : [],
       frameworks: Array.isArray(resume.skills?.frameworks) ? resume.skills.frameworks : [],
@@ -250,6 +258,9 @@ const ensureResumeItemIds = (resume) => {
   return {
     ...resume,
     personal: resume.personal || {},
+    assets: resume.assets || {},
+    style: resume.style || {},
+    metadata: resume.metadata || {},
     skills: resume.skills || { languages: [], frameworks: [], tools: [] },
     education: fixArray(resume.education, 'edu'),
     experience: fixArray(resume.experience, 'exp'),
@@ -633,6 +644,8 @@ export const ResumeProvider = ({ children }) => {
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [isScanHistoryOpen, setIsScanHistoryOpen] = useState(false);
   const [isCompanyMatchOpen, setIsCompanyMatchOpen] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [isDownloadSuccessModalOpen, setIsDownloadSuccessModalOpen] = useState(false);
   const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
   const [isGitHubImportModalOpen, setIsGitHubImportModalOpen] = useState(false);
   const [isOpportunityXImportModalOpen, setIsOpportunityXImportModalOpen] = useState(false);
@@ -848,18 +861,24 @@ export const ResumeProvider = ({ children }) => {
     });
   }, [updateActiveResume]);
 
-  const updateAssets = useCallback((assetsObj) => {
-    updateActiveResume((prev) => ({
-      ...prev,
-      assets: { ...(prev.assets || {}), ...assetsObj }
-    }));
+  const updateAssets = useCallback((arg1, arg2) => {
+    updateActiveResume((prev) => {
+      const current = prev.assets || {};
+      const next = typeof arg1 === 'string'
+        ? { ...current, [arg1]: arg2 }
+        : { ...current, ...(arg1 || {}) };
+      return { ...prev, assets: next };
+    });
   }, [updateActiveResume]);
 
-  const updateStyle = useCallback((styleObj) => {
-    updateActiveResume((prev) => ({
-      ...prev,
-      style: { ...(prev.style || {}), ...styleObj }
-    }));
+  const updateStyle = useCallback((arg1, arg2) => {
+    updateActiveResume((prev) => {
+      const current = prev.style || {};
+      const next = typeof arg1 === 'string'
+        ? { ...current, [arg1]: arg2 }
+        : { ...current, ...(arg1 || {}) };
+      return { ...prev, style: next };
+    });
   }, [updateActiveResume]);
 
   const applyResumePreset = useCallback((preset) => {
@@ -1269,11 +1288,14 @@ export const ResumeProvider = ({ children }) => {
   }, [updateActiveResume]);
 
   // Section Specific Updaters
-  const updatePersonal = useCallback((field, value) => {
-    updateActiveResume((prev) => ({
-      ...prev,
-      personal: { ...(prev.personal || {}), [field]: value }
-    }));
+  const updatePersonal = useCallback((arg1, arg2) => {
+    updateActiveResume((prev) => {
+      const current = prev.personal || {};
+      const next = typeof arg1 === 'string'
+        ? { ...current, [arg1]: arg2 }
+        : { ...current, ...(arg1 || {}) };
+      return { ...prev, personal: next };
+    });
   }, [updateActiveResume]);
 
   const updateExperience = useCallback((expArray) => {
@@ -1304,8 +1326,14 @@ export const ResumeProvider = ({ children }) => {
     updateActiveResume((prev) => ({ ...prev, languages: langArray }));
   }, [updateActiveResume]);
 
-  const updateSocialLinks = useCallback((socialObj) => {
-    updateActiveResume((prev) => ({ ...prev, socialLinks: { ...(prev.socialLinks || {}), ...socialObj } }));
+  const updateSocialLinks = useCallback((arg1, arg2) => {
+    updateActiveResume((prev) => {
+      const current = prev.socialLinks || {};
+      const next = typeof arg1 === 'string'
+        ? { ...current, [arg1]: arg2 }
+        : { ...current, ...(arg1 || {}) };
+      return { ...prev, socialLinks: next };
+    });
   }, [updateActiveResume]);
 
   const updateCustomSections = useCallback((customArray) => {
@@ -1314,16 +1342,36 @@ export const ResumeProvider = ({ children }) => {
 
   const setTemplate = useCallback((templateId) => {
     updateActiveResume((prev) => {
-      const isTargetPhoto = isPhotoTemplate(templateId);
+      const caps = getTemplateCapabilities(templateId);
+      const isTargetPhoto = Boolean(caps.supportsPhoto);
       const currentPhoto = prev.assets?.profilePhoto;
+
+      // Preserve existing user photo; if template supports photo and no photo exists, provide DEFAULT_PROFILE_PHOTO
       let nextPhoto = currentPhoto;
       if (isTargetPhoto && (!currentPhoto || currentPhoto.trim() === '')) {
         nextPhoto = DEFAULT_PROFILE_PHOTO;
       }
+
+      // Ensure photoPosition is valid for this template
+      let nextPosition = prev.assets?.photoPosition;
+      if (isTargetPhoto) {
+        if (!nextPosition || nextPosition === 'hidden') {
+          nextPosition = caps.supportedPhotoPositions?.find(p => p !== 'hidden') || 'top-right';
+        }
+      }
+
       return {
         ...prev,
-        metadata: { ...prev.metadata, template: templateId },
-        assets: { ...(prev.assets || {}), profilePhoto: nextPhoto }
+        metadata: {
+          ...(prev.metadata || {}),
+          template: templateId,
+          layoutId: caps.layoutId || prev.metadata?.layoutId
+        },
+        assets: {
+          ...(prev.assets || {}),
+          profilePhoto: nextPhoto,
+          photoPosition: nextPosition || 'top-right'
+        }
       };
     });
     trackEvent(AnalyticsEvents.TEMPLATE_SELECTED, { template: templateId });
@@ -1453,6 +1501,10 @@ export const ResumeProvider = ({ children }) => {
         setIsScanHistoryOpen,
         isCompanyMatchOpen,
         setIsCompanyMatchOpen,
+        isSupportModalOpen,
+        setIsSupportModalOpen,
+        isDownloadSuccessModalOpen,
+        setIsDownloadSuccessModalOpen,
         isDonationModalOpen,
         setIsDonationModalOpen,
         isGitHubImportModalOpen,

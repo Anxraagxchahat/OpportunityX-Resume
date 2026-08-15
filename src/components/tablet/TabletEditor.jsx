@@ -9,7 +9,7 @@ import { InlineAIBadge } from '../InlineAIBadge';
 import { getTemplateCapabilities } from '../../templates';
 import { isPhotoTemplate, DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS } from '../../utils/photoDefaults';
 
-export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandscape = false }) => {
+export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'portrait', isLandscape = false, onOpenPhotoCrop }) => {
   const {
     activeResume,
     updatePersonal,
@@ -54,6 +54,8 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
 
   // Two-column layout grid class helper for landscape
   const formGridClass = isLandscape ? 'grid grid-cols-2 gap-3.5 sm:gap-4' : 'grid grid-cols-1 gap-3.5 sm:gap-4';
+
+  const isEmailValid = !personal.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal.email);
 
   // ================= EXPERIENCE HANDLERS =================
   const addExperienceItem = () => {
@@ -237,6 +239,34 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
               </button>
             </div>
 
+            {/* Profile Photo Quick Card (Only for photo templates) */}
+            {isPhotoTemplate(metadata?.template) && (
+              <div className="p-3.5 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] flex items-center justify-between gap-3 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-[var(--ox-surface-primary)] border border-orange-500/40 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md">
+                    {assets?.profilePhoto ? (
+                      <img src={assets.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="w-5 h-5 text-slate-400" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-[var(--ox-text-primary)]">Profile Photo</div>
+                    <div className="text-[10px] text-[var(--ox-text-secondary)]">
+                      {assets?.profilePhoto ? 'Photo is active on photo templates' : 'No photo uploaded yet'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onSelectSection && onSelectSection('photo')}
+                  className="px-3.5 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Camera className="w-3.5 h-3.5" /> Manage Photo
+                </button>
+              </div>
+            )}
+
             <div className={formGridClass}>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Full Name *</label>
@@ -291,6 +321,229 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                   placeholder="e.g. San Francisco, CA / Remote"
                   className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
                 />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 1.5 PROFILE PHOTO */}
+        {isPhotoTemplate(metadata?.template) && activeSection === 'photo' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)]">
+              <div>
+                <h2 className="text-base font-bold text-[var(--ox-text-primary)] flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-orange-400" /> Profile Photo & Avatar
+                </h2>
+                <p className="text-xs text-[var(--ox-text-secondary)] mt-0.5">
+                  Upload or customize your profile photo for photo-enabled resume templates.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggleSectionVisibility('photo')}
+                className="text-xs font-semibold text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] flex items-center gap-1 min-h-[44px]"
+              >
+                {hiddenSections.includes('photo') ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-slate-400" />}
+                <span>{hiddenSections.includes('photo') ? 'Hidden in PDF' : 'Visible in PDF'}</span>
+              </button>
+            </div>
+
+            {/* Photo Upload & Preview Card */}
+            <div className="p-5 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-5 shadow-lg">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="relative group">
+                  <div className={`w-24 h-24 overflow-hidden border-2 border-orange-500/60 bg-[var(--ox-surface-primary)] shadow-2xl flex items-center justify-center ${
+                    assets?.photoShape === 'square' ? 'rounded-md' : assets?.photoShape === 'rounded' ? 'rounded-2xl' : 'rounded-full'
+                  }`}>
+                    {assets?.profilePhoto ? (
+                      <img
+                        src={assets.profilePhoto}
+                        alt="Profile Preview"
+                        className="w-full h-full object-cover transition-transform duration-100 ease-out"
+                        style={{
+                          transform: `translateY(${((50 - (assets?.photoOffsetY ?? 50)) / 50) * (96 * 0.45 * ((assets?.photoZoom || 100) / 100))}px) scale(${(assets?.photoZoom || 100) / 100})`,
+                          transformOrigin: 'center center'
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center p-2">
+                        <Camera className="w-8 h-8 text-slate-500 mx-auto" />
+                        <span className="text-[9px] text-slate-500 font-semibold block mt-1">No Photo</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-1 space-y-3 w-full text-center sm:text-left">
+                  <div className="text-xs font-bold text-[var(--ox-text-primary)]">Upload & Position Photo</div>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <label className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all cursor-pointer flex items-center gap-2 shadow-sm min-h-[44px]">
+                      <Upload className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>Choose Photo File</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              if (evt.target?.result) {
+                                updateAssets('profilePhoto', evt.target.result);
+                                if (onOpenPhotoCrop) onOpenPhotoCrop();
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+
+                    {assets?.profilePhoto && onOpenPhotoCrop && (
+                      <button
+                        type="button"
+                        onClick={onOpenPhotoCrop}
+                        className="px-3.5 py-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer min-h-[44px]"
+                      >
+                        <Crop className="w-3.5 h-3.5" /> Crop & Adjust
+                      </button>
+                    )}
+
+                    {assets?.profilePhoto && (
+                      <button
+                        type="button"
+                        onClick={() => updateAssets('profilePhoto', null)}
+                        className="px-3.5 py-2 bg-[var(--ox-surface-primary)] hover:bg-red-500/10 text-[var(--ox-text-secondary)] hover:text-red-500 border border-[var(--ox-border)] rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer min-h-[44px]"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-[var(--ox-text-muted)] font-medium">Supports JPG, PNG, WEBP on-device Base64.</p>
+                </div>
+              </div>
+
+              {/* Vertical Shift & Layout Controls */}
+              <div className="pt-4 border-t border-[var(--ox-border)] space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-[var(--ox-text-primary)]">
+                    <span>Vertical Alignment (Up / Down Shift)</span>
+                    <span className="text-orange-500">{assets?.photoOffsetY ?? 50}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={assets?.photoOffsetY ?? 50}
+                    onChange={(e) => updateAssets('photoOffsetY', Number(e.target.value))}
+                    className="w-full accent-orange-500 cursor-pointer h-2 bg-[var(--ox-surface-primary)] rounded-lg"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[var(--ox-text-primary)]">Display Size</label>
+                    <div className="flex items-center gap-2">
+                      {[
+                        { id: 'sm', label: 'Small' },
+                        { id: 'md', label: 'Medium' },
+                        { id: 'lg', label: 'Large' }
+                      ].map((sz) => (
+                        <button
+                          key={sz.id}
+                          type="button"
+                          onClick={() => updateAssets('photoSize', sz.id)}
+                          className={`flex-1 py-1.5 rounded-xl border text-xs font-bold transition-all min-h-[40px] cursor-pointer ${
+                            (assets?.photoSize || 'md') === sz.id
+                              ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+                              : 'bg-[var(--ox-surface-primary)] text-[var(--ox-text-secondary)] border-[var(--ox-border)]'
+                          }`}
+                        >
+                          {sz.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[var(--ox-text-primary)]">Display Shape</label>
+                    <div className="flex items-center gap-2">
+                      {[
+                        { id: 'circle', label: 'Circle' },
+                        { id: 'rounded', label: 'Rounded' },
+                        { id: 'square', label: 'Square' }
+                      ].map((shp) => (
+                        <button
+                          key={shp.id}
+                          type="button"
+                          onClick={() => updateAssets('photoShape', shp.id)}
+                          className={`flex-1 py-1.5 rounded-xl border text-xs font-bold transition-all min-h-[40px] cursor-pointer ${
+                            (assets?.photoShape || 'circle') === shp.id
+                              ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+                              : 'bg-[var(--ox-surface-primary)] text-[var(--ox-text-secondary)] border-[var(--ox-border)]'
+                          }`}
+                        >
+                          {shp.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Layout Position Selector */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[var(--ox-text-primary)]">Photo Layout Position</label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {[
+                      { id: 'top-left', label: 'Top Left' },
+                      { id: 'top-right', label: 'Top Right' },
+                      { id: 'center', label: 'Center' },
+                      { id: 'sidebar', label: 'Sidebar' },
+                      { id: 'hidden', label: 'Hidden' }
+                    ]
+                      .filter((pos) => {
+                        const caps = getTemplateCapabilities(metadata?.template);
+                        return caps.supportedPhotoPositions?.includes(pos.id);
+                      })
+                      .map((pos) => (
+                        <button
+                          key={pos.id}
+                          type="button"
+                          onClick={() => updateAssets('photoPosition', pos.id)}
+                          className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all min-h-[40px] cursor-pointer ${
+                            (assets?.photoPosition || 'top-left') === pos.id
+                              ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+                              : 'bg-[var(--ox-surface-primary)] text-[var(--ox-text-secondary)] border-[var(--ox-border)]'
+                          }`}
+                        >
+                          {pos.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Preset Sample Avatars */}
+              <div className="pt-4 border-t border-[var(--ox-border)] space-y-3">
+                <div className="text-xs font-bold text-[var(--ox-text-primary)]">Or Choose Sample Headshot</div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {SAMPLE_AVATARS.map((av) => (
+                    <button
+                      key={av.id}
+                      type="button"
+                      onClick={() => updateAssets('profilePhoto', av.url)}
+                      className={`p-2 rounded-xl border flex items-center gap-2 transition-all text-left cursor-pointer ${
+                        assets?.profilePhoto === av.url
+                          ? 'bg-orange-500/10 border-orange-500 text-orange-400'
+                          : 'bg-[var(--ox-surface-primary)] border-[var(--ox-border)] text-[var(--ox-text-secondary)]'
+                      }`}
+                    >
+                      <img src={av.url} alt={av.label} className="w-8 h-8 rounded-full object-cover border border-[var(--ox-border)] flex-shrink-0" />
+                      <span className="text-[11px] font-bold truncate">{av.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

@@ -9,7 +9,7 @@ import { downloadDirectPDF } from '../utils/pdfDownloader';
 
 export const PublicRecruiterViewPage = () => {
   const { slug } = useParams();
-  const { activeResume, setIsDonationModalOpen } = useResume();
+  const { activeResume, setIsDownloadSuccessModalOpen } = useResume();
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [contactMsg, setContactMsg] = useState('');
   const [sentSuccess, setSentSuccess] = useState(false);
@@ -21,7 +21,7 @@ export const PublicRecruiterViewPage = () => {
     const candidateName = activeResume?.personal?.fullName || 'Candidate';
     await downloadDirectPDF('resume-a4-preview', candidateName);
     setTimeout(() => {
-      setIsDonationModalOpen(true);
+      setIsDownloadSuccessModalOpen(true);
     }, 400);
   };
 

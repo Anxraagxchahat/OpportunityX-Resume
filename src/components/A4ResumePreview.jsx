@@ -57,7 +57,7 @@ export const A4ResumePreview = () => {
     setIsInspectorOpen,
     setIsThemeCustomizerOpen,
     setIsAssetManagerOpen,
-    setIsDonationModalOpen
+    setIsDownloadSuccessModalOpen
   } = useResume();
 
   const [zoomLevel, setZoomLevel] = useState(85);
@@ -159,9 +159,9 @@ export const A4ResumePreview = () => {
 
     setIsDownloading(false);
 
-    // Trigger Post-Download Support & Donation Pop-up
+    // Trigger Post-Download Success Confirmation Pop-up
     setTimeout(() => {
-      setIsDonationModalOpen(true);
+      setIsDownloadSuccessModalOpen(true);
     }, 400);
   };
 

@@ -1,20 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Eye, Download, Layout, FileText } from 'lucide-react';
 import { useResume } from '../../context/ResumeContext';
-
-const SECTIONS = [
-  'personal',
-  'summary',
-  'experience',
-  'education',
-  'projects',
-  'skills',
-  'certificates',
-  'achievements',
-  'languages',
-  'socialLinks',
-  'customSections'
-];
+import { isPhotoTemplate } from '../../utils/photoDefaults';
 
 export const TabletBottomActionBar = ({
   activeSection,
@@ -26,17 +13,25 @@ export const TabletBottomActionBar = ({
   isSplitView = false,
   onToggleSplitView
 }) => {
-  const currentIdx = SECTIONS.indexOf(activeSection);
+  const { activeResume } = useResume();
+  const templateId = activeResume?.metadata?.template || 'modern';
+  const hasPhotoSupport = isPhotoTemplate(templateId);
+
+  const sections = hasPhotoSupport
+    ? ['personal', 'photo', 'summary', 'experience', 'education', 'projects', 'skills', 'certificates', 'achievements', 'languages', 'socialLinks', 'customSections']
+    : ['personal', 'summary', 'experience', 'education', 'projects', 'skills', 'certificates', 'achievements', 'languages', 'socialLinks', 'customSections'];
+
+  const currentIdx = sections.indexOf(activeSection);
 
   const handlePrevious = () => {
     if (currentIdx > 0) {
-      onSelectSection(SECTIONS[currentIdx - 1]);
+      onSelectSection(sections[currentIdx - 1]);
     }
   };
 
   const handleNext = () => {
-    if (currentIdx < SECTIONS.length - 1) {
-      onSelectSection(SECTIONS[currentIdx + 1]);
+    if (currentIdx < sections.length - 1) {
+      onSelectSection(sections[currentIdx + 1]);
     }
   };
 

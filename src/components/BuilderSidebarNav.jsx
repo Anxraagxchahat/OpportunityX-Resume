@@ -5,6 +5,7 @@ import {
   Eye, EyeOff, Pin, PinOff
 } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
+import { isPhotoTemplate } from '../utils/photoDefaults';
 
 export const builderSections = [
   { id: 'personal', label: 'Personal Info', icon: User },
@@ -24,7 +25,11 @@ export const builderSections = [
 export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
   const { resumeHealth, activeResume, toggleSectionVisibility } = useResume();
   const { percentage, completedCount, totalCount } = resumeHealth;
-  const hiddenSections = activeResume.metadata?.hiddenSections || [];
+  const hiddenSections = activeResume?.metadata?.hiddenSections || [];
+  const templateId = activeResume?.metadata?.template || 'modern';
+  const hasPhotoSupport = isPhotoTemplate(templateId);
+
+  const visibleSections = builderSections.filter((sec) => sec.id !== 'photo' || hasPhotoSupport);
 
   // Pinned state persisted in localStorage; Hover state triggers Instagram-like expansion
   const [isPinned, setIsPinned] = useState(() => {
@@ -79,7 +84,7 @@ export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
 
         {/* Section List */}
         <div className="space-y-1 flex-1">
-          {builderSections.map((sec) => {
+          {visibleSections.map((sec) => {
             const Icon = sec.icon;
             const isActive = activeSection === sec.id;
             const isHidden = hiddenSections.includes(sec.id);
