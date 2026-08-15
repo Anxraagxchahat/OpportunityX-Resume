@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user, AuthenticatedUser
 from app.repositories.resume_repository import ResumeRepository
+from app.repositories.user_repository import UserRepository
 from app.repositories.activity_repository import ActivityRepository
 from app.db.schemas.schemas import ResumeCreateRequest, ResumeUpdateRequest, ResumeResponse
 from app.db.models.models import Resume
@@ -16,6 +17,12 @@ async def list_resumes(
     user: AuthenticatedUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    UserRepository(db).sync_user(
+        uid=user.uid,
+        email=user.email or f"{user.uid}@opportunityx.co.in",
+        display_name=user.name,
+        photo_url=user.photo_url
+    )
     repo = ResumeRepository(db)
     return repo.get_user_resumes(user.uid)
 
@@ -25,8 +32,34 @@ async def create_resume(
     user: AuthenticatedUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    UserRepository(db).sync_user(
+        uid=user.uid,
+        email=user.email or f"{user.uid}@opportunityx.co.in",
+        display_name=user.name,
+        photo_url=user.photo_url
+    )
     repo = ResumeRepository(db)
+
+    # Check if a resume with this custom ID already exists for this user (upsert / idempotency)
+    resume_id = req.id if (req.id and req.id.strip()) else f"res_{uuid.uuid4().hex[:16]}"
+    existing = repo.get_by_user_and_id(user.uid, resume_id)
+    if existing:
+        updated = repo.update(existing, {
+            "title": req.title,
+            "content": req.content,
+            "template_id": req.template_id or existing.template_id or "modern",
+            "font_family": req.font_family or existing.font_family or "Inter",
+            "accent_color": req.accent_color or existing.accent_color or "#F97316"
+        })
+        ActivityRepository(db).log_activity(
+            user_id=user.uid,
+            event_type="RESUME_UPDATED",
+            details={"resume_id": updated.id, "title": updated.title}
+        )
+        return updated
+
     resume = Resume(
+        id=resume_id,
         user_id=user.uid,
         title=req.title,
         content=req.content,
@@ -61,6 +94,12 @@ async def update_resume(
     user: AuthenticatedUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    UserRepository(db).sync_user(
+        uid=user.uid,
+        email=user.email or f"{user.uid}@opportunityx.co.in",
+        display_name=user.name,
+        photo_url=user.photo_url
+    )
     repo = ResumeRepository(db)
     resume = repo.get_by_user_and_id(user.uid, resume_id)
     if not resume:
@@ -69,7 +108,7 @@ async def update_resume(
     updated_data = req.model_dump(exclude_unset=True)
     if "content" in updated_data and updated_data["content"]:
         # Save snapshot version before updating
-        repo.create_version(resume_id=resume.id, title=f"AutoSave snapshot", content=resume.content)
+        repo.create_version(resume_id=resume.id, title="AutoSave snapshot", content=resume.content)
 
     updated = repo.update(resume, updated_data)
     ActivityRepository(db).log_activity(
