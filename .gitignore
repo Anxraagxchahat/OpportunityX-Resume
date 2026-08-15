@@ -2,7 +2,7 @@
 # Environment & Secret Files (CRITICAL SECURITY)
 # ==========================================
 .env
-.env.example
+.env.local
 .env.*
 *.env
 !.env.example
@@ -123,4 +123,3 @@ Thumbs.db
 *.sln
 *.sw?
 *.bak
-
