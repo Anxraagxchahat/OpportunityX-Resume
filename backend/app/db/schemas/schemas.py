@@ -78,6 +78,17 @@ class CreditTransactionResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class CreditConsumeRequest(BaseModel):
+    action_name: str = Field(default="AI Feature", description="Feature consuming credit")
+    credits: int = Field(default=1, ge=1, le=10, description="Number of credits to deduct")
+
+class CreditConsumeResponse(BaseModel):
+    ok: bool
+    remaining_credits: int
+    credits_deducted: int
+    action_name: str
+    message: str
+
 # Cashfree & Payment Schemas
 class CashfreeCreateRequest(BaseModel):
     pack_id: str = Field(..., description="Credit pack: pack-starter, pack-popular, pack-best, pack-pro")
@@ -102,6 +113,7 @@ class CashfreeVerifyResponse(BaseModel):
     message: str
     credits_added: int = 0
     new_balance: int = 0
+    already_verified: bool = False
 
 # Feature Flag Schemas
 class FeatureFlagResponse(BaseModel):
@@ -130,6 +142,7 @@ class NotificationResponse(BaseModel):
 
 # Resume Schemas
 class ResumeCreateRequest(BaseModel):
+    id: Optional[str] = None
     title: str = "Untitled Resume"
     content: Dict[str, Any]
     template_id: Optional[str] = "modern"
