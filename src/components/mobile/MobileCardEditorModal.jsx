@@ -167,15 +167,16 @@ export const MobileCardEditorModal = () => {
                   <label className="text-xs font-bold text-[var(--ox-text-secondary)]">End Date</label>
                   <input
                     type="text"
-                    disabled={Boolean(formData.current || formData.isCurrent)}
-                    placeholder={Boolean(formData.current || formData.isCurrent) ? 'Present' : 'e.g. Dec 2024'}
-                    value={Boolean(formData.current || formData.isCurrent) ? 'Present' : formData.endDate || ''}
+                    placeholder="e.g. Dec 2024 or Present"
+                    value={formData.endDate ?? (Boolean(formData.current || formData.isCurrent) ? 'Present' : '')}
                     onChange={(e) => {
-                      handleChange('endDate', e.target.value);
-                      handleChange('current', false);
-                      handleChange('isCurrent', false);
+                      const val = e.target.value;
+                      const isNowPresent = /^(present|current|now|till date|ongoing)$/i.test(val.trim());
+                      handleChange('endDate', val);
+                      handleChange('current', isNowPresent);
+                      handleChange('isCurrent', isNowPresent);
                     }}
-                    className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-3 py-3 text-xs text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px] disabled:opacity-60"
+                    className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-3 py-3 text-xs text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
                   />
                 </div>
               </div>
@@ -185,14 +186,12 @@ export const MobileCardEditorModal = () => {
                 <label className="flex items-center gap-2 text-xs font-semibold text-[var(--ox-text-primary)] cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={Boolean(formData.current || formData.isCurrent)}
+                    checked={Boolean(formData.current || formData.isCurrent || (typeof formData.endDate === 'string' && /^(present|current|now|till date|ongoing)$/i.test(formData.endDate.trim())))}
                     onChange={(e) => {
                       const isChecked = e.target.checked;
                       handleChange('current', isChecked);
                       handleChange('isCurrent', isChecked);
-                      if (isChecked) {
-                        handleChange('endDate', '');
-                      }
+                      handleChange('endDate', isChecked ? 'Present' : (formData.endDate && !/^(present|current|now|till date|ongoing)$/i.test(formData.endDate.trim()) ? formData.endDate : ''));
                     }}
                     className="w-4 h-4 rounded border-slate-700 text-orange-500 focus:ring-orange-500 accent-orange-500 cursor-pointer"
                   />
