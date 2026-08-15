@@ -48,15 +48,27 @@ const COUNTRIES = [
   { code: 'EG', name: 'Egypt', dial: '+20', flag: '🇪🇬', minDigits: 10, maxDigits: 10 }
 ];
 
-const loadCashfreeScript = (env = 'sandbox') => {
-  return new Promise((resolve, reject) => {
-    if (window.Cashfree) return resolve(window.Cashfree);
+let cashfreeSDKPromise = null;
+const loadCashfreeScript = () => {
+  if (typeof window !== 'undefined' && window.Cashfree) return Promise.resolve(window.Cashfree);
+  if (cashfreeSDKPromise) return cashfreeSDKPromise;
+
+  cashfreeSDKPromise = new Promise((resolve, reject) => {
+    if (typeof window !== 'undefined' && window.Cashfree) return resolve(window.Cashfree);
+    const existing = document.getElementById('cashfree-sdk-v3-preloader');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.Cashfree));
+      existing.addEventListener('error', () => reject(new Error('Failed to load Cashfree Payment SDK')));
+      return;
+    }
     const script = document.createElement('script');
+    script.id = 'cashfree-sdk-v3-preloader';
     script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
     script.onload = () => resolve(window.Cashfree);
     script.onerror = () => reject(new Error('Failed to load Cashfree Payment SDK'));
     document.body.appendChild(script);
   });
+  return cashfreeSDKPromise;
 };
 
 export const BuyCreditsModal = ({ isOpen, onClose }) => {
@@ -65,7 +77,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
     setIsBuyCreditsModalOpen,
     session,
     setIsUnlockAIModalOpen,
-    addPurchasedCredits,
+    setAiCredits,
     aiCredits
   } = useResume();
 
@@ -73,6 +85,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
   const [paymentStep, setPaymentStep] = useState('select'); // 'select' | 'success'
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStage, setProcessingStage] = useState('idle'); // 'idle' | 'creating' | 'checkout' | 'verifying'
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [customerPhone, setCustomerPhone] = useState(session?.phone || session?.phoneNumber || '');
   const [errorMsg, setErrorMsg] = useState('');
@@ -83,6 +96,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
     if (active) {
       pingBackendWarmup();
       preloadCashfreeSDK();
+      loadCashfreeScript().catch(() => {});
     }
   }, [active]);
 
@@ -99,6 +113,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   const handleClose = () => {
     setPaymentStep('select');
     setIsProcessing(false);
+    setProcessingStage('idle');
     setErrorMsg('');
     if (onClose) onClose();
     else setIsBuyCreditsModalOpen(false);
@@ -139,7 +154,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
   }
 
   const handleInitiateCashfreePayment = async () => {
-    if (isProcessing) return; // Prevent duplicate payment session requests
+    if (isProcessing) return;
 
     if (!customerPhone || !validatePhone(customerPhone, selectedCountry)) {
       const requiredDigitsText = selectedCountry.minDigits === selectedCountry.maxDigits 
@@ -155,9 +170,11 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
     }
 
     setIsProcessing(true);
+    setProcessingStage('creating');
     setErrorMsg('');
+
     try {
-      // Pass full phone string to backend
+      // 1. Create order on backend (fast endpoint with pooled connection)
       const fullPhone = customerPhone.replace(/\D/g, '');
       const orderData = await apiService.createCashfreeOrder(selectedPack.id, fullPhone);
 
@@ -165,37 +182,44 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
         throw new Error("Invalid payment session received from backend.");
       }
 
-      // 2. Live Cashfree Web SDK Payment Modal Checkout
-      await loadCashfreeScript(orderData.environment);
-      const cashfree = window.Cashfree({ mode: orderData.environment === 'production' ? 'production' : 'sandbox' });
+      setProcessingStage('checkout');
+
+      // 2. Open Cashfree Web SDK Checkout
+      await loadCashfreeScript();
+      const mode = orderData.environment === 'production' ? 'production' : 'sandbox';
+      const cashfree = window.Cashfree({ mode });
 
       cashfree.checkout({
         paymentSessionId: orderData.payment_session_id,
         redirectTarget: '_modal'
       }).then(async () => {
+        setProcessingStage('verifying');
         const verifyRes = await apiService.verifyCashfreeOrder(orderData.order_id);
+
         if (verifyRes.ok && verifyRes.status === 'PAID') {
-          // Fetch authoritative credit balance from backend DB
-          try {
-            const walletData = await apiService.getCreditBalance();
-            if (walletData && typeof walletData.remaining_credits === 'number') {
-              addPurchasedCredits(selectedPack.credits, `₹${selectedPack.price} Pack (Cashfree)`);
-            }
-          } catch (e) {
-            addPurchasedCredits(selectedPack.credits, `₹${selectedPack.price} Pack (Cashfree)`);
+          // Instant authoritative credit balance update from database response
+          if (typeof verifyRes.new_balance === 'number') {
+            setAiCredits((prev) => ({
+              ...prev,
+              remaining: verifyRes.new_balance,
+              totalPurchased: (prev.totalPurchased || 0) + (verifyRes.credits_added || selectedPack.credits)
+            }));
           }
           setPaymentStep('success');
         } else {
           setErrorMsg(verifyRes.message || "Payment verification returned pending/failed status. No credits were added.");
         }
         setIsProcessing(false);
-      }).catch((err) => {
+        setProcessingStage('idle');
+      }).catch(() => {
         setIsProcessing(false);
+        setProcessingStage('idle');
         setErrorMsg("Payment was cancelled or closed. No charges were made to your account.");
       });
 
     } catch (err) {
       setIsProcessing(false);
+      setProcessingStage('idle');
       setErrorMsg(err.message || "We couldn't start the payment securely. Please try again.");
     }
   };
@@ -388,19 +412,16 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
               </p>
             </div>
 
-            {/* Processing Banner */}
-            {isProcessing && (
-              <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-slate-300 text-xs space-y-1 animate-pulse text-center">
-                <p className="font-bold text-orange-400">Preparing secure payment…</p>
-                <p className="text-[11px] text-slate-400">
-                  This may take up to 10–15 seconds on the first request while we securely connect to the payment service.
-                </p>
-              </div>
-            )}
-
             {/* CTA Purchase Button */}
             {(() => {
               const isFormValid = acceptedTerms && validatePhone(customerPhone, selectedCountry);
+              const getButtonText = () => {
+                if (processingStage === 'creating') return 'Preparing secure checkout…';
+                if (processingStage === 'checkout') return 'Opening secure checkout…';
+                if (processingStage === 'verifying') return 'Verifying payment…';
+                return 'Preparing secure checkout…';
+              };
+
               return (
                 <button
                   onClick={handleInitiateCashfreePayment}
@@ -414,7 +435,7 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
                   {isProcessing ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin shrink-0 text-orange-400" />
-                      <span className="text-orange-400">Preparing secure payment…</span>
+                      <span className="text-orange-400">{getButtonText()}</span>
                     </>
                   ) : (
                     <>

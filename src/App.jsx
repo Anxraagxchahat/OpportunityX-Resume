@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { initPaymentPreloader } from './utils/paymentPreloader';
 import { ThemeProvider } from './context/ThemeProvider';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ResumeProvider } from './context/ResumeContext';
+import { ResumeProvider, useResume } from './context/ResumeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { AuthLoadingScreen } from './components/AuthLoadingScreen';
@@ -14,6 +14,7 @@ import { AICreditsModal } from './components/AICreditsModal';
 import { AIUpgradePromptModal } from './components/AIUpgradePromptModal';
 import { GitHubImportModal } from './components/GitHubImportModal';
 import { OpportunityXImportModal } from './components/OpportunityXImportModal';
+import ResumeMigrationModal from './components/ResumeMigrationModal';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { MobileNavigationProvider } from './context/MobileNavigationContext';
 import { MobileMoreMenuModal } from './components/mobile/MobileMoreMenuModal';
@@ -53,6 +54,27 @@ function AuthGate({ children }) {
   }
 
   return children;
+}
+
+function ResumeMigrationModalWrapper() {
+  const {
+    isMigrationModalOpen,
+    localGuestResumes,
+    migrateLocalResumesToCloud,
+    dismissMigrationModal,
+    isMigrating
+  } = useResume();
+
+  return (
+    <ResumeMigrationModal
+      isOpen={isMigrationModalOpen}
+      onClose={dismissMigrationModal}
+      localResumes={localGuestResumes}
+      onMigrateToCloud={migrateLocalResumesToCloud}
+      onKeepLocalOnly={dismissMigrationModal}
+      isMigrating={isMigrating}
+    />
+  );
 }
 
 function AppContent() {
@@ -112,6 +134,7 @@ export function App() {
                 <AIUpgradePromptModal />
                 <GitHubImportModal />
                 <OpportunityXImportModal />
+                <ResumeMigrationModalWrapper />
               </MobileNavigationProvider>
             </Router>
           </ResumeProvider>
