@@ -93,22 +93,19 @@ export const Navbar = () => {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`relative flex flex-col items-center justify-center px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs font-medium transition-all duration-200 ${
-                  isActive ? 'text-[var(--ox-text-primary)] font-semibold' : 'text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)]'
+                className={`relative flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors duration-200 z-10 ${
+                  isActive ? 'text-[#F97316] font-bold' : 'text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)]'
                 }`}
               >
-                <div className="flex items-center gap-1.5 relative z-10">
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#F97316]' : 'text-slate-400'}`} />
-                  <span className="whitespace-nowrap">{item.label}</span>
-                </div>
-
                 {isActive && (
                   <motion.div
-                    layoutId="activeDot"
-                    className="w-1.5 h-1.5 rounded-full bg-[#F97316] shadow-[0_0_8px_#F97316] mt-1"
+                    layoutId="desktopNavActive"
+                    className="absolute inset-0 bg-[#F97316]/15 border border-[#F97316]/30 rounded-xl shadow-[0_0_12px_rgba(249,115,22,0.12)] pointer-events-none z-[-1]"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
+                <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-[#F97316]' : 'text-slate-400'}`} />
+                <span className="whitespace-nowrap">{item.label}</span>
               </Link>
             );
           })}
