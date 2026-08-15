@@ -96,7 +96,7 @@ export const hydrateAndNormalizeResume = (resume) => {
 
           const finalIsCurrent = isCurrentMentioned || eDate === 'Present' || /present|current/i.test(eDate);
           itemCopy.startDate = sDate;
-          itemCopy.endDate = finalIsCurrent ? '' : (eDate === 'Present' ? '' : eDate);
+          itemCopy.endDate = finalIsCurrent ? (eDate && !/present|current/i.test(eDate) ? eDate : 'Present') : eDate;
           itemCopy.current = finalIsCurrent;
           itemCopy.isCurrent = finalIsCurrent;
 
