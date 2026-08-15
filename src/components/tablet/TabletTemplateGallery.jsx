@@ -16,7 +16,6 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const currentTemplate = activeResume?.metadata?.template || 'modern';
-  const currentAccent = activeResume?.metadata?.accentColor || '#F97316';
 
   const handleUseTemplate = (templateId) => {
     setTemplate(templateId);
@@ -39,54 +38,55 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
 
   const isLandscape = orientation === 'landscape';
   const gridClass = isLandscape
-    ? 'grid grid-cols-2 min-[900px]:grid-cols-3 gap-4'
+    ? 'grid grid-cols-2 min-[900px]:grid-cols-3 gap-4 sm:gap-5'
     : 'grid grid-cols-2 gap-4';
 
   return (
     <div className="w-full min-h-dvh bg-[var(--ox-bg)] text-[var(--ox-text-primary)] font-sans flex flex-col transition-colors duration-300">
-      {/* Exact One Top Navigation */}
+      {/* ─── Dedicated Tablet Top Navigation ─── */}
       <TabletTopBar />
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-5 py-6 space-y-6 overflow-y-auto custom-scrollbar">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 md:px-8 py-6 space-y-6 overflow-y-auto custom-scrollbar">
 
         {/* Header Banner */}
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-semibold border border-orange-500/30">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-bold border border-orange-500/30">
             <Grid className="w-3.5 h-3.5" /> OpportunityX Template Gallery
           </div>
-          <h1 className="text-2xl font-black text-[var(--ox-text-primary)]">Resume Templates for Tablet</h1>
-          <p className="text-xs text-[var(--ox-text-secondary)]">
+          <h1 className="text-2xl sm:text-3xl font-black text-[var(--ox-text-primary)]">Resume Templates for Tablet</h1>
+          <p className="text-xs sm:text-sm text-[var(--ox-text-secondary)]">
             Switch presentation layout instantly without losing your resume data.
           </p>
         </div>
 
         {/* Search & Category Chips */}
-        <div className="space-y-3 pb-4 border-b border-[var(--ox-border)]">
+        <div className="space-y-3.5 pb-4 border-b border-[var(--ox-border)]">
           {/* Row 1: Search Box & Filter Count */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="relative w-full sm:w-72">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-[var(--ox-text-secondary)] absolute left-3.5 top-3" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search template..."
-                className="w-full bg-[#080B12] border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                placeholder="Search template name or tags..."
+                className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl pl-9 pr-3.5 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
               />
             </div>
-            <div className="text-xs text-slate-400 font-medium">
-              Showing <span className="font-bold text-white">{totalFilteredCount}</span> templates
+            <div className="text-xs text-[var(--ox-text-secondary)] font-medium">
+              Showing <span className="font-bold text-[var(--ox-text-primary)]">{totalFilteredCount}</span> templates
             </div>
           </div>
 
           {/* Row 2: Wrap-Enabled Category Chips */}
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs font-semibold">
             <button
+              type="button"
               onClick={() => setSelectedCategory('all')}
-              className={`px-3 py-1.5 rounded-xl border font-bold transition-all cursor-pointer ${
+              className={`min-h-[40px] px-3.5 py-1.5 rounded-xl border font-bold transition-all cursor-pointer ${
                 selectedCategory === 'all'
                   ? 'bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-sm'
-                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                  : 'bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] border-[var(--ox-border)] hover:text-[var(--ox-text-primary)]'
               }`}
             >
               All Templates
@@ -94,11 +94,12 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
             {TEMPLATE_CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-xl border font-bold transition-all cursor-pointer ${
+                className={`min-h-[40px] px-3.5 py-1.5 rounded-xl border font-bold transition-all cursor-pointer ${
                   selectedCategory === cat.id
                     ? 'bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-sm'
-                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                    : 'bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] border-[var(--ox-border)] hover:text-[var(--ox-text-primary)]'
                 }`}
               >
                 {cat.shortName || cat.categoryName}
@@ -114,8 +115,8 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
             if (visibleTemplates.length === 0) return null;
 
             return (
-              <div key={cat.id} className="space-y-3">
-                <h2 className="text-sm font-extrabold text-[var(--ox-text-primary)] flex items-center gap-2 pb-1 border-b border-slate-800/80">
+              <div key={cat.id} className="space-y-3.5">
+                <h2 className="text-sm font-extrabold text-[var(--ox-text-primary)] flex items-center gap-2 pb-1.5 border-b border-[var(--ox-border)]">
                   <Layers className="w-4 h-4 text-orange-400" /> {cat.categoryName} ({visibleTemplates.length})
                 </h2>
 
@@ -127,15 +128,15 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
                     return (
                       <div
                         key={t.id}
-                        className={`p-4 rounded-2xl bg-[var(--ox-surface-secondary)] border space-y-3 flex flex-col justify-between transition-all ${
-                          isCurrent ? 'border-orange-500/60 shadow-md' : 'border-[var(--ox-border)] hover:border-orange-500/40'
+                        className={`p-4 sm:p-5 rounded-2xl bg-[var(--ox-surface-secondary)] border space-y-3.5 flex flex-col justify-between transition-all shadow-md ${
+                          isCurrent ? 'border-orange-500/60 shadow-orange-500/10' : 'border-[var(--ox-border)] hover:border-orange-500/40'
                         }`}
                       >
-                        <div className="space-y-2.5">
+                        <div className="space-y-3">
                           {/* Thumbnail */}
-                          <div className="h-36 rounded-xl bg-slate-950 border border-slate-800 p-2 relative overflow-hidden flex flex-col justify-between">
+                          <div className="h-40 rounded-xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] p-2 relative overflow-hidden flex flex-col justify-between">
                             <div className="flex items-center justify-between z-10">
-                              <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-slate-900 text-white border border-slate-800 flex items-center gap-1">
+                              <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[var(--ox-surface-secondary)] text-[var(--ox-text-primary)] border border-[var(--ox-border)] flex items-center gap-1 shadow-sm">
                                 {caps.atsFriendly ? <ShieldCheck className="w-3 h-3 text-emerald-400" /> : <Sparkles className="w-3 h-3 text-amber-400" />}
                                 {caps.atsFriendly ? 'ATS Friendly' : 'Creative'}
                               </span>
@@ -155,15 +156,17 @@ export const TabletTemplateGallery = ({ orientation = 'portrait' }) => {
                           </div>
                         </div>
 
-                        <div className="pt-2 border-t border-[var(--ox-border)] flex items-center justify-between">
-                          <span className="text-[10px] font-semibold text-slate-400">
+                        <div className="pt-3 border-t border-[var(--ox-border)] flex items-center justify-between">
+                          <span className="text-[10px] font-semibold text-[var(--ox-text-secondary)]">
                             {caps.supportsPhoto ? '📷 Photo' : '📄 Text Only'}
                           </span>
                           <button
+                            type="button"
                             onClick={() => handleUseTemplate(t.id)}
-                            className="px-3.5 py-2 text-xs font-bold text-black bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                            className="min-h-[44px] px-3.5 sm:px-4 py-2 text-xs font-bold text-black bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                           >
-                            Use Template <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                            <span>Use Template</span>
+                            <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                           </button>
                         </div>
                       </div>
