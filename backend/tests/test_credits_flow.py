@@ -84,17 +84,17 @@ class TestCreditFlow(unittest.TestCase):
         self.assertTrue(all(t["completed"] for t in overview["social_tasks"]))
 
     def test_e_generate_referral_code_format(self):
-        """TEST E: Generate referral code -> Exactly 6 uppercase A-Z characters"""
+        """TEST E: Generate referral code -> Exactly 6 uppercase alphanumeric characters"""
         for _ in range(20):
             code = generate_referral_code(6)
             self.assertEqual(len(code), 6)
-            self.assertTrue(code.isalpha())
+            self.assertTrue(code.isalnum())
             self.assertTrue(code.isupper())
 
         user_id = "user-ref-code-test"
         profile = self.repo.get_or_create_referral_profile(user_id)
         self.assertEqual(len(profile.referral_code), 6)
-        self.assertTrue(profile.referral_code.isalpha())
+        self.assertTrue(profile.referral_code.isalnum())
         self.assertTrue(profile.referral_code.isupper())
 
         # Test persistence across subsequent calls

@@ -12,12 +12,12 @@ const STORAGE_KEY = 'ox_pending_referral_code';
 export const CANONICAL_PROD_URL = 'https://resume.opportunityx.co.in';
 
 /**
- * Validates a referral code format: exactly 6 uppercase letters (A-Z).
+ * Validates a referral code format: exactly 6 uppercase alphanumeric characters (A-Z, 0-9).
  */
 export function isValidReferralCode(code) {
   if (!code || typeof code !== 'string') return false;
   const clean = code.trim().toUpperCase();
-  return clean.length === 6 && /^[A-Z]{6}$/.test(clean);
+  return clean.length === 6 && /^[A-Z0-9]{6}$/.test(clean);
 }
 
 /**
@@ -25,7 +25,7 @@ export function isValidReferralCode(code) {
  */
 export function normalizeReferralCode(code) {
   if (!code || typeof code !== 'string') return '';
-  return code.trim().toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6);
+  return code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
 }
 
 /**

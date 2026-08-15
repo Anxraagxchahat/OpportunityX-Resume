@@ -103,8 +103,9 @@ async def global_exception_handler(request: Request, exc: Exception):
         headers=headers
     )
 
-# 4. Include Central Router
+# 4. Include Central Router (Both /api and /api/v1 to prevent 404 on any client)
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router, prefix="/api")
 
 @app.get("/health")
 async def health_check_root():

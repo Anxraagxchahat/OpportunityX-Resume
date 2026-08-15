@@ -51,10 +51,10 @@ REWARDABLE_SOCIAL_TASKS = [
 
 def generate_referral_code(length: int = 6) -> str:
     """
-    Generate exactly 6 uppercase letters (A-Z only, no numbers).
+    Generate exactly 6 uppercase alphanumeric characters (A-Z, 0-9).
     """
-    letters = string.ascii_uppercase
-    return ''.join(secrets.choice(letters) for _ in range(length))
+    chars = string.ascii_uppercase + string.digits
+    return ''.join(secrets.choice(chars) for _ in range(length))
 
 class CreditRepository:
     def __init__(self, db: Session):
@@ -231,8 +231,8 @@ class CreditRepository:
 
     def redeem_referral_code(self, user_id: str, code: str) -> tuple[AICreditWallet, int, str]:
         clean_code = (code or "").strip().upper()
-        if len(clean_code) != 6 or not clean_code.isalpha():
-            raise HTTPException(status_code=400, detail="Referral code must be exactly 6 uppercase letters (A-Z).")
+        if len(clean_code) != 6 or not clean_code.isalnum():
+            raise HTTPException(status_code=400, detail="Referral code must be exactly 6 uppercase alphanumeric characters (A-Z, 0-9).")
 
         user_profile = self.get_or_create_referral_profile(user_id)
         if user_profile.redeemed_referral_code:

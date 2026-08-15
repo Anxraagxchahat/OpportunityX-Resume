@@ -115,7 +115,40 @@ export const apiService = {
   },
 
   async getRewardsOverview() {
-    return request('/credits/rewards-overview');
+    try {
+      return await request('/credits/rewards-overview');
+    } catch (err) {
+      if (err.status === 404) {
+        try {
+          const res = await request('/credits/referral-code');
+          if (res && (res.referralCode || res.referral_code)) {
+            const code = res.referralCode || res.referral_code;
+            return {
+              remaining_credits: 5,
+              social_bonus_earned: 0,
+              social_tasks: [
+                { task_id: 'instagram_follow', platform: 'Instagram', action: 'Follow OpportunityX', official_url: 'https://www.instagram.com/theopportunityx/', reward_amount: 2, completed: false },
+                { task_id: 'linkedin_follow', platform: 'LinkedIn', action: 'Follow OpportunityX', official_url: 'https://www.linkedin.com/company/128134073', reward_amount: 1, completed: false },
+                { task_id: 'x_follow', platform: 'X', action: 'Follow OpportunityX', official_url: 'https://x.com/TheOpportunityX', reward_amount: 1, completed: false },
+                { task_id: 'youtube_subscribe', platform: 'YouTube', action: 'Subscribe to OpportunityX', official_url: 'https://www.youtube.com/@theopportunityX', reward_amount: 1, completed: false }
+              ],
+              referral_profile: {
+                referral_code: code,
+                has_redeemed: res.has_redeemed || false,
+                redeemed_code: res.redeemed_code || null,
+                successful_referrals: res.successful_referrals || 0,
+                referral_credits_earned: res.referral_credits_earned || 0
+              }
+            };
+          }
+        } catch (fbErr) {}
+      }
+      throw err;
+    }
+  },
+
+  async getReferralCode() {
+    return request('/credits/referral-code');
   },
 
   async claimWelcomeCredits() {

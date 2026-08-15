@@ -48,6 +48,28 @@ async def get_rewards_overview(
     repo = CreditRepository(db)
     return repo.get_rewards_overview(user.uid)
 
+@router.get("/referral-code")
+async def get_user_referral_code(
+    user: AuthenticatedUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    UserRepository(db).sync_user(
+        uid=user.uid,
+        email=user.email or f"{user.uid}@opportunityx.co.in",
+        display_name=user.name,
+        photo_url=user.photo_url
+    )
+    repo = CreditRepository(db)
+    profile = repo.get_or_create_referral_profile(user.uid)
+    return {
+        "referralCode": profile.referral_code,
+        "referral_code": profile.referral_code,
+        "successful_referrals": profile.successful_referrals_count,
+        "referral_credits_earned": profile.referral_credits_earned,
+        "has_redeemed": bool(profile.redeemed_referral_code),
+        "redeemed_code": profile.redeemed_referral_code
+    }
+
 @router.get("/transactions", response_model=List[CreditTransactionResponse])
 async def get_credit_transactions(
     user: AuthenticatedUser = Depends(get_current_user),
