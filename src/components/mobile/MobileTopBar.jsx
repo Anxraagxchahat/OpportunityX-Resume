@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Menu, Sparkles, User, Edit3, Check, ShieldCheck, Sun, Moon } from 'lucide-react';
 import { useResume } from '../../context/ResumeContext';
 import { useMobileNavigation } from '../../context/MobileNavigationContext';
@@ -57,8 +58,8 @@ export const MobileTopBar = () => {
             <Menu className="w-5 h-5 text-orange-500" />
           </button>
 
-          {/* Brand: Logo + Text */}
-          <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+          {/* Brand: Logo + Text — Navigates Home */}
+          <Link to="/" className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden" style={{ minHeight: 44 }}>
             <img
               src="/favicon.png"
               alt="OpportunityX Logo"
@@ -73,7 +74,7 @@ export const MobileTopBar = () => {
                 RESUME
               </span>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* RIGHT: Theme + Credits + Account — Never wraps, never shrinks */}
