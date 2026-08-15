@@ -29,7 +29,7 @@ export const FullStackTemplate = ({ resumeData, accentHex, fontFamily }) => {
             <div key={exp.id} className="space-y-1">
               <div className="flex justify-between font-bold text-slate-900">
                 <span>{exp.role} @ {exp.company}</span>
-                <span className="font-normal text-slate-500">{exp.startDate} – {exp.endDate}</span>
+                <span className="font-normal text-slate-500">{exp.startDate ? `${exp.startDate} – ` : ''}{exp.endDate || (exp.current || exp.isCurrent ? 'Present' : '')}</span>
               </div>
               {exp.bullets && (
                 <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
