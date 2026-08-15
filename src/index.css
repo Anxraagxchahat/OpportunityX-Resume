@@ -428,17 +428,40 @@ p, li, ul, ol, blockquote, span {
   /* Modal Content Sizing */
   div[role="dialog"] > div,
   .tablet-modal-container {
-    max-width: 768px !important;
-    width: 90vw !important;
+    max-width: 720px !important;
+    width: 92vw !important;
     max-height: 88vh !important;
     border-radius: 1.25rem !important;
     overflow-y: auto !important;
   }
 
-  /* Tablet Touch Target Enforcement */
-  button, input, select, a, [role="button"] {
-    min-height: 44px;
+  /* Tablet Touch Target Enforcement for Interactive Elements */
+  .touch-target,
+  button:not(.no-touch-enforce),
+  a:not(.no-touch-enforce),
+  input:not([type="checkbox"]):not([type="radio"]),
+  select {
     touch-action: manipulation;
   }
+
+  /* Tablet Responsive Spacing Helpers */
+  .tablet-page-container {
+    padding-left: clamp(1.25rem, 3vw, 2rem) !important;
+    padding-right: clamp(1.25rem, 3vw, 2rem) !important;
+  }
+}
+
+/* Tablet Glass Surface & Animation Utilities */
+.tablet-glass-nav {
+  background: var(--ox-surface-secondary);
+  border: 1px solid var(--ox-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.tablet-active-pill {
+  background: rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.12);
 }
 
