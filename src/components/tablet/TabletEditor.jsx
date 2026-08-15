@@ -53,7 +53,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
   const hiddenSections = metadata.hiddenSections || [];
 
   // Two-column layout grid class helper for landscape
-  const formGridClass = isLandscape ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-1 gap-4';
+  const formGridClass = isLandscape ? 'grid grid-cols-2 gap-3.5 sm:gap-4' : 'grid grid-cols-1 gap-3.5 sm:gap-4';
 
   // ================= EXPERIENCE HANDLERS =================
   const addExperienceItem = () => {
@@ -127,13 +127,11 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
   const addEducationItem = () => {
     const newItem = {
       id: `edu-${Date.now()}`,
-      institution: '',
       degree: '',
+      institution: '',
       location: '',
       startDate: '',
-      endDate: '2025',
-      gpa: '',
-      description: ''
+      endDate: ''
     };
     updateEducation([...education, newItem]);
   };
@@ -167,11 +165,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
   const updateProjectField = (id, targetIdx, field, value) =>
     updateProjects(
       projects.map((p, idx) =>
-        (p.id && id ? p.id === id : idx === targetIdx)
-          ? field === 'techStack'
-            ? { ...p, techStack: value, technologies: typeof value === 'string' ? value.split(',').map(s => s.trim()).filter(Boolean) : value }
-            : { ...p, [field]: value }
-          : p
+        (p.id && id ? p.id === id : idx === targetIdx) ? { ...p, [field]: value } : p
       )
     );
 
@@ -219,7 +213,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
     updateCustomSections(customSections.filter((cs, idx) => (cs.id && id ? cs.id !== id : idx !== targetIdx)));
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-6 custom-scrollbar bg-[var(--ox-surface-primary)] text-[var(--ox-text-primary)] transition-colors duration-300">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 space-y-6 custom-scrollbar bg-[var(--ox-surface-primary)] text-[var(--ox-text-primary)] transition-colors duration-300">
       <div className="max-w-3xl mx-auto w-full space-y-6">
 
         {/* 1. PERSONAL INFORMATION */}
@@ -251,7 +245,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                   value={personal.fullName || ''}
                   onChange={(e) => updatePersonal('fullName', e.target.value)}
                   placeholder="e.g. Alex Rivera"
-                  className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
+                  className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
                 />
               </div>
 
@@ -262,7 +256,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                   value={personal.jobTitle || ''}
                   onChange={(e) => updatePersonal('jobTitle', e.target.value)}
                   placeholder="e.g. Senior Full Stack Engineer"
-                  className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
+                  className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
                 />
               </div>
 
@@ -273,7 +267,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                   value={personal.email || ''}
                   onChange={(e) => updatePersonal('email', e.target.value)}
                   placeholder="e.g. alex.rivera@opportunityx.dev"
-                  className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
+                  className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
                 />
               </div>
 
@@ -284,7 +278,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                   value={personal.phone || ''}
                   onChange={(e) => updatePersonal('phone', e.target.value)}
                   placeholder="e.g. +1 (555) 234-5678"
-                  className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
+                  className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
                 />
               </div>
 
@@ -295,7 +289,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                   value={personal.location || ''}
                   onChange={(e) => updatePersonal('location', e.target.value)}
                   placeholder="e.g. San Francisco, CA / Remote"
-                  className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-white focus:border-orange-500 focus:outline-none"
+                  className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -312,7 +306,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
             </div>
             <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs font-semibold text-[var(--ox-text-secondary)]">
-                <span>Summary Text</span>
+                <span>Professional Summary</span>
                 <span className="text-[10px] opacity-60">{(personal.summary || '').length} chars</span>
               </div>
               <textarea
@@ -320,7 +314,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                 value={personal.summary || ''}
                 onChange={(e) => updatePersonal('summary', e.target.value)}
                 placeholder="e.g. Versatile Full Stack Software Engineer with 5+ years of experience engineering high-throughput SaaS applications..."
-                className="w-full bg-[#10131D] border border-slate-800 rounded-xl p-3.5 text-xs font-medium text-white focus:border-orange-500 focus:outline-none leading-relaxed"
+                className="w-full bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl p-3.5 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none leading-relaxed"
               />
             </div>
           </div>
@@ -348,7 +342,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                 const isCollapsed = collapsedItems[itemKey];
 
                 return (
-                  <div key={itemKey} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3 shadow-md">
+                  <div key={itemKey} className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3 shadow-md">
                     {/* Horizontal Card Header */}
                     <div className="flex items-center justify-between gap-2">
                       <button
@@ -356,7 +350,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                         onClick={() => toggleItemCollapse(itemKey)}
                         className="flex items-center gap-2 text-xs font-bold text-orange-400 text-left hover:underline min-h-[44px] min-w-[44px]"
                       >
-                        {isCollapsed ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
+                        {isCollapsed ? <ChevronDown className="w-4 h-4 text-[var(--ox-text-secondary)]" /> : <ChevronUp className="w-4 h-4 text-[var(--ox-text-secondary)]" />}
                         <span>{exp.role || `Position #${idx + 1}`} {exp.company ? `@ ${exp.company}` : ''}</span>
                       </button>
 
@@ -365,7 +359,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                           type="button"
                           onClick={() => moveExperience(idx, -1)}
                           disabled={idx === 0}
-                          className="min-h-[44px] min-w-[44px] p-2 text-slate-400 hover:text-white disabled:opacity-20 flex items-center justify-center cursor-pointer"
+                          className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] disabled:opacity-20 flex items-center justify-center cursor-pointer"
                           title="Move Up"
                         >
                           <MoveUp className="w-4 h-4" />
@@ -374,7 +368,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                           type="button"
                           onClick={() => moveExperience(idx, 1)}
                           disabled={idx === experience.length - 1}
-                          className="min-h-[44px] min-w-[44px] p-2 text-slate-400 hover:text-white disabled:opacity-20 flex items-center justify-center cursor-pointer"
+                          className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] disabled:opacity-20 flex items-center justify-center cursor-pointer"
                           title="Move Down"
                         >
                           <MoveDown className="w-4 h-4" />
@@ -382,7 +376,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                         <button
                           type="button"
                           onClick={() => removeExperienceItem(exp.id, idx)}
-                          className="min-h-[44px] min-w-[44px] p-2 text-slate-500 hover:text-red-400 flex items-center justify-center cursor-pointer ml-1"
+                          className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-red-400 flex items-center justify-center cursor-pointer ml-1"
                           title="Delete Role"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -398,48 +392,53 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                             value={exp.role || exp.title || ''}
                             onChange={(e) => updateExperienceField(exp.id, idx, 'role', e.target.value)}
                             placeholder="Role / Title"
-                            className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                            className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                           />
                           <input
                             type="text"
                             value={exp.company || ''}
                             onChange={(e) => updateExperienceField(exp.id, idx, 'company', e.target.value)}
                             placeholder="Company Name"
-                            className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                            className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                           />
                           <input
                             type="text"
                             value={exp.startDate || ''}
                             onChange={(e) => updateExperienceField(exp.id, idx, 'startDate', e.target.value)}
                             placeholder="Start Date (e.g. Jan 2022)"
-                            className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                            className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                           />
                           <input
                             type="text"
-                            disabled={Boolean(exp.current || exp.isCurrent)}
-                            value={Boolean(exp.current || exp.isCurrent) ? 'Present' : exp.endDate || ''}
+                            value={exp.endDate ?? (Boolean(exp.current || exp.isCurrent) ? 'Present' : '')}
                             onChange={(e) => {
                               const val = e.target.value;
+                              const isNowPresent = /^(present|current|now|till date|ongoing)$/i.test(val.trim());
                               updateExperience(
                                 experience.map((item, i) => {
                                   if ((item.id && exp.id && item.id === exp.id) || i === idx) {
-                                    return { ...item, endDate: val, current: false, isCurrent: false };
+                                    return {
+                                      ...item,
+                                      endDate: val,
+                                      current: isNowPresent,
+                                      isCurrent: isNowPresent
+                                    };
                                   }
                                   return item;
                                 })
                               );
                             }}
-                            placeholder={Boolean(exp.current || exp.isCurrent) ? 'Present' : 'End Date (e.g. Dec 2024)'}
-                            className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white disabled:opacity-60"
+                            placeholder="End Date (e.g. Dec 2024 or Present)"
+                            className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] placeholder:text-[var(--ox-text-secondary)] focus:outline-none focus:border-orange-500"
                           />
                         </div>
 
                         {/* Present Toggle Checkbox */}
                         <div className="flex items-center gap-2 pt-1">
-                          <label className="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer select-none">
+                          <label className="flex items-center gap-2 text-xs font-semibold text-[var(--ox-text-primary)] cursor-pointer select-none">
                             <input
                               type="checkbox"
-                              checked={Boolean(exp.current || exp.isCurrent)}
+                              checked={Boolean(exp.current || exp.isCurrent || (typeof exp.endDate === 'string' && /^(present|current|now|till date|ongoing)$/i.test(exp.endDate.trim())))}
                               onChange={(e) => {
                                 const isChecked = e.target.checked;
                                 updateExperience(
@@ -449,22 +448,22 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                                         ...item,
                                         current: isChecked,
                                         isCurrent: isChecked,
-                                        endDate: isChecked ? '' : item.endDate
+                                        endDate: isChecked ? 'Present' : (item.endDate && !/^(present|current|now|till date|ongoing)$/i.test(item.endDate.trim()) ? item.endDate : '')
                                       };
                                     }
                                     return item;
                                   })
                                 );
                               }}
-                              className="w-4 h-4 rounded border-slate-800 text-orange-500 focus:ring-orange-500 accent-orange-500 cursor-pointer"
+                              className="w-4 h-4 rounded border-[var(--ox-border)] text-orange-500 focus:ring-orange-500 accent-orange-500 cursor-pointer"
                             />
                             <span>Currently working in this role</span>
                           </label>
                         </div>
 
                         {/* Bullets */}
-                        <div className="space-y-2 pt-2 border-t border-slate-800/80">
-                          <label className="text-[11px] font-bold text-slate-300">Bullet Points</label>
+                        <div className="space-y-2 pt-2 border-t border-[var(--ox-border)]">
+                          <label className="text-[11px] font-bold text-[var(--ox-text-secondary)]">Bullet Points</label>
                           {(exp.bullets || []).map((bullet, bIdx) => (
                             <div key={bIdx} className="flex items-center gap-2">
                               <input
@@ -472,12 +471,12 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                                 value={bullet}
                                 onChange={(e) => updateBulletPoint(exp.id, idx, bIdx, e.target.value)}
                                 placeholder="Describe key achievement or responsibility..."
-                                className="flex-1 min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                                className="flex-1 min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                               />
                               <button
                                 type="button"
                                 onClick={() => removeBulletPoint(exp.id, idx, bIdx)}
-                                className="min-h-[44px] min-w-[44px] p-2 text-slate-500 hover:text-red-400 flex items-center justify-center"
+                                className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-red-400 flex items-center justify-center cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -486,7 +485,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                           <button
                             type="button"
                             onClick={() => addBulletPoint(exp.id, idx)}
-                            className="text-xs font-semibold text-orange-400 hover:underline flex items-center gap-1 min-h-[44px] pt-1"
+                            className="text-xs font-semibold text-orange-400 hover:underline flex items-center gap-1 min-h-[44px] pt-1 cursor-pointer"
                           >
                             <Plus className="w-3.5 h-3.5" /> Add Bullet Point
                           </button>
@@ -518,7 +517,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
 
             <div className="space-y-3">
               {education.map((edu, idx) => (
-                <div key={edu.id || idx} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3 shadow-md">
+                <div key={edu.id || idx} className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3 shadow-md">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-orange-400">
                       {edu.degree || `Education #${idx + 1}`} {edu.institution ? `@ ${edu.institution}` : ''}
@@ -526,7 +525,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                     <button
                       type="button"
                       onClick={() => removeEducationItem(edu.id, idx)}
-                      className="min-h-[44px] min-w-[44px] p-2 text-slate-500 hover:text-red-400 flex items-center justify-center cursor-pointer"
+                      className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-red-400 flex items-center justify-center cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -538,28 +537,28 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                       value={edu.degree || ''}
                       onChange={(e) => updateEducationField(edu.id, idx, 'degree', e.target.value)}
                       placeholder="Degree (e.g. B.S. Computer Science)"
-                      className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                      className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                     />
                     <input
                       type="text"
                       value={edu.institution || ''}
                       onChange={(e) => updateEducationField(edu.id, idx, 'institution', e.target.value)}
                       placeholder="Institution / University"
-                      className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                      className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                     />
                     <input
                       type="text"
                       value={edu.startDate || ''}
                       onChange={(e) => updateEducationField(edu.id, idx, 'startDate', e.target.value)}
                       placeholder="Start Year (e.g. 2020)"
-                      className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                      className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                     />
                     <input
                       type="text"
                       value={edu.endDate || ''}
                       onChange={(e) => updateEducationField(edu.id, idx, 'endDate', e.target.value)}
                       placeholder="End Year (e.g. 2024)"
-                      className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                      className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                     />
                   </div>
                 </div>
@@ -586,13 +585,13 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
 
             <div className="space-y-3">
               {projects.map((proj, idx) => (
-                <div key={proj.id || idx} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3 shadow-md">
+                <div key={proj.id || idx} className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3 shadow-md">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-orange-400">{proj.name || `Project #${idx + 1}`}</span>
                     <button
                       type="button"
                       onClick={() => removeProjectItem(proj.id, idx)}
-                      className="min-h-[44px] min-w-[44px] p-2 text-slate-500 hover:text-red-400 flex items-center justify-center cursor-pointer"
+                      className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-red-400 flex items-center justify-center cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -604,14 +603,14 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                       value={proj.name || ''}
                       onChange={(e) => updateProjectField(proj.id, idx, 'name', e.target.value)}
                       placeholder="Project Name"
-                      className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                      className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                     />
                     <input
                       type="text"
                       value={proj.techStack || ''}
                       onChange={(e) => updateProjectField(proj.id, idx, 'techStack', e.target.value)}
                       placeholder="Technologies (e.g. React, Node.js, PostgreSQL)"
-                      className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
+                      className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                     />
                   </div>
                   <textarea
@@ -619,7 +618,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                     value={proj.description || ''}
                     onChange={(e) => updateProjectField(proj.id, idx, 'description', e.target.value)}
                     placeholder="Project overview and impact..."
-                    className="w-full bg-[#080B12] border border-slate-800 rounded-lg p-3 text-xs text-white"
+                    className="w-full bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg p-3 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                   />
                 </div>
               ))}
@@ -637,17 +636,17 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
             </div>
 
             {/* Category selection & Input */}
-            <div className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3">
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <div className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
                 {['frameworks', 'languages', 'tools', 'databases'].map((cat) => (
                   <button
                     key={cat}
                     type="button"
                     onClick={() => setActiveSkillCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all min-h-[44px] ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all min-h-[44px] cursor-pointer ${
                       activeSkillCategory === cat
-                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
-                        : 'bg-slate-900 text-slate-400 border border-slate-800'
+                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40 shadow-sm'
+                        : 'bg-[var(--ox-surface-primary)] text-[var(--ox-text-secondary)] border border-[var(--ox-border)] hover:text-[var(--ox-text-primary)]'
                     }`}
                   >
                     {cat}
@@ -667,12 +666,12 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
                     }
                   }}
                   placeholder={`Add a skill under ${activeSkillCategory}...`}
-                  className="flex-1 min-h-[44px] bg-[#080B12] border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-orange-500 focus:outline-none"
+                  className="flex-1 min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => addSkillChip(activeSkillCategory, newSkillInput)}
-                  className="min-h-[44px] px-4 bg-orange-500 text-black font-bold text-xs rounded-xl hover:bg-orange-400 transition-colors"
+                  className="min-h-[44px] px-4 bg-orange-500 text-black font-bold text-xs rounded-xl hover:bg-orange-400 transition-colors cursor-pointer"
                 >
                   Add
                 </button>
@@ -686,20 +685,20 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
 
               return (
                 <div key={cat} className="space-y-2">
-                  <div className="text-xs font-bold uppercase tracking-wider text-slate-400 capitalize">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[var(--ox-text-secondary)] capitalize">
                     {cat} ({chipList.length})
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {chipList.map((skillName) => (
                       <span
                         key={skillName}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-white group"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-xs font-semibold text-[var(--ox-text-primary)] group shadow-sm"
                       >
                         <span>{skillName}</span>
                         <button
                           type="button"
                           onClick={() => removeSkillChip(cat, skillName)}
-                          className="text-slate-500 hover:text-red-400 ml-1"
+                          className="text-[var(--ox-text-secondary)] hover:text-red-400 ml-1 cursor-pointer font-bold"
                         >
                           ×
                         </button>
@@ -712,7 +711,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
           </div>
         )}
 
-        {/* 7. CERTIFICATES, ACHIEVEMENTS, LANGUAGES, SOCIAL LINKS, CUSTOM */}
+        {/* 7. CERTIFICATES */}
         {activeSection === 'certificates' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)]">
@@ -722,7 +721,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
               <button
                 type="button"
                 onClick={addCertificateItem}
-                className="px-3.5 min-h-[44px] text-xs font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl flex items-center gap-1.5"
+                className="px-3.5 min-h-[44px] text-xs font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> Add Certificate
               </button>
@@ -730,16 +729,16 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
 
             <div className="space-y-3">
               {certificates.map((cert, idx) => (
-                <div key={cert.id || idx} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3 shadow-md">
+                <div key={cert.id || idx} className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3 shadow-md">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-orange-400">{cert.name || `Certificate #${idx + 1}`}</span>
-                    <button type="button" onClick={() => removeCertificateItem(cert.id, idx)} className="min-h-[44px] min-w-[44px] p-2 text-slate-500 hover:text-red-400 flex items-center justify-center">
+                    <button type="button" onClick={() => removeCertificateItem(cert.id, idx)} className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-red-400 flex items-center justify-center cursor-pointer">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                   <div className={formGridClass}>
-                    <input type="text" value={cert.name || ''} onChange={(e) => updateCertificates(certificates.map((c, i) => i === idx ? { ...c, name: e.target.value } : c))} placeholder="Certificate Name" className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white" />
-                    <input type="text" value={cert.issuer || ''} onChange={(e) => updateCertificates(certificates.map((c, i) => i === idx ? { ...c, issuer: e.target.value } : c))} placeholder="Issuing Organization" className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white" />
+                    <input type="text" value={cert.name || ''} onChange={(e) => updateCertificates(certificates.map((c, i) => i === idx ? { ...c, name: e.target.value } : c))} placeholder="Certificate Name" className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500" />
+                    <input type="text" value={cert.issuer || ''} onChange={(e) => updateCertificates(certificates.map((c, i) => i === idx ? { ...c, issuer: e.target.value } : c))} placeholder="Issuing Organization" className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500" />
                   </div>
                 </div>
               ))}
@@ -747,56 +746,58 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
           </div>
         )}
 
+        {/* 8. ACHIEVEMENTS */}
         {activeSection === 'achievements' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)]">
               <h2 className="text-base font-bold text-[var(--ox-text-primary)] flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-orange-400" /> Key Achievements ({achievements.length})
               </h2>
-              <button type="button" onClick={addAchievementItem} className="px-3.5 min-h-[44px] text-xs font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl flex items-center gap-1.5">
+              <button type="button" onClick={addAchievementItem} className="px-3.5 min-h-[44px] text-xs font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl flex items-center gap-1.5 cursor-pointer">
                 <Plus className="w-4 h-4" /> Add Achievement
               </button>
             </div>
 
             <div className="space-y-3">
               {achievements.map((ach, idx) => (
-                <div key={ach.id || idx} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3 shadow-md">
+                <div key={ach.id || idx} className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3 shadow-md">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-orange-400">{ach.title || `Achievement #${idx + 1}`}</span>
-                    <button type="button" onClick={() => removeAchievementItem(ach.id, idx)} className="min-h-[44px] min-w-[44px] p-2 text-slate-500 hover:text-red-400 flex items-center justify-center">
+                    <button type="button" onClick={() => removeAchievementItem(ach.id, idx)} className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-red-400 flex items-center justify-center cursor-pointer">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  <input type="text" value={ach.title || ''} onChange={(e) => updateAchievements(achievements.map((a, i) => i === idx ? { ...a, title: e.target.value } : a))} placeholder="Achievement Title" className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white" />
+                  <input type="text" value={ach.title || ''} onChange={(e) => updateAchievements(achievements.map((a, i) => i === idx ? { ...a, title: e.target.value } : a))} placeholder="Achievement Title" className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500" />
                 </div>
               ))}
             </div>
           </div>
         )}
 
+        {/* 9. LANGUAGES */}
         {activeSection === 'languages' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)]">
               <h2 className="text-base font-bold text-[var(--ox-text-primary)] flex items-center gap-2">
                 <Languages className="w-4 h-4 text-orange-400" /> Languages ({languages.length})
               </h2>
-              <button type="button" onClick={addLanguageItem} className="px-3.5 min-h-[44px] text-xs font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl flex items-center gap-1.5">
+              <button type="button" onClick={addLanguageItem} className="px-3.5 min-h-[44px] text-xs font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl flex items-center gap-1.5 cursor-pointer">
                 <Plus className="w-4 h-4" /> Add Language
               </button>
             </div>
 
             <div className="space-y-3">
               {languages.map((lang, idx) => (
-                <div key={lang.id || idx} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3 shadow-md">
+                <div key={lang.id || idx} className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3 shadow-md">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-orange-400">{lang.name || `Language #${idx + 1}`}</span>
-                    <button type="button" onClick={() => removeLanguageItem(lang.id, idx)} className="min-h-[44px] min-w-[44px] p-2 text-slate-500 hover:text-red-400 flex items-center justify-center">
+                    <button type="button" onClick={() => removeLanguageItem(lang.id, idx)} className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-red-400 flex items-center justify-center cursor-pointer">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                   <div className={formGridClass}>
-                    <input type="text" value={lang.name || ''} onChange={(e) => updateLanguages(languages.map((l, i) => i === idx ? { ...l, name: e.target.value } : l))} placeholder="Language (e.g. English)" className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white" />
-                    <input type="text" value={lang.proficiency || ''} onChange={(e) => updateLanguages(languages.map((l, i) => i === idx ? { ...l, proficiency: e.target.value } : l))} placeholder="Proficiency (e.g. Native / Professional)" className="w-full min-h-[44px] bg-[#080B12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white" />
+                    <input type="text" value={lang.name || ''} onChange={(e) => updateLanguages(languages.map((l, i) => i === idx ? { ...l, name: e.target.value } : l))} placeholder="Language (e.g. English)" className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500" />
+                    <input type="text" value={lang.proficiency || ''} onChange={(e) => updateLanguages(languages.map((l, i) => i === idx ? { ...l, proficiency: e.target.value } : l))} placeholder="Proficiency (e.g. Native / Professional)" className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500" />
                   </div>
                 </div>
               ))}
@@ -804,6 +805,7 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
           </div>
         )}
 
+        {/* 10. SOCIAL LINKS */}
         {activeSection === 'socialLinks' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)]">
@@ -815,13 +817,13 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
             <div className={formGridClass}>
               {['linkedin', 'github', 'portfolio', 'twitter', 'leetcode'].map((key) => (
                 <div key={key} className="space-y-1">
-                  <label className="text-xs font-bold text-slate-300 capitalize">{key}</label>
+                  <label className="text-xs font-bold text-[var(--ox-text-secondary)] capitalize">{key}</label>
                   <input
                     type="text"
                     value={socialLinks[key] || ''}
                     onChange={(e) => updateSocialLinks({ ...socialLinks, [key]: e.target.value })}
                     placeholder={`https://${key}.com/in/username`}
-                    className="w-full min-h-[44px] bg-[#10131D] border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-orange-500 focus:outline-none"
+                    className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
                   />
                 </div>
               ))}
@@ -829,29 +831,30 @@ export const TabletEditor = ({ activeSection, orientation = 'portrait', isLandsc
           </div>
         )}
 
+        {/* 11. CUSTOM SECTIONS */}
         {activeSection === 'customSections' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)]">
               <h2 className="text-base font-bold text-[var(--ox-text-primary)] flex items-center gap-2">
                 <Layers className="w-4 h-4 text-orange-400" /> Custom Sections ({customSections.length})
               </h2>
-              <button type="button" onClick={addCustomSection} className="px-3.5 min-h-[44px] text-xs font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl flex items-center gap-1.5">
+              <button type="button" onClick={addCustomSection} className="px-3.5 min-h-[44px] text-xs font-bold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl flex items-center gap-1.5 cursor-pointer">
                 <Plus className="w-4 h-4" /> Add Custom Section
               </button>
             </div>
 
             <div className="space-y-3">
               {customSections.map((cs, idx) => (
-                <div key={cs.id || idx} className="p-4 rounded-xl bg-[#10131D] border border-slate-800 space-y-3 shadow-md">
+                <div key={cs.id || idx} className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3 shadow-md">
                   <div className="flex items-center justify-between">
                     <input
                       type="text"
                       value={cs.title || ''}
                       onChange={(e) => updateCustomSections(customSections.map((c, i) => i === idx ? { ...c, title: e.target.value } : c))}
                       placeholder="Section Title"
-                      className="bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-bold text-white min-h-[44px]"
+                      className="bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-1.5 text-xs font-bold text-[var(--ox-text-primary)] min-h-[44px] focus:outline-none focus:border-orange-500"
                     />
-                    <button type="button" onClick={() => removeCustomSection(cs.id, idx)} className="min-h-[44px] min-w-[44px] p-2 text-slate-500 hover:text-red-400 flex items-center justify-center">
+                    <button type="button" onClick={() => removeCustomSection(cs.id, idx)} className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-red-400 flex items-center justify-center cursor-pointer">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
