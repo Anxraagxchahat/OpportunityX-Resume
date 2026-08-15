@@ -1,11 +1,20 @@
 import { auth } from '../firebase';
 
-const API_BASE_URL =
+// Smart multi-port detection for local development (supports 8001, 8000, 8002, or Render in prod)
+const DEFAULT_LOCAL_URL = 'http://localhost:8001/api/v1';
+const FALLBACK_LOCAL_URLS = [
+  'http://localhost:8001/api/v1',
+  'http://localhost:8000/api/v1',
+  'http://127.0.0.1:8001/api/v1',
+  'http://127.0.0.1:8000/api/v1'
+];
+
+let cachedBaseUrl =
   import.meta.env.VITE_BACKEND_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD
     ? 'https://opportunityx-resume.onrender.com/api/v1'
-    : 'http://localhost:8000/api/v1');
+    : DEFAULT_LOCAL_URL);
 
 async function getAuthToken() {
   try {
@@ -31,19 +40,45 @@ async function request(endpoint, options = {}) {
   }
 
   let response;
+  let lastNetErr = null;
+
+  // Try current cachedBaseUrl
   try {
-    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    response = await fetch(`${cachedBaseUrl}${endpoint}`, {
       ...options,
       headers
     });
   } catch (netErr) {
+    lastNetErr = netErr;
+
+    // In development: auto-probe fallback ports if primary port fails
+    if (!import.meta.env.PROD) {
+      for (const fallbackUrl of FALLBACK_LOCAL_URLS) {
+        if (fallbackUrl === cachedBaseUrl) continue;
+        try {
+          const fallbackRes = await fetch(`${fallbackUrl}${endpoint}`, {
+            ...options,
+            headers
+          });
+          cachedBaseUrl = fallbackUrl;
+          response = fallbackRes;
+          lastNetErr = null;
+          break;
+        } catch (fbErr) {
+          // Continue probing
+        }
+      }
+    }
+  }
+
+  if (lastNetErr || !response) {
     if (endpoint.includes('/auth')) {
       throw new Error('Unable to connect to OpportunityX authentication service. Please check your network and try again.');
     }
     if (endpoint.includes('/payments')) {
       throw new Error('Payment service is temporarily unreachable. Your account has not been charged.');
     }
-    throw new Error('Network connection issue. Please verify your internet connection and retry.');
+    throw new Error('Backend service connecting. Please click Retry.');
   }
 
   if (!response.ok) {
@@ -70,9 +105,14 @@ export const apiService = {
     return request('/ecosystem/profile');
   },
 
-  // ──────────────────────────────────────────
-  // Cloud Resume CRUD (Supabase / Postgres)
-  // ──────────────────────────────────────────
+  async updateUserProfile(profileData) {
+    return request('/ecosystem/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData)
+    });
+  },
+
+  // Resumes CRUD
   async getResumes() {
     return request('/resumes');
   },
@@ -84,14 +124,22 @@ export const apiService = {
   async createResume(resumeData) {
     return request('/resumes', {
       method: 'POST',
-      body: JSON.stringify(resumeData)
+      body: JSON.stringify({
+        title: resumeData.title || 'Untitled Resume',
+        resume_data: resumeData.resume_data || resumeData,
+        ats_score: resumeData.ats_score || 0
+      })
     });
   },
 
   async updateResume(id, updateData) {
     return request(`/resumes/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(updateData)
+      body: JSON.stringify({
+        title: updateData.title,
+        resume_data: updateData.resume_data || updateData,
+        ats_score: updateData.ats_score
+      })
     });
   },
 
@@ -172,7 +220,10 @@ export const apiService = {
   async consumeCredit(actionName = 'AI Feature', credits = 1) {
     return request('/credits/consume', {
       method: 'POST',
-      body: JSON.stringify({ action_name: actionName, credits })
+      body: JSON.stringify({
+        action_name: actionName,
+        credits: credits
+      })
     });
   },
 
@@ -180,44 +231,13 @@ export const apiService = {
     return request('/credits/transactions');
   },
 
-  // ──────────────────────────────────────────
-  // Cashfree Payment Gateway
-  // ──────────────────────────────────────────
-  async createCashfreeOrder(packId, customerPhone = "9999999999") {
-    return request('/payments/create-order', {
-      method: 'POST',
-      body: JSON.stringify({ pack_id: packId, customer_phone: customerPhone })
-    });
-  },
-
-  async verifyCashfreeOrder(orderId) {
-    return request('/payments/verify-order', {
-      method: 'POST',
-      body: JSON.stringify({ order_id: orderId })
-    });
-  },
-
-  // ──────────────────────────────────────────
-  // AI Generation
-  // ──────────────────────────────────────────
-  async generateAI(feature, prompt, content) {
-    return request('/ai/generate', {
-      method: 'POST',
-      body: JSON.stringify({ feature, prompt, content })
-    });
-  },
-
   // Feature Flags
   async getFeatureFlags() {
-    return request('/flags/all');
+    return request('/flags');
   },
 
-  // Health Check
+  // Health
   async getHealth() {
-    try {
-      return await request('/health/warmup');
-    } catch (e) {
-      return { status: 'ok', warm: false };
-    }
+    return request('/health');
   }
 };
