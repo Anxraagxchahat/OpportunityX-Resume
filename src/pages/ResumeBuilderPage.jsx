@@ -822,21 +822,26 @@ export const ResumeBuilderPage = () => {
                                 <label className="text-[11px] font-semibold text-slate-400 block mb-1">End Date</label>
                                 <input
                                   type="text"
-                                  disabled={Boolean(exp.current || exp.isCurrent)}
-                                  value={Boolean(exp.current || exp.isCurrent) ? 'Present' : exp.endDate || ''}
+                                  value={exp.endDate ?? (Boolean(exp.current || exp.isCurrent) ? 'Present' : '')}
                                   onChange={(e) => {
                                     const val = e.target.value;
+                                    const isNowPresent = /^(present|current|now|till date|ongoing)$/i.test(val.trim());
                                     updateExperience(
                                       experience.map((item, i) => {
                                         if ((item.id && exp.id && item.id === exp.id) || i === idx) {
-                                          return { ...item, endDate: val, current: false, isCurrent: false };
+                                          return {
+                                            ...item,
+                                            endDate: val,
+                                            current: isNowPresent,
+                                            isCurrent: isNowPresent
+                                          };
                                         }
                                         return item;
                                       })
                                     );
                                   }}
-                                  placeholder={Boolean(exp.current || exp.isCurrent) ? 'Present' : 'e.g. 2024-12 or Dec 2024'}
-                                  className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white disabled:opacity-60"
+                                  placeholder="e.g. 2024-12, Dec 2024, or Present"
+                                  className="w-full bg-[#080B12] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-orange-500"
                                 />
                               </div>
                             </div>
@@ -846,7 +851,7 @@ export const ResumeBuilderPage = () => {
                               <label className="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer select-none">
                                 <input
                                   type="checkbox"
-                                  checked={Boolean(exp.current || exp.isCurrent)}
+                                  checked={Boolean(exp.current || exp.isCurrent || (typeof exp.endDate === 'string' && /^(present|current|now|till date|ongoing)$/i.test(exp.endDate.trim())))}
                                   onChange={(e) => {
                                     const isChecked = e.target.checked;
                                     updateExperience(
@@ -856,7 +861,7 @@ export const ResumeBuilderPage = () => {
                                             ...item,
                                             current: isChecked,
                                             isCurrent: isChecked,
-                                            endDate: isChecked ? '' : item.endDate
+                                            endDate: isChecked ? 'Present' : (item.endDate && !/^(present|current|now|till date|ongoing)$/i.test(item.endDate.trim()) ? item.endDate : '')
                                           };
                                         }
                                         return item;
