@@ -4,24 +4,20 @@ from app.core.config import settings
 
 def init_firebase():
     if not firebase_admin._apps:
-        client_email = settings.FIREBASE_CLIENT_EMAIL or "firebase-adminsdk-fbsvc@opportunityx-61efd.iam.gserviceaccount.com"
+        client_email = settings.FIREBASE_CLIENT_EMAIL
         raw_key = settings.FIREBASE_PRIVATE_KEY or ""
         private_key = raw_key.strip().strip('"').strip("'")
         if "\\n" in private_key:
             private_key = private_key.replace("\\n", "\n")
 
-        if "-----BEGIN PRIVATE KEY-----" not in private_key:
-            from app.core.config import Settings
-            default_settings = Settings()
-            private_key = default_settings.FIREBASE_PRIVATE_KEY.replace('\\n', '\n')
+        if not private_key or not client_email:
+            raise ValueError("Firebase Admin credentials not configured. FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY environment variables are required.")
 
         cred_dict = {
             "type": "service_account",
             "project_id": settings.FIREBASE_PROJECT_ID or "opportunityx-61efd",
-            "private_key_id": "651778ae11b6a510828f5cc73f685ae8f49969fb",
             "private_key": private_key,
             "client_email": client_email,
-            "client_id": "108149193597757443948",
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
