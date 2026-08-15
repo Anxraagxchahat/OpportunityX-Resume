@@ -27,6 +27,7 @@ const BYOK_KEY = 'opportunityx_byok_keys_v1';
 const SELECTED_MODEL_KEY = 'opportunityx_selected_ai_model_v1';
 
 import { cleanDateString, hydrateAndNormalizeResume, ensureResumeItemIds } from '../utils/dateSanitizer';
+import { getPendingReferralCode, clearPendingReferralCode } from '../utils/referralAttribution';
 
 // Re-export for backward compatibility
 export { cleanDateString, hydrateAndNormalizeResume, ensureResumeItemIds };
@@ -92,8 +93,27 @@ export const ResumeProvider = ({ children }) => {
       setPersistenceMode('cloud');
 
       // 1. Sync User with Backend & Fetch Authoritative Credit Balance
-      apiService.syncAuth().then(async () => {
+      const syncUserAndCredits = async () => {
         try {
+          await apiService.syncAuth().catch((err) => {
+            console.warn("[CloudSync] Backend auth sync notice:", err.message);
+          });
+
+          // Check if there is a pending referral code to redeem
+          const pendingRef = getPendingReferralCode();
+          if (pendingRef) {
+            try {
+              const redeemRes = await apiService.redeemReferralCode(pendingRef);
+              if (redeemRes && redeemRes.ok) {
+                console.log("[Referral] Successfully redeemed pending referral:", pendingRef);
+              }
+            } catch (refErr) {
+              console.warn("[Referral] Pending referral redemption note:", refErr.message);
+            } finally {
+              clearPendingReferralCode();
+            }
+          }
+
           let walletData = await apiService.getCreditBalance();
           if (walletData && typeof walletData.remaining_credits === 'number') {
             if (!walletData.has_claimed_welcome) {
@@ -106,12 +126,12 @@ export const ResumeProvider = ({ children }) => {
               totalPurchased: walletData.total_purchased || 0,
               usageHistory: []
             });
-            return;
           }
-        } catch (e) {}
-      }).catch((err) => {
-        console.warn("[CloudSync] Backend auth sync warning:", err.message);
-      });
+        } catch (e) {
+          console.warn("[CloudSync] Credit balance hydration notice:", e);
+        }
+      };
+      syncUserAndCredits();
 
       // 2. Hydrate Cloud Resumes from Supabase / Backend
       setIsCloudSyncing(true);
@@ -765,8 +785,13 @@ export const ResumeProvider = ({ children }) => {
   const refreshCreditBalance = useCallback(async () => {
     if (!firebaseUser) return { remaining: 0, totalPurchased: 0 };
     try {
-      const walletData = await apiService.getCreditBalance();
+      let walletData = await apiService.getCreditBalance();
       if (walletData && typeof walletData.remaining_credits === 'number') {
+        if (!walletData.has_claimed_welcome) {
+          try {
+            walletData = await apiService.claimWelcomeCredits();
+          } catch (e) {}
+        }
         const updated = {
           remaining: walletData.remaining_credits,
           totalPurchased: walletData.total_purchased || 0,
@@ -783,7 +808,7 @@ export const ResumeProvider = ({ children }) => {
       console.warn('[Credits] Failed to refresh credit balance:', e);
     }
     return aiCredits;
-  }, [firebaseUser]);
+  }, [firebaseUser, aiCredits]);
 
   const addPurchasedCredits = useCallback(async (creditsToAdd, description = 'Purchased Credits') => {
     return refreshCreditBalance();

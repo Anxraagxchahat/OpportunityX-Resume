@@ -204,3 +204,47 @@ class ActivityLog(Base):
     details = Column(JSON, default={})
     ip_address = Column(String(64), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+# 15. User Referral Profile Table (Permanent 6-Letter A-Z Code)
+class UserReferralProfile(Base):
+    __tablename__ = "user_referral_profiles"
+
+    user_id = Column(String(128), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    referral_code = Column(String(6), unique=True, nullable=False, index=True)
+    redeemed_referral_code = Column(String(6), nullable=True)
+    redeemed_referrer_id = Column(String(128), nullable=True)
+    successful_referrals_count = Column(Integer, default=0, nullable=False)
+    referral_credits_earned = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=get_utc_now, server_default=func.now())
+    qualified_at = Column(DateTime(timezone=True), nullable=True)
+
+    user = relationship("User", backref="referral_profile")
+
+# 16. Referrals Ledger Table
+class Referral(Base):
+    __tablename__ = "referrals"
+
+    id = Column(String(128), primary_key=True, default=generate_uuid)
+    referrer_user_id = Column(String(128), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    referred_user_id = Column(String(128), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    referral_code = Column(String(6), nullable=False)
+    status = Column(String(32), default="QUALIFIED", nullable=False)  # 'QUALIFIED', 'PENDING'
+    reward_amount = Column(Integer, default=5, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=get_utc_now, server_default=func.now())
+    qualified_at = Column(DateTime(timezone=True), default=get_utc_now, server_default=func.now())
+
+# 17. User Social Tasks Audit & Reward Table
+class UserSocialTask(Base):
+    __tablename__ = "user_social_tasks"
+
+    id = Column(String(128), primary_key=True, default=generate_uuid)
+    user_id = Column(String(128), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    task_id = Column(String(64), nullable=False, index=True)  # 'instagram_follow', 'linkedin_follow', 'x_follow', 'youtube_subscribe'
+    platform = Column(String(64), nullable=False)  # 'Instagram', 'LinkedIn', 'X', 'YouTube'
+    status = Column(String(32), default="COMPLETED", nullable=False)  # 'COMPLETED', 'PENDING'
+    verification_status = Column(String(32), default="VERIFIED", nullable=False)  # 'VERIFIED', 'MANUAL_PENDING'
+    reward_amount = Column(Integer, nullable=False)
+    reward_granted = Column(Boolean, default=True, nullable=False)
+    completed_at = Column(DateTime(timezone=True), default=get_utc_now, server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=get_utc_now, server_default=func.now())
+

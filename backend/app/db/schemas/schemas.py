@@ -203,3 +203,54 @@ class MetricsResponse(BaseModel):
     total_active_sessions: int
     total_resumes_saved: int
     database_status: str
+
+# Rewards & Referral Schemas
+class SocialTaskItem(BaseModel):
+    task_id: str
+    platform: str
+    action: str
+    official_url: str
+    reward_amount: int
+    completed: bool
+    completed_at: Optional[datetime] = None
+
+class ReferralProfileResponse(BaseModel):
+    referral_code: str
+    has_redeemed: bool
+    redeemed_code: Optional[str] = None
+    successful_referrals: int
+    referral_credits_earned: int
+
+class StarterCreditsInfo(BaseModel):
+    amount: int = 5
+    claimed: bool
+    type: str = "GUARANTEED"
+
+class RewardsOverviewResponse(BaseModel):
+    starter_credits: StarterCreditsInfo
+    social_tasks: List[SocialTaskItem]
+    social_bonus_earned: int
+    social_bonus_max: int
+    referral_profile: ReferralProfileResponse
+    remaining_credits: int
+
+class SocialClaimRequest(BaseModel):
+    task_id: str
+
+class SocialClaimResponse(BaseModel):
+    ok: bool
+    task_id: str
+    credits_added: int
+    remaining_credits: int
+    message: str
+
+class ReferralRedeemRequest(BaseModel):
+    referral_code: str
+
+class ReferralRedeemResponse(BaseModel):
+    ok: bool
+    referral_code: str
+    credits_added: int
+    remaining_credits: int
+    message: str
+

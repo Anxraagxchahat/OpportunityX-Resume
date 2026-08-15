@@ -108,14 +108,32 @@ export const apiService = {
   },
 
   // ──────────────────────────────────────────
-  // AI Credits System (Authoritative)
+  // AI Credits & Rewards System (Authoritative)
   // ──────────────────────────────────────────
   async getCreditBalance() {
     return request('/credits/balance');
   },
 
+  async getRewardsOverview() {
+    return request('/credits/rewards-overview');
+  },
+
   async claimWelcomeCredits() {
     return request('/credits/claim-welcome', { method: 'POST' });
+  },
+
+  async claimSocialReward(taskId) {
+    return request('/credits/claim-social', {
+      method: 'POST',
+      body: JSON.stringify({ task_id: taskId })
+    });
+  },
+
+  async redeemReferralCode(referralCode) {
+    return request('/credits/redeem-referral', {
+      method: 'POST',
+      body: JSON.stringify({ referral_code: referralCode })
+    });
   },
 
   async consumeCredit(actionName = 'AI Feature', credits = 1) {

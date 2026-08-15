@@ -1,6 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { initPaymentPreloader } from './utils/paymentPreloader';
+import { captureReferralFromUrl } from './utils/referralAttribution';
 import { ThemeProvider } from './context/ThemeProvider';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ResumeProvider, useResume } from './context/ResumeContext';
@@ -89,12 +90,12 @@ function RouteLoadingFallback() {
     </div>
   );
 }
-
 function AppContent() {
   const location = useLocation();
   const isWorkspace = location.pathname === '/builder';
 
   useEffect(() => {
+    captureReferralFromUrl();
     initPaymentPreloader();
   }, []);
 
