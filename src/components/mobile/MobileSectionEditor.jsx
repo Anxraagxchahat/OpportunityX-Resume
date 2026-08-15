@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import {
   User, FileText, Briefcase, GraduationCap, FolderGit2, Cpu, Award, Trophy,
   Languages, Share2, Layers, Plus, Trash2, Edit3, Eye, EyeOff, Sparkles,
-  ChevronLeft, ChevronRight, Check, X, Globe, Link, Camera
+  ChevronLeft, ChevronRight, Check, X, Globe, Link, Camera, Upload, RefreshCw
 } from 'lucide-react';
 import { useResume } from '../../context/ResumeContext';
 import { useMobileNavigation } from '../../context/MobileNavigationContext';
-import { builderSections } from './MobileSectionNav';
+import { builderSections, getBuilderSections } from './MobileSectionNav';
+import { isPhotoTemplate, DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS } from '../../utils/photoDefaults';
+import { executeOpenRouterRequest } from '../../services/ai/providerManager';
 
 export const MobileSectionEditor = () => {
   const {
     activeResume,
     updatePersonal,
+    updateAssets,
     updateExperience,
     updateEducation,
     updateProjects,
@@ -29,6 +32,9 @@ export const MobileSectionEditor = () => {
   const isHidden = hiddenSections.includes(activeSection);
 
   const personal = activeResume.personal || {};
+  const assets = activeResume.assets || {};
+  const hasPhotoSupport = isPhotoTemplate(activeResume.metadata?.template);
+  const activeSectionsList = getBuilderSections(hasPhotoSupport);
   const experience = Array.isArray(activeResume.experience) ? activeResume.experience : [];
   const education = Array.isArray(activeResume.education) ? activeResume.education : [];
   const projects = Array.isArray(activeResume.projects) ? activeResume.projects : [];
@@ -44,15 +50,15 @@ export const MobileSectionEditor = () => {
   };
 
   // Section Stepper Previous/Next
-  const currentSectionIdx = builderSections.findIndex((s) => s.id === activeSection);
+  const currentSectionIdx = activeSectionsList.findIndex((s) => s.id === activeSection);
   const handlePrevSection = () => {
     if (currentSectionIdx > 0) {
-      setActiveSection(builderSections[currentSectionIdx - 1].id);
+      setActiveSection(activeSectionsList[currentSectionIdx - 1].id);
     }
   };
   const handleNextSection = () => {
-    if (currentSectionIdx < builderSections.length - 1) {
-      setActiveSection(builderSections[currentSectionIdx + 1].id);
+    if (currentSectionIdx < activeSectionsList.length - 1) {
+      setActiveSection(activeSectionsList[currentSectionIdx + 1].id);
     }
   };
 
@@ -102,7 +108,7 @@ export const MobileSectionEditor = () => {
   };
 
   return (
-    <div className="w-full bg-[var(--ox-bg)] p-4 space-y-4 pb-[calc(96px+env(safe-area-inset-bottom,0px))] select-none no-print">
+    <div className="w-full bg-[var(--ox-bg)] p-4 space-y-4 pb-[calc(180px+env(safe-area-inset-bottom,24px))] select-none no-print">
       
       {/* Mobile Section Header */}
       <div className="p-3 rounded-2xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] shadow-sm">
@@ -148,6 +154,125 @@ export const MobileSectionEditor = () => {
       {/* 1. PERSONAL INFO */}
       {activeSection === 'personal' && (
         <div className="space-y-4">
+          {/* Profile Photo Control Card (When selected template supports photos) */}
+          {hasPhotoSupport && (
+            <div className="p-4 rounded-2xl bg-[var(--ox-card-bg)] border border-orange-500/30 space-y-3.5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-400">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-[var(--ox-text-primary)]">Profile Photo</h3>
+                    <p className="text-[10px] text-[var(--ox-text-secondary)]">Supported by current template</p>
+                  </div>
+                </div>
+                {assets?.profilePhoto && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateAssets('profilePhoto', null);
+                      addToast('Profile photo removed', 'info');
+                    }}
+                    className="text-[10px] font-bold text-red-400 hover:text-red-300 px-2 py-1 rounded-lg bg-red-500/10 border border-red-500/20 cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3.5">
+                {/* Photo Preview Thumbnail */}
+                <div
+                  className="relative w-16 h-16 shrink-0 bg-[var(--ox-surface-secondary)] border-2 border-orange-500/30 overflow-hidden flex items-center justify-center shadow-inner"
+                  style={{
+                    borderRadius: assets?.photoShape === 'square' ? '8px' : assets?.photoShape === 'rounded' ? '16px' : '9999px'
+                  }}
+                >
+                  {assets?.profilePhoto ? (
+                    <img
+                      src={assets.profilePhoto}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-[var(--ox-text-muted)]" />
+                  )}
+                </div>
+
+                {/* Upload & Choose Controls */}
+                <div className="flex-1 space-y-2">
+                  <label className="block w-full text-center py-2.5 px-3 rounded-xl bg-orange-500 text-white font-bold text-xs shadow-md active:scale-95 transition-transform cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 5 * 1024 * 1024) {
+                            addToast('Image too large (max 5MB)', 'error');
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = (evt) => {
+                            updateAssets('profilePhoto', evt.target?.result);
+                            addToast('Profile photo updated', 'success');
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    <span>{assets?.profilePhoto ? 'Change Photo' : 'Upload Photo'}</span>
+                  </label>
+
+                  {/* Shape Selector */}
+                  <div className="flex items-center gap-1.5">
+                    {[
+                      { id: 'circle', label: 'Circle' },
+                      { id: 'rounded', label: 'Rounded' },
+                      { id: 'square', label: 'Square' }
+                    ].map((shp) => (
+                      <button
+                        key={shp.id}
+                        type="button"
+                        onClick={() => updateAssets('photoShape', shp.id)}
+                        className={`flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                          (assets?.photoShape || 'circle') === shp.id
+                            ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+                            : 'bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] border-[var(--ox-border)]'
+                        }`}
+                      >
+                        {shp.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sample Avatar Presets */}
+              <div className="pt-2 border-t border-[var(--ox-border)]/60">
+                <div className="text-[10px] font-bold text-[var(--ox-text-secondary)] mb-1.5">Sample Headshots:</div>
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                  {SAMPLE_AVATARS.map((av) => (
+                    <button
+                      key={av.id}
+                      type="button"
+                      onClick={() => {
+                        updateAssets('profilePhoto', av.url);
+                        addToast(`Applied ${av.label}`, 'success');
+                      }}
+                      className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 border-2 border-[var(--ox-border)] hover:border-orange-500 active:scale-95 transition-all cursor-pointer"
+                      title={av.label}
+                    >
+                      <img src={av.url} alt={av.label} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Full Name *</label>
             <input
@@ -204,6 +329,28 @@ export const MobileSectionEditor = () => {
           </div>
 
           <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--ox-text-secondary)]">LinkedIn Profile URL</label>
+            <input
+              type="url"
+              placeholder="e.g. https://linkedin.com/in/alexmorgan"
+              value={personal.linkedin || ''}
+              onChange={(e) => handlePersonalChange('linkedin', e.target.value)}
+              className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-xs font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--ox-text-secondary)]">GitHub Profile URL</label>
+            <input
+              type="url"
+              placeholder="e.g. https://github.com/alexmorgan"
+              value={personal.github || ''}
+              onChange={(e) => handlePersonalChange('github', e.target.value)}
+              className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-xs font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Portfolio / Website URL</label>
             <input
               type="url"
@@ -212,6 +359,134 @@ export const MobileSectionEditor = () => {
               onChange={(e) => handlePersonalChange('website', e.target.value)}
               className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-xs font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
             />
+          </div>
+        </div>
+      )}
+
+      {/* 1.5 DEDICATED PHOTO SECTION */}
+      {activeSection === 'photo' && hasPhotoSupport && (
+        <div className="space-y-4">
+          <div className="p-4 rounded-2xl bg-[var(--ox-card-bg)] border border-orange-500/30 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[var(--ox-text-primary)]">Profile Photo & Headshot</h3>
+                  <p className="text-xs text-[var(--ox-text-secondary)]">Visible on photo-enabled resume templates</p>
+                </div>
+              </div>
+              {assets?.profilePhoto && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateAssets('profilePhoto', null);
+                    addToast('Profile photo removed', 'info');
+                  }}
+                  className="text-xs font-bold text-red-400 hover:text-red-300 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 cursor-pointer"
+                >
+                  Remove Photo
+                </button>
+              )}
+            </div>
+
+            {/* Photo Large Preview */}
+            <div className="flex flex-col items-center justify-center p-4 bg-[var(--ox-surface-secondary)]/50 rounded-2xl border border-[var(--ox-border)] gap-3">
+              <div
+                className="relative w-24 h-24 bg-[var(--ox-surface-primary)] border-2 border-orange-500/40 overflow-hidden flex items-center justify-center shadow-md"
+                style={{
+                  borderRadius: assets?.photoShape === 'square' ? '12px' : assets?.photoShape === 'rounded' ? '24px' : '9999px'
+                }}
+              >
+                {assets?.profilePhoto ? (
+                  <img
+                    src={assets.profilePhoto}
+                    alt="Profile Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-12 h-12 text-[var(--ox-text-muted)]" />
+                )}
+              </div>
+              <span className="text-[11px] text-[var(--ox-text-secondary)] font-medium">
+                {assets?.profilePhoto ? 'Photo is active on photo templates' : 'No photo uploaded yet'}
+              </span>
+            </div>
+
+            {/* Upload Button */}
+            <label className="block w-full text-center py-3 px-4 rounded-2xl bg-orange-500 text-white font-bold text-xs shadow-md active:scale-95 transition-transform cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                      addToast('Image too large (max 5MB)', 'error');
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                      updateAssets('profilePhoto', evt.target?.result);
+                      addToast('Profile photo updated', 'success');
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+              <span className="flex items-center justify-center gap-2">
+                <Upload className="w-4 h-4" />
+                {assets?.profilePhoto ? 'Choose Different Photo File' : 'Upload Profile Photo'}
+              </span>
+            </label>
+
+            {/* Shape Selector */}
+            <div className="space-y-1.5 pt-1">
+              <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Photo Shape</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'circle', label: 'Circle' },
+                  { id: 'rounded', label: 'Rounded' },
+                  { id: 'square', label: 'Square' }
+                ].map((shp) => (
+                  <button
+                    key={shp.id}
+                    type="button"
+                    onClick={() => updateAssets('photoShape', shp.id)}
+                    className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                      (assets?.photoShape || 'circle') === shp.id
+                        ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 shadow-sm'
+                        : 'bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] border-[var(--ox-border)]'
+                    }`}
+                  >
+                    {shp.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sample Avatar Headshots */}
+            <div className="space-y-2 pt-2 border-t border-[var(--ox-border)]">
+              <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Instant Sample Avatars</label>
+              <div className="grid grid-cols-3 gap-2">
+                {SAMPLE_AVATARS.map((av) => (
+                  <button
+                    key={av.id}
+                    type="button"
+                    onClick={() => {
+                      updateAssets('profilePhoto', av.url);
+                      addToast(`Selected ${av.label}`, 'success');
+                    }}
+                    className="flex items-center gap-2 p-2 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] hover:border-orange-500 text-left active:scale-95 transition-all cursor-pointer"
+                  >
+                    <img src={av.url} alt={av.label} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                    <span className="text-[10px] font-bold text-[var(--ox-text-primary)] truncate">{av.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -242,10 +517,21 @@ export const MobileSectionEditor = () => {
               setAiModalConfig({
                 isOpen: true,
                 title: 'Improve Summary with AI',
+                initialPrompt: personal.summary || `Professional summary for a ${personal.targetRole || 'Software Engineer'} with strong background and measurable results.`,
+                onGenerate: async () => {
+                  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+                  const res = await executeOpenRouterRequest({
+                    modelId: 'google/gemini-2.5-flash:free',
+                    systemPrompt: 'You are an executive resume writer. Enhance the professional summary to be concise, impactful, quantifiable, and ATS-optimized. Respond with only the enhanced summary text.',
+                    userPrompt: `Improve this resume summary for role "${personal.targetRole || 'Professional'}":\n${personal.summary || 'Aspiring software engineer with strong technical skills and problem-solving background.'}`,
+                    apiKey
+                  });
+                  return res.generatedContent;
+                },
                 onApply: (newSummary) => handlePersonalChange('summary', newSummary)
               });
             }}
-            className="w-full py-3.5 rounded-2xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 font-bold text-xs flex items-center justify-center gap-2 min-h-[48px] active:scale-95 transition-all"
+            className="w-full py-3.5 rounded-2xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 font-bold text-xs flex items-center justify-center gap-2 min-h-[48px] active:scale-95 transition-all cursor-pointer"
           >
             <Sparkles className="w-4 h-4 animate-pulse text-amber-400" />
             <span>Improve Summary with AI</span>

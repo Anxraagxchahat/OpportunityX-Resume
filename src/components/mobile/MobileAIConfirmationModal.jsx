@@ -2,54 +2,76 @@ import React, { useState } from 'react';
 import { Sparkles, X, Check, RefreshCw, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useResume } from '../../context/ResumeContext';
 import { useMobileNavigation } from '../../context/MobileNavigationContext';
+import { executeOpenRouterRequest } from '../../services/ai/providerManager';
 
 export const MobileAIConfirmationModal = () => {
-  const { aiCredits, checkAIAccess } = useResume();
+  const { aiCredits, checkAIAccess, consumeCredit, byokKeys } = useResume();
   const { aiModalConfig, setAiModalConfig, addToast } = useMobileNavigation();
 
   const [stage, setStage] = useState('confirm'); // 'confirm' | 'loading' | 'preview' | 'error'
   const [generatedResult, setGeneratedResult] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isDeducting, setIsDeducting] = useState(false);
 
   if (!aiModalConfig.isOpen) return null;
 
   const handleClose = () => {
-    setAiModalConfig({ isOpen: false, type: '', initialPrompt: '', field: '', onApply: null });
+    setAiModalConfig({ isOpen: false, type: '', initialPrompt: '', field: '', onApply: null, onGenerate: null });
     setStage('confirm');
     setGeneratedResult('');
     setErrorMessage('');
+    setIsDeducting(false);
   };
 
   const handleExecuteAI = async () => {
+    if (isDeducting) return;
+
     // Check credits before executing
-    if (!checkAIAccess || !checkAIAccess(1)) {
-      addToast('Insufficient AI Credits', 'error');
+    if (!checkAIAccess || !checkAIAccess(aiModalConfig.title || 'AI Feature')) {
+      addToast('Insufficient AI Credits or Login Required', 'error');
       handleClose();
       return;
     }
 
     setStage('loading');
+    setIsDeducting(true);
 
     try {
+      let resultText = '';
       if (typeof aiModalConfig.onGenerate === 'function') {
-        const result = await aiModalConfig.onGenerate();
-        if (result) {
-          setGeneratedResult(result);
+        resultText = await aiModalConfig.onGenerate();
+      } else {
+        // Direct OpenRouter request
+        const apiKey = byokKeys.openrouter || import.meta.env.VITE_OPENROUTER_API_KEY;
+        const res = await executeOpenRouterRequest({
+          modelId: 'google/gemini-2.5-flash:free',
+          systemPrompt: 'You are an executive resume writer. Enhance this content to be impactful, quantifiable, and ATS-optimized.',
+          userPrompt: `Improve this resume content:\n${aiModalConfig.initialPrompt || 'Software Engineer with experience in cloud technologies.'}`,
+          apiKey
+        });
+        resultText = res.generatedContent;
+      }
+
+      if (resultText && resultText.trim()) {
+        // Authoritative Backend Credit Consumption
+        const creditDeducted = await consumeCredit(aiModalConfig.title || 'AI Feature', 1);
+        if (creditDeducted) {
+          setGeneratedResult(resultText);
           setStage('preview');
         } else {
-          setErrorMessage('AI server returned empty suggestion.');
+          setErrorMessage('Credit deduction was rejected by server. Please check your credit balance.');
           setStage('error');
         }
       } else {
-        // Fallback simulation if no custom generator passed
-        setTimeout(() => {
-          setGeneratedResult('Results-oriented software engineer with expertise in scalable web architectures...');
-          setStage('preview');
-        }, 1200);
+        setErrorMessage('AI server returned empty suggestion. No credits were deducted.');
+        setStage('error');
       }
     } catch (err) {
-      setErrorMessage(err.message || 'AI service request failed.');
+      console.error('Mobile AI Generation Error:', err);
+      setErrorMessage(err.message || 'AI service request failed. No credits were deducted.');
       setStage('error');
+    } finally {
+      setIsDeducting(false);
     }
   };
 

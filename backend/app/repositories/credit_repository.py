@@ -83,7 +83,7 @@ class CreditRepository:
         return (
             self.db.query(AICreditTransaction)
             .filter(AICreditTransaction.user_id == user_id)
-            .order_by(AICreditTransaction.created_at.desc())
+            .order_by(AICreditTransaction.created_at.desc(), AICreditTransaction.id.desc())
             .limit(limit)
             .all()
         )

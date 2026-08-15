@@ -81,8 +81,11 @@ export const AIAssistantPage = () => {
         apiKey
       });
 
-      // 6. Deduct credit ONLY on successful response
-      consumeCredit(activeFeature.name);
+      // 6. Deduct credit ONLY on successful response (AUTHORITATIVE)
+      const deducted = await consumeCredit(activeFeature.name, 1);
+      if (!deducted) {
+        throw new Error('Credit deduction was rejected or balance is insufficient.');
+      }
 
       // 7. Cache response locally
       setCachedResponse(selectedFeatureId, promptInput, selectedAIModel, result);

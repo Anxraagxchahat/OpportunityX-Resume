@@ -2,13 +2,17 @@ import React from 'react';
 import { X, ShieldCheck, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { useResume } from '../../context/ResumeContext';
 import { useMobileNavigation } from '../../context/MobileNavigationContext';
-import { builderSections } from './MobileSectionNav';
+import { getBuilderSections } from './MobileSectionNav';
+import { isPhotoTemplate } from '../../utils/photoDefaults';
 
 export const MobileSectionsDrawer = () => {
   const { activeResume, resumeHealth, toggleSectionVisibility } = useResume();
   const { isSectionDrawerOpen, setIsSectionDrawerOpen, activeSection, setActiveSection } = useMobileNavigation();
   const { percentage, completedCount, totalCount } = resumeHealth;
   const hiddenSections = activeResume.metadata?.hiddenSections || [];
+
+  const hasPhotoSupport = isPhotoTemplate(activeResume?.metadata?.template);
+  const sections = getBuilderSections(hasPhotoSupport);
 
   if (!isSectionDrawerOpen) return null;
 
@@ -51,7 +55,7 @@ export const MobileSectionsDrawer = () => {
 
         {/* Section List */}
         <div className="p-3 space-y-1.5 overflow-y-auto custom-scrollbar flex-1 pb-safe">
-          {builderSections.map((sec) => {
+          {sections.map((sec) => {
             const Icon = sec.icon;
             const isActive = activeSection === sec.id;
             const isHidden = hiddenSections.includes(sec.id);

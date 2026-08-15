@@ -63,11 +63,11 @@ export const ATSCheckerPage = () => {
     }
 
     setIsMatching(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsMatching(false);
       const res = matchJobDescription(activeResume, jobDescription);
       setJdMatchResult(res);
-      consumeCredit('AI ATS Job Match');
+      await consumeCredit('AI ATS Job Match', 1);
     }, 400);
   };
 

@@ -1,11 +1,15 @@
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Numeric, Text, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from datetime import datetime, timezone
 import uuid
 from app.core.database import Base
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+def get_utc_now():
+    return datetime.now(timezone.utc)
 
 # 1. Users Identity Cache (Firebase UID Primary Key - Auth is shared, DB is isolated)
 class User(Base):
@@ -123,7 +127,7 @@ class AICreditTransaction(Base):
     credits_changed = Column(Integer, nullable=False)
     resulting_balance = Column(Integer, nullable=False)
     metadata_info = Column(JSON, default={})
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=get_utc_now, server_default=func.now())
 
 # 9. Cashfree Payment Orders
 class Payment(Base):

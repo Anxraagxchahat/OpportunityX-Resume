@@ -1,9 +1,12 @@
 import React, { useRef, useEffect } from 'react';
-import { Layers, User, FileText, Briefcase, GraduationCap, FolderGit2, Cpu, Award, Trophy, Languages, Share2 } from 'lucide-react';
+import { Layers, User, Camera, FileText, Briefcase, GraduationCap, FolderGit2, Cpu, Award, Trophy, Languages, Share2 } from 'lucide-react';
 import { useMobileNavigation } from '../../context/MobileNavigationContext';
+import { useResume } from '../../context/ResumeContext';
+import { isPhotoTemplate } from '../../utils/photoDefaults';
 
-export const builderSections = [
+export const ALL_BUILDER_SECTIONS = [
   { id: 'personal', label: 'Personal', icon: User },
+  { id: 'photo', label: 'Photo', icon: Camera },
   { id: 'summary', label: 'Summary', icon: FileText },
   { id: 'experience', label: 'Experience', icon: Briefcase },
   { id: 'education', label: 'Education', icon: GraduationCap },
@@ -16,9 +19,19 @@ export const builderSections = [
   { id: 'customSections', label: 'Custom Sections', icon: Layers }
 ];
 
+export const getBuilderSections = (hasPhoto = false) => {
+  return ALL_BUILDER_SECTIONS.filter((s) => s.id !== 'photo' || hasPhoto);
+};
+
+export const builderSections = ALL_BUILDER_SECTIONS;
+
 export const MobileSectionNav = () => {
   const { activeSection, setActiveSection, setIsSectionDrawerOpen } = useMobileNavigation();
+  const { activeResume } = useResume();
   const scrollRef = useRef(null);
+
+  const hasPhotoSupport = isPhotoTemplate(activeResume?.metadata?.template);
+  const sections = getBuilderSections(hasPhotoSupport);
 
   // Auto-scroll active section chip into view when changed
   useEffect(() => {
@@ -47,7 +60,7 @@ export const MobileSectionNav = () => {
         <div className="h-4 w-[1px] bg-[var(--ox-border)] shrink-0 my-auto mx-0.5" />
 
         {/* Section Chips */}
-        {builderSections.map((sec) => {
+        {sections.map((sec) => {
           const Icon = sec.icon;
           const isActive = activeSection === sec.id;
 

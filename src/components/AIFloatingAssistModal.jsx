@@ -62,8 +62,11 @@ export const AIFloatingAssistModal = ({
         apiKey
       });
 
-      // 6. Deduct credit ONLY on successful response
-      consumeCredit(`AI ${targetField.toUpperCase()}`);
+      // 6. Deduct credit ONLY on successful response (AUTHORITATIVE)
+      const deducted = await consumeCredit(`AI ${targetField.toUpperCase()}`, 1);
+      if (!deducted) {
+        throw new Error('Credit deduction failed or balance insufficient. Please check your AI credits.');
+      }
 
       // 7. Cache response locally
       setCachedResponse(targetField, initialText, selectedAIModel, result);

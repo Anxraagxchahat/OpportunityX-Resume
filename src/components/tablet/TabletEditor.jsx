@@ -241,9 +241,14 @@ export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'po
 
             {/* Profile Photo Quick Card (Only for photo templates) */}
             {isPhotoTemplate(metadata?.template) && (
-              <div className="p-3.5 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] flex items-center justify-between gap-3 shadow-sm">
+              <div className="p-3.5 rounded-xl bg-[var(--ox-surface-secondary)] border border-orange-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-[var(--ox-surface-primary)] border border-orange-500/40 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md">
+                  <div
+                    className="w-12 h-12 bg-[var(--ox-surface-primary)] border-2 border-orange-500/40 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md"
+                    style={{
+                      borderRadius: assets?.photoShape === 'square' ? '8px' : assets?.photoShape === 'rounded' ? '14px' : '9999px'
+                    }}
+                  >
                     {assets?.profilePhoto ? (
                       <img src={assets.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -257,13 +262,46 @@ export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'po
                     </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onSelectSection && onSelectSection('photo')}
-                  className="px-3.5 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Camera className="w-3.5 h-3.5" /> Manage Photo
-                </button>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <label className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (evt) => {
+                            updateAssets('profilePhoto', evt.target?.result);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{assets?.profilePhoto ? 'Change' : 'Upload'}</span>
+                  </label>
+
+                  {assets?.profilePhoto && (
+                    <button
+                      type="button"
+                      onClick={() => updateAssets('profilePhoto', null)}
+                      className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => onSelectSection && onSelectSection('photo')}
+                    className="px-3 py-1.5 bg-[var(--ox-surface-primary)] hover:bg-orange-500/10 text-[var(--ox-text-secondary)] hover:text-orange-400 border border-[var(--ox-border)] rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Camera className="w-3.5 h-3.5" /> Manage
+                  </button>
+                </div>
               </div>
             )}
 
@@ -312,13 +350,46 @@ export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'po
                 />
               </div>
 
-              <div className={`space-y-1 ${isLandscape ? 'col-span-2' : ''}`}>
+              <div className="space-y-1">
                 <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Location</label>
                 <input
                   type="text"
                   value={personal.location || ''}
                   onChange={(e) => updatePersonal('location', e.target.value)}
                   placeholder="e.g. San Francisco, CA / Remote"
+                  className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[var(--ox-text-secondary)]">LinkedIn Profile URL</label>
+                <input
+                  type="url"
+                  value={personal.linkedin || ''}
+                  onChange={(e) => updatePersonal('linkedin', e.target.value)}
+                  placeholder="e.g. https://linkedin.com/in/alexrivera"
+                  className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[var(--ox-text-secondary)]">GitHub Profile URL</label>
+                <input
+                  type="url"
+                  value={personal.github || ''}
+                  onChange={(e) => updatePersonal('github', e.target.value)}
+                  placeholder="e.g. https://github.com/alexrivera"
+                  className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
+                />
+              </div>
+
+              <div className={`space-y-1 ${isLandscape ? 'col-span-2' : ''}`}>
+                <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Portfolio / Website URL</label>
+                <input
+                  type="url"
+                  value={personal.website || ''}
+                  onChange={(e) => updatePersonal('website', e.target.value)}
+                  placeholder="e.g. https://alexrivera.dev"
                   className="w-full min-h-[44px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none"
                 />
               </div>
