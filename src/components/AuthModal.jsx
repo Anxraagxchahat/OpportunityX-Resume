@@ -55,12 +55,39 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeProvider, setActiveProvider] = useState('');
   const [error, setError] = useState('');
+  const [infoMsg, setInfoMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  const authOpRef = React.useRef(false);
+  const infoTimerRef = React.useRef(null);
+
+  // Reset state when modal opens/closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setError('');
+      setInfoMsg('');
+      setSuccessMsg('');
+      setIsSubmitting(false);
+      setActiveProvider('');
+      authOpRef.current = false;
+      if (infoTimerRef.current) clearTimeout(infoTimerRef.current);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
+  const showCancelNotice = (msg = 'Sign-in cancelled. You can try again anytime.') => {
+    setError('');
+    setInfoMsg(msg);
+    if (infoTimerRef.current) clearTimeout(infoTimerRef.current);
+    infoTimerRef.current = setTimeout(() => {
+      setInfoMsg('');
+    }, 3500);
+  };
+
   const handleSuccess = (firebaseUser) => {
     setError('');
+    setInfoMsg('');
     setSuccessMsg(`Welcome, ${firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User'}!`);
 
     trackAuthEvent(getAuthEventName(normalizeProvider(firebaseUser), mode === 'signup'), {
@@ -79,10 +106,15 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   };
 
   const handleError = (firebaseError) => {
-    trackAuthEvent('auth_error', { code: firebaseError.code, message: firebaseError.message });
+    const code = firebaseError?.code || '';
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+      return;
+    }
 
-    const msg = firebaseError.message || '';
-    if (msg.includes('redirect_uri') || (firebaseError.code === 'auth/invalid-credential' && activeProvider === 'github')) {
+    trackAuthEvent('auth_error', { code, message: firebaseError?.message });
+
+    const msg = firebaseError?.message || '';
+    if (msg.includes('redirect_uri') || (code === 'auth/invalid-credential' && activeProvider === 'github')) {
       setError('GitHub OAuth Callback URL is misconfigured in GitHub OAuth App settings. Authorization Callback URL must be set to: https://opportunityx-61efd.firebaseapp.com/__/auth/handler');
       return;
     }
@@ -96,29 +128,49 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
       'auth/weak-password': 'Password must be at least 6 characters.',
       'auth/invalid-email': 'Please enter a valid email address.',
-      'auth/popup-closed-by-user': 'Sign-in popup was closed. Please try again.',
       'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
-      'auth/popup-blocked': 'Sign-in popup was blocked. Please allow popups for this site.',
-      'auth/network-request-failed': 'Network error. Please check your connection and try again.',
+      'auth/popup-blocked': 'Sign-in popup was blocked by your browser. Please allow popups for this site and try again.',
+      'auth/network-request-failed': 'Network error. Please check your internet connection and try again.',
     };
 
-    const errorCode = firebaseError?.code || '';
     const rawMsg = firebaseError?.message || (typeof firebaseError === 'string' ? firebaseError : '');
-    setError(errorMap[errorCode] || rawMsg || 'Authentication failed. Please try again.');
+    setError(errorMap[code] || rawMsg || 'Authentication failed. Please try again.');
   };
 
   const handleOAuthLogin = async (provider, providerInstance) => {
+    // Prevent duplicate concurrent popup requests
+    if (authOpRef.current || isSubmitting) {
+      return;
+    }
+
     setError('');
+    setInfoMsg('');
     setSuccessMsg('');
     setIsSubmitting(true);
     setActiveProvider(provider);
+    authOpRef.current = true;
 
     try {
       const result = await signInWithPopup(auth, providerInstance);
-      handleSuccess(result.user);
+      if (result && result.user) {
+        handleSuccess(result.user);
+      }
     } catch (err) {
-      handleError(err);
+      const code = err?.code || '';
+      if (code === 'auth/popup-closed-by-user') {
+        // Immediate clean reset on manual popup closure — non-fatal user cancellation
+        showCancelNotice('Sign-in cancelled. You can try again anytime.');
+      } else if (code === 'auth/cancelled-popup-request') {
+        // Fast reset on concurrent request cancellation
+        setError('');
+      } else if (code === 'auth/popup-blocked') {
+        setError('Sign-in popup was blocked by your browser. Please allow popups for this site and try again.');
+      } else {
+        handleError(err);
+      }
     } finally {
+      // Immediate clean state recovery: no stuck spinners, no locked buttons
+      authOpRef.current = false;
       setIsSubmitting(false);
       setActiveProvider('');
     }
@@ -127,6 +179,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const handleEmailAuth = async (e) => {
     e.preventDefault();
     setError('');
+    setInfoMsg('');
     setSuccessMsg('');
 
     const cleanEmail = email.trim();
@@ -258,6 +311,20 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
               className="px-2.5 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
             >
               <LogOut className="w-3 h-3" /> Logout
+            </button>
+          </div>
+        )}
+
+        {/* Info / Cancellation Notice */}
+        {infoMsg && !error && !successMsg && (
+          <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-xs text-orange-400 font-medium flex items-center justify-between gap-2 animate-fadeIn">
+            <span>{infoMsg}</span>
+            <button
+              type="button"
+              onClick={() => setInfoMsg('')}
+              className="text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] p-0.5 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}

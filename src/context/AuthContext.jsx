@@ -57,7 +57,16 @@ export const AuthProvider = ({ children }) => {
   const initializedRef = useRef(false);
 
   useEffect(() => {
+    // Safety fallback timer so UI never hangs indefinitely on initial auth check
+    const safetyTimer = setTimeout(() => {
+      if (!initializedRef.current) {
+        initializedRef.current = true;
+        setAuthLoading(false);
+      }
+    }, 2500);
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      clearTimeout(safetyTimer);
       setUser(currentUser);
       cacheUserIdentity(currentUser);
 
@@ -77,7 +86,10 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      unsubscribe();
+    };
   }, []);
 
   const logout = useCallback(async () => {

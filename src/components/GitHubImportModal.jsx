@@ -137,9 +137,12 @@ export const GitHubImportModal = ({ isOpen, onClose }) => {
       }
     } catch (err) {
       setIsLoading(false);
+      const code = err?.code || '';
       const msg = err.message || '';
-      if (msg.includes('redirect_uri') || msg.includes('auth/operation-not-allowed') || err.code === 'auth/popup-closed-by-user') {
-        setErrorMsg('GitHub OAuth is misconfigured or popup was closed. Please enter your GitHub username below to fetch profile instantly without OAuth!');
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        setErrorMsg('');
+      } else if (msg.includes('redirect_uri') || msg.includes('auth/operation-not-allowed')) {
+        setErrorMsg('GitHub OAuth is misconfigured. Please enter your GitHub username below to fetch profile instantly without OAuth!');
       } else {
         setErrorMsg(err.message || 'GitHub OAuth login failed. You can enter your GitHub username below to fetch public profile.');
       }
