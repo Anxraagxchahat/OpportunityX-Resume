@@ -104,8 +104,9 @@ async def verify_payment_order(
             order_id=req.order_id,
             status="PAID",
             message="Payment already verified and credits applied.",
-            credits_added=payment.credits,
-            new_balance=wallet.remaining_credits
+            credits_added=0,
+            new_balance=wallet.remaining_credits,
+            already_verified=True
         )
 
     # Verify with Cashfree Server
@@ -142,7 +143,8 @@ async def verify_payment_order(
             status="PAID",
             message="Payment verified successfully! AI credits added to your wallet.",
             credits_added=payment.credits,
-            new_balance=updated_wallet.remaining_credits
+            new_balance=updated_wallet.remaining_credits,
+            already_verified=False
         )
     else:
         payment_repo.update_status(order_id=req.order_id, status=cf_status)

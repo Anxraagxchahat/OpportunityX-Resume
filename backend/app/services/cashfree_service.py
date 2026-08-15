@@ -14,6 +14,13 @@ class CashfreeService:
         self.app_id = settings.CASHFREE_APP_ID or ""
         self.secret_key = settings.CASHFREE_SECRET_KEY or ""
         self.api_version = settings.CASHFREE_API_VERSION or "2023-08-01"
+        self._client: Optional[httpx.AsyncClient] = None
+
+    def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            limits = httpx.Limits(max_keepalive_connections=20, max_connections=50, keepalive_expiry=30.0)
+            self._client = httpx.AsyncClient(timeout=10.0, limits=limits)
+        return self._client
 
     @property
     def is_sandbox(self) -> bool:
@@ -76,26 +83,26 @@ class CashfreeService:
         env_name = "sandbox" if self.is_sandbox else "production"
         logger.info(f"Creating Cashfree PG order {order_id} in mode '{env_name}' at {url}")
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.post(url, json=payload, headers=self._get_headers())
-            if response.status_code not in (200, 201):
-                logger.error(f"Cashfree Create Order Error ({response.status_code}): {response.text}")
-                raise ValueError(f"Cashfree Order Creation Failed ({response.status_code}): {response.text}")
+        client = self._get_client()
+        response = await client.post(url, json=payload, headers=self._get_headers())
+        if response.status_code not in (200, 201):
+            logger.error(f"Cashfree Create Order Error ({response.status_code}): {response.text}")
+            raise ValueError(f"Cashfree Order Creation Failed ({response.status_code}): {response.text}")
 
-            data = response.json()
-            session_id = data.get("payment_session_id")
-            if not session_id:
-                logger.error(f"Cashfree response missing payment_session_id: {data}")
-                raise ValueError(f"Cashfree API response missing payment_session_id: {response.text}")
+        data = response.json()
+        session_id = data.get("payment_session_id")
+        if not session_id:
+            logger.error(f"Cashfree response missing payment_session_id: {data}")
+            raise ValueError(f"Cashfree API response missing payment_session_id: {response.text}")
 
-            return {
-                "order_id": data.get("order_id", order_id),
-                "payment_session_id": session_id,
-                "cf_order_id": str(data.get("cf_order_id", "")),
-                "amount": amount,
-                "is_mock": False,
-                "environment": env_name
-            }
+        return {
+            "order_id": data.get("order_id", order_id),
+            "payment_session_id": session_id,
+            "cf_order_id": str(data.get("cf_order_id", "")),
+            "amount": amount,
+            "is_mock": False,
+            "environment": env_name
+        }
 
     async def verify_order(self, order_id: str) -> Dict[str, Any]:
         if not self.app_id or not self.secret_key or "your_" in self.app_id:
@@ -108,19 +115,19 @@ class CashfreeService:
             }
 
         url = f"{self.base_url}/orders/{order_id}"
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(url, headers=self._get_headers())
-            if response.status_code != 200:
-                logger.error(f"Cashfree Verify Order Error: {response.text}")
-                return {"order_id": order_id, "order_status": "FAILED", "is_mock": False}
-            data = response.json()
-            status = data.get("order_status", "PENDING")
-            return {
-                "order_id": order_id,
-                "order_status": status,
-                "cf_payment_id": str(data.get("cf_order_id", "")),
-                "is_mock": False
-            }
+        client = self._get_client()
+        response = await client.get(url, headers=self._get_headers())
+        if response.status_code != 200:
+            logger.error(f"Cashfree Verify Order Error: {response.text}")
+            return {"order_id": order_id, "order_status": "FAILED", "is_mock": False}
+        data = response.json()
+        status = data.get("order_status", "PENDING")
+        return {
+            "order_id": order_id,
+            "order_status": status,
+            "cf_payment_id": str(data.get("cf_order_id", "")),
+            "is_mock": False
+        }
 
     def verify_webhook_signature(self, raw_body: str, signature: str, timestamp: str) -> bool:
         if not signature or not self.secret_key:
