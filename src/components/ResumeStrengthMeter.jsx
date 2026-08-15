@@ -19,15 +19,15 @@ export const ResumeStrengthMeter = () => {
   };
 
   return (
-    <div className="cyber-glass-card p-6 flex flex-col justify-between space-y-4 border-orange-500/30">
+    <div className="p-5 sm:p-6 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] flex flex-col justify-between space-y-4 shadow-lg transition-colors duration-300">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400">
             <Zap className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-extrabold text-white">Overall Resume Strength</h3>
-            <p className="text-[11px] text-slate-400">Deterministic multi-factor analysis</p>
+            <h3 className="text-sm font-extrabold text-[var(--ox-text-primary)]">Overall Resume Strength</h3>
+            <p className="text-[11px] text-[var(--ox-text-secondary)]">Deterministic multi-factor analysis</p>
           </div>
         </div>
 
@@ -38,11 +38,11 @@ export const ResumeStrengthMeter = () => {
 
       <div className="space-y-2">
         <div className="flex justify-between items-baseline">
-          <span className="text-4xl font-black text-white">{resumeStrengthScore}%</span>
-          <span className="text-xs text-slate-400 font-semibold">98% Confidence Rating</span>
+          <span className="text-3xl sm:text-4xl font-black text-[var(--ox-text-primary)]">{resumeStrengthScore}%</span>
+          <span className="text-xs text-[var(--ox-text-secondary)] font-semibold">98% Confidence Rating</span>
         </div>
 
-        <div className="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+        <div className="w-full bg-[var(--ox-surface-primary)] h-2.5 rounded-full overflow-hidden border border-[var(--ox-border)]">
           <div
             className="bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 h-full rounded-full transition-all duration-700"
             style={{ width: `${resumeStrengthScore}%` }}
@@ -50,12 +50,12 @@ export const ResumeStrengthMeter = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-slate-800/80">
-        <div className="flex items-center justify-between text-slate-400">
+      <div className="grid grid-cols-2 gap-2 text-[11px] pt-3 border-t border-[var(--ox-border)]">
+        <div className="flex items-center justify-between text-[var(--ox-text-secondary)]">
           <span>ATS Pass Rate:</span>
           <strong className="text-emerald-400 font-bold">{atsEngineResult.overallScore}%</strong>
         </div>
-        <div className="flex items-center justify-between text-slate-400">
+        <div className="flex items-center justify-between text-[var(--ox-text-secondary)]">
           <span>Structure Health:</span>
           <strong className="text-orange-400 font-bold">{resumeHealth.percentage}%</strong>
         </div>
@@ -63,3 +63,5 @@ export const ResumeStrengthMeter = () => {
     </div>
   );
 };
+
+export default ResumeStrengthMeter;
