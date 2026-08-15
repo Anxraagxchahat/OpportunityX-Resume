@@ -187,9 +187,9 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
     switch (platform?.toLowerCase()) {
       case 'instagram': return <InstagramIcon className="w-4 h-4 text-[#E4405F]" />;
       case 'linkedin': return <LinkedInIcon className="w-4 h-4 text-[#0A66C2]" />;
-      case 'x': return <XIcon className="w-3.5 h-3.5 text-slate-800 dark:text-white" />;
+      case 'x': return <XIcon className="w-3.5 h-3.5 text-white" />;
       case 'youtube': return <YoutubeIcon className="w-4 h-4 text-[#FF0000]" />;
-      default: return <Sparkles className="w-4 h-4 text-orange-500" />;
+      default: return <Sparkles className="w-4 h-4 text-orange-400" />;
     }
   };
 
@@ -208,19 +208,20 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
   const referralCreditsEarned = rewardsData?.referral_profile?.referral_credits_earned || 0;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 dark:bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="bg-white dark:bg-[#0B0D14] text-slate-900 dark:text-white border border-slate-200 dark:border-orange-500/30 rounded-2xl w-full max-w-xl shadow-2xl p-4 sm:p-6 space-y-4 relative max-h-[92vh] overflow-y-auto custom-scrollbar">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
+      {/* Pure AMOLED Jet Black Modal Container */}
+      <div className="bg-[#000000] text-white border border-[#222222] rounded-3xl w-full max-w-xl shadow-[0_0_60px_rgba(0,0,0,0.9)] p-4 sm:p-6 space-y-4 relative max-h-[92vh] overflow-y-auto custom-scrollbar">
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="absolute top-4 right-4 text-neutral-400 hover:text-white p-2 rounded-xl bg-[#111111] hover:bg-[#1C1C1C] border border-[#222222] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center shadow-sm"
           aria-label="Close Credits Center"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="flex items-center gap-3 pr-10">
+        <div className="flex items-center gap-3 pr-12">
           <div className="relative p-1 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shrink-0">
             <img
               src="/favicon.png"
@@ -234,13 +235,13 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
             <div className="hidden w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 items-center justify-center text-white font-black text-sm shadow-md">
               OX
             </div>
-            <span className="absolute -bottom-1 -right-1 p-1 rounded-full bg-orange-500 text-black border border-white dark:border-[#0B0D14] shadow-md">
+            <span className="absolute -bottom-1 -right-1 p-1 rounded-full bg-orange-500 text-black border border-[#000000] shadow-md">
               <Sparkles className="w-3 h-3 animate-pulse" />
             </span>
           </div>
           <div className="min-w-0">
-            <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white truncate">✨ AI Credits & Rewards Center</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+            <h3 className="text-base sm:text-xl font-black text-white truncate">✨ AI Credits & Rewards Center</h3>
+            <p className="text-xs text-neutral-400 truncate">
               {isLoggedIn
                 ? `Account: ${session.user?.email || 'Authenticated User'}`
                 : 'Guest Session — Login to unlock 5 Guaranteed Starter Credits'}
@@ -250,59 +251,59 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
-          <div className="p-2.5 sm:p-3 rounded-xl bg-orange-50/60 dark:bg-[#10131D] border border-orange-500/30 dark:border-orange-500/40 text-center space-y-0.5 shadow-sm">
-            <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Remaining</span>
-            <div className="text-xl sm:text-2xl font-black text-orange-600 dark:text-orange-400">{remaining}</div>
-            <span className="text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 block font-medium">Never Expire</span>
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-[#0A0A0A] border border-orange-500/30 text-center space-y-0.5 shadow-sm">
+            <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">Remaining</span>
+            <div className="text-xl sm:text-2xl font-black text-orange-400">{remaining}</div>
+            <span className="text-[8px] sm:text-[9px] text-neutral-500 block font-medium">Never Expire</span>
           </div>
 
-          <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#10131D] border border-slate-200 dark:border-slate-800 text-center space-y-0.5 shadow-sm">
-            <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Credits Used</span>
-            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{totalUsed}</div>
-            <span className="text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 block font-medium">AI Requests</span>
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-[#0A0A0A] border border-[#1C1C1C] text-center space-y-0.5 shadow-sm">
+            <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">Credits Used</span>
+            <div className="text-xl sm:text-2xl font-black text-white">{totalUsed}</div>
+            <span className="text-[8px] sm:text-[9px] text-neutral-500 block font-medium">AI Requests</span>
           </div>
 
-          <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50/60 dark:bg-[#10131D] border border-emerald-500/30 dark:border-slate-800 text-center space-y-0.5 shadow-sm">
-            <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Purchased</span>
-            <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{totalPurchased}</div>
-            <span className="text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 block font-medium">Credit Packs</span>
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-[#0A0A0A] border border-emerald-500/30 text-center space-y-0.5 shadow-sm">
+            <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">Purchased</span>
+            <div className="text-xl sm:text-2xl font-black text-emerald-400">{totalPurchased}</div>
+            <span className="text-[8px] sm:text-[9px] text-neutral-500 block font-medium">Credit Packs</span>
           </div>
         </div>
 
         {/* 1. Guaranteed Starter Credits Status */}
-        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-between text-xs gap-2">
+        <div className="p-3 rounded-2xl bg-[#06140B] border border-emerald-500/30 flex items-center justify-between text-xs gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <div className="min-w-0">
-              <span className="font-bold text-emerald-800 dark:text-emerald-300">5 Starter Credits</span>
-              <span className="text-slate-600 dark:text-slate-400 ml-1.5 hidden sm:inline">— Guaranteed on first use</span>
+              <span className="font-bold text-emerald-300">5 Starter Credits</span>
+              <span className="text-neutral-400 ml-1.5 hidden sm:inline">— Guaranteed on first use</span>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 flex items-center gap-1 shrink-0">
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 shrink-0">
             <Check className="w-3 h-3" /> Active
           </span>
         </div>
 
         {isLoggedIn ? (
           <>
-            {/* 2. Optional Social Media Tasks (High Contrast & Theme Adaptive) */}
-            <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50/80 dark:bg-[#10131D] border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+            {/* 2. Optional Social Media Tasks (Pure Jet Black & High Contrast) */}
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0A0A0A] border border-[#1C1C1C] space-y-3 shadow-sm">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Gift className="w-4 h-4 text-orange-500" /> Earn More Credits (Social Tasks)
+                  <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                    <Gift className="w-4 h-4 text-orange-400" /> Earn More Credits (Social Tasks)
                   </h4>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Earn up to <strong className="text-orange-600 dark:text-amber-400 font-bold">+5 Bonus Credits</strong> by following official channels.
+                  <p className="text-[11px] text-neutral-400">
+                    Earn up to <strong className="text-orange-400 font-bold">+5 Bonus Credits</strong> by following official channels.
                   </p>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/30 shrink-0">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-orange-500/10 text-orange-400 border border-orange-500/30 shrink-0">
                   {socialBonusEarned} / 5 earned
                 </span>
               </div>
 
               {socialMessage.text && (
-                <div className={`p-2.5 rounded-xl text-xs flex items-center gap-2 ${socialMessage.isError ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'}`}>
+                <div className={`p-2.5 rounded-xl text-xs flex items-center gap-2 ${socialMessage.isError ? 'bg-red-500/10 text-red-400 border border-red-500/30' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'}`}>
                   {socialMessage.isError ? <AlertCircle className="w-4 h-4 shrink-0" /> : <Check className="w-4 h-4 shrink-0" />}
                   <span className="font-semibold">{socialMessage.text}</span>
                 </div>
@@ -314,31 +315,31 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
                   return (
                     <div
                       key={task.task_id}
-                      className={`p-3 rounded-xl border flex items-center justify-between gap-2.5 transition-all shadow-sm ${
+                      className={`p-3 rounded-2xl border flex items-center justify-between gap-2.5 transition-all shadow-sm ${
                         task.completed
-                          ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-500/30'
-                          : 'bg-white dark:bg-[#151926] border-slate-200 dark:border-slate-800 hover:border-orange-500/40'
+                          ? 'bg-[#0A180E] border-emerald-500/30 text-neutral-200'
+                          : 'bg-[#121212] border-[#222222] hover:border-orange-500/40 text-white'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="p-2 rounded-xl bg-slate-100 dark:bg-black/50 border border-slate-200 dark:border-slate-800 shrink-0 flex items-center justify-center">
+                        <div className="p-2 rounded-xl bg-[#050505] border border-[#242424] shrink-0 flex items-center justify-center">
                           {getPlatformIcon(task.platform)}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{task.platform}</div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{task.action}</div>
+                          <div className="text-xs font-bold text-white truncate">{task.platform}</div>
+                          <div className="text-[11px] text-neutral-400 truncate">{task.action}</div>
                         </div>
                       </div>
 
                       {task.completed ? (
-                        <span className="px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0">
+                        <span className="px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0">
                           <Check className="w-3 h-3" /> +{task.reward_amount} Cr
                         </span>
                       ) : (
                         <button
                           onClick={() => handleClaimSocial(task)}
                           disabled={isClaiming || socialBonusEarned >= 5}
-                          className="px-3 py-1.5 min-h-[38px] rounded-xl text-[11px] font-bold bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:border-orange-500/50 flex items-center gap-1.5 transition-all cursor-pointer shrink-0 disabled:opacity-50"
+                          className="px-3 py-1.5 min-h-[38px] rounded-xl text-[11px] font-bold bg-orange-500/15 hover:bg-orange-500/25 text-orange-400 border border-orange-500/40 hover:border-orange-500/60 flex items-center gap-1.5 transition-all cursor-pointer shrink-0 disabled:opacity-50"
                         >
                           {isClaiming ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -356,51 +357,51 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* 3. Refer & Earn Section (Flawless Theme Adaptation & Layout) */}
-            <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50/80 dark:bg-[#10131D] border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+            {/* 3. Refer & Earn Section (Pure Jet Black & Clean Layout) */}
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0A0A0A] border border-[#1C1C1C] space-y-3 shadow-sm">
               {/* Header with clear title & badge */}
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Users className="w-4 h-4 text-orange-500" /> Refer & Earn (+5 Credits Each)
+                  <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-orange-400" /> Refer & Earn (+5 Credits Each)
                   </h4>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                  <p className="text-[11px] text-neutral-400">
                     Share your link with friends. You both earn +5 credits when they join.
                   </p>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-600 dark:text-orange-300 border border-orange-500/30 shrink-0">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-300 border border-orange-500/30 shrink-0">
                   +5 / Referral
                 </span>
               </div>
 
               {/* Error & Retry Handling */}
               {rewardsError ? (
-                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between text-xs text-red-600 dark:text-red-400 gap-2">
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between text-xs text-red-400 gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span className="truncate font-semibold">{rewardsError}</span>
                   </div>
                   <button
                     onClick={fetchRewards}
-                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-700 dark:text-red-300 rounded-lg font-bold flex items-center gap-1 shrink-0 cursor-pointer min-h-[36px]"
+                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg font-bold flex items-center gap-1 shrink-0 cursor-pointer min-h-[36px]"
                   >
                     <RefreshCw className="w-3 h-3" /> Retry
                   </button>
                 </div>
               ) : (
                 /* Main Referral Code & Actions Box */
-                <div className="p-3 sm:p-4 rounded-xl bg-white dark:bg-[#151926] border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+                <div className="p-3 sm:p-4 rounded-2xl bg-[#121212] border border-[#222222] space-y-3 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block tracking-wider">Your Permanent Referral Code</span>
+                      <span className="text-[9px] uppercase font-bold text-neutral-400 block tracking-wider">Your Permanent Referral Code</span>
                       <div className="flex items-center gap-2 mt-0.5">
                         {isLoadingRewards ? (
                           <div className="flex items-center gap-2 py-1">
-                            <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />
-                            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-semibold">Loading code...</span>
+                            <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />
+                            <span className="text-xs text-neutral-400 font-mono font-semibold">Loading code...</span>
                           </div>
                         ) : (
-                          <span className="text-2xl sm:text-3xl font-black font-mono tracking-widest text-orange-600 dark:text-orange-400 select-all">
+                          <span className="text-2xl sm:text-3xl font-black font-mono tracking-widest text-orange-400 select-all">
                             {userReferralCode || 'XQ7MKA'}
                           </span>
                         )}
@@ -412,17 +413,17 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
                       <button
                         onClick={() => handleCopyCode(userReferralCode)}
                         disabled={!userReferralCode || isLoadingRewards}
-                        className="flex-1 sm:flex-initial px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                        className="flex-1 sm:flex-initial px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold bg-[#1A1A1A] hover:bg-[#252525] text-neutral-200 border border-[#2E2E2E] hover:border-[#3E3E3E] flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
                         title="Copy Referral Code"
                       >
                         {copyStatus === 'code' ? (
                           <>
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            <span className="text-emerald-600 dark:text-emerald-400">Code Copied!</span>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">Code Copied!</span>
                           </>
                         ) : (
                           <>
-                            <Copy className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                            <Copy className="w-3.5 h-3.5 text-neutral-400" />
                             <span>Copy Code</span>
                           </>
                         )}
@@ -431,17 +432,17 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
                       <button
                         onClick={() => handleCopyLink(userReferralCode)}
                         disabled={!userReferralCode || isLoadingRewards}
-                        className="flex-1 sm:flex-initial px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                        className="flex-1 sm:flex-initial px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold bg-[#1A1A1A] hover:bg-[#252525] text-neutral-200 border border-[#2E2E2E] hover:border-[#3E3E3E] flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
                         title="Copy Referral Link"
                       >
                         {copyStatus === 'link' ? (
                           <>
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            <span className="text-emerald-600 dark:text-emerald-400">Link Copied!</span>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">Link Copied!</span>
                           </>
                         ) : (
                           <>
-                            <LinkIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                            <LinkIcon className="w-3.5 h-3.5 text-neutral-400" />
                             <span>Copy Link</span>
                           </>
                         )}
@@ -470,38 +471,38 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
 
                   {/* Shareable Link Display */}
                   {userReferralCode && (
-                    <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                    <div className="pt-2.5 border-t border-[#1F1F1F] flex items-center justify-between text-[11px] text-neutral-400">
                       <span className="truncate">
-                        Referral Link: <span className="font-mono font-semibold text-slate-800 dark:text-slate-300 select-all">{getReferralShareUrl(userReferralCode).replace('https://', '')}</span>
+                        Referral Link: <span className="font-mono font-semibold text-neutral-300 select-all">{getReferralShareUrl(userReferralCode).replace('https://', '')}</span>
                       </span>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Referral Stats Summary (High Contrast & Clear) */}
+              {/* Referral Stats Summary (Pure Black & High Contrast) */}
               <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                <div className="p-3 rounded-xl bg-white dark:bg-[#151926] border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Successful Referrals</span>
-                  <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white">{successfulReferrals}</span>
+                <div className="p-3 rounded-2xl bg-[#121212] border border-[#222222] shadow-sm">
+                  <span className="text-[10px] text-neutral-400 block font-medium">Successful Referrals</span>
+                  <span className="font-black text-sm sm:text-base text-white">{successfulReferrals}</span>
                 </div>
-                <div className="p-3 rounded-xl bg-white dark:bg-[#151926] border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Referral Credits Earned</span>
-                  <span className="font-black text-sm sm:text-base text-emerald-600 dark:text-emerald-400">+{referralCreditsEarned} Cr</span>
+                <div className="p-3 rounded-2xl bg-[#121212] border border-[#222222] shadow-sm">
+                  <span className="text-[10px] text-neutral-400 block font-medium">Referral Credits Earned</span>
+                  <span className="font-black text-sm sm:text-base text-emerald-400">+{referralCreditsEarned} Cr</span>
                 </div>
               </div>
 
               {/* Redeem Friend's Code Form */}
               {hasRedeemedReferral ? (
-                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                <div className="p-3 rounded-2xl bg-[#0A180E] border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                   <span>
                     Referral code <strong className="font-mono font-bold tracking-wider">{redeemedCode}</strong> redeemed (+5 Credits claimed).
                   </span>
                 </div>
               ) : (
                 <form onSubmit={handleApplyReferral} className="space-y-2 pt-1">
-                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-300 block">Have a friend's referral code?</span>
+                  <span className="text-[11px] font-bold text-neutral-300 block">Have a friend's referral code?</span>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
@@ -509,7 +510,7 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
                       value={inputReferralCode}
                       onChange={(e) => setInputReferralCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                       placeholder="ENTER 6-LETTER CODE"
-                      className="flex-1 px-3.5 py-2.5 min-h-[44px] bg-white dark:bg-[#151926] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs font-mono font-bold tracking-widest uppercase rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-sm"
+                      className="flex-1 px-3.5 py-2.5 min-h-[44px] bg-[#121212] border border-[#2C2C2C] text-white placeholder:text-neutral-500 text-xs font-mono font-bold tracking-widest uppercase rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-sm"
                     />
                     <button
                       type="submit"
@@ -520,7 +521,7 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
                     </button>
                   </div>
                   {referralMessage.text && (
-                    <p className={`text-[11px] font-semibold ${referralMessage.isError ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                    <p className={`text-[11px] font-semibold ${referralMessage.isError ? 'text-red-400' : 'text-emerald-400'}`}>
                       {referralMessage.text}
                     </p>
                   )}
@@ -533,14 +534,14 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
         {/* Usage History Section */}
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <History className="w-3.5 h-3.5 text-slate-500" /> Recent Activity History
+            <h4 className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+              <History className="w-3.5 h-3.5 text-neutral-500" /> Recent Activity History
             </h4>
-            <span className="text-[10px] text-slate-500">{usageHistory.length} logs</span>
+            <span className="text-[10px] text-neutral-500">{usageHistory.length} logs</span>
           </div>
 
           {usageHistory.length === 0 ? (
-            <div className="p-3 text-center text-xs text-slate-500 bg-slate-50 dark:bg-[#10131D] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="p-3 text-center text-xs text-neutral-500 bg-[#0A0A0A] rounded-2xl border border-[#1C1C1C] shadow-sm">
               No usage activity logged yet.
             </div>
           ) : (
@@ -548,18 +549,18 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
               {usageHistory.map((item) => (
                 <div
                   key={item.id}
-                  className="p-2 rounded-xl bg-slate-50 dark:bg-[#10131D] border border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-xs"
+                  className="p-2.5 rounded-2xl bg-[#0A0A0A] border border-[#1C1C1C] flex items-center justify-between text-xs"
                 >
                   <div className="flex items-center gap-2 truncate">
                     <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
-                    <span className="text-slate-800 dark:text-slate-200 truncate">{item.action}</span>
+                    <span className="text-neutral-200 truncate">{item.action}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                    <span className="text-[10px] font-mono text-neutral-400">
                       {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {item.creditsUsed > 0 && (
-                      <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">
+                      <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">
                         -{item.creditsUsed} Cr
                       </span>
                     )}
@@ -578,7 +579,7 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
                 handleClose();
                 setIsBuyCreditsModalOpen(true);
               }}
-              className="w-full py-3 min-h-[44px] bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 min-h-[44px] bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-2xl shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
               <Zap className="w-4 h-4" /> Need More? Buy Credit Pack (From ₹29)
             </button>
@@ -588,7 +589,7 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
                 handleClose();
                 setIsUnlockAIModalOpen(true);
               }}
-              className="w-full py-3 min-h-[44px] bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 min-h-[44px] bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-2xl shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
               <Sparkles className="w-4 h-4" /> Login & Claim 5 Guaranteed Credits
             </button>
@@ -596,7 +597,7 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
 
           <button
             onClick={handleClose}
-            className="w-full py-2 min-h-[44px] text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer flex items-center justify-center"
+            className="w-full py-2 min-h-[44px] text-center text-xs font-semibold text-neutral-400 hover:text-white cursor-pointer flex items-center justify-center"
           >
             Close
           </button>
