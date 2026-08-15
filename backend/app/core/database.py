@@ -5,7 +5,7 @@ from app.core.config import settings
 import re
 
 # Engine configuration with connection pooling for Supabase PostgreSQL
-DATABASE_URL = settings.DATABASE_URL
+DATABASE_URL = settings.DATABASE_URL or "sqlite:///./opportunityx_dev.db"
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 

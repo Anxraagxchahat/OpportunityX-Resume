@@ -12,8 +12,15 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker — use bundled worker from CDN for reliability
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+// Configure PDF.js worker using Vite native worker resolution with CDN fallback
+try {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString();
+} catch {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '4.10.38'}/pdf.worker.min.mjs`;
+}
 
 const IS_DEV = import.meta.env.DEV;
 

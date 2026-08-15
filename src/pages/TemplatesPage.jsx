@@ -16,11 +16,6 @@ const RECENT_KEY = 'opportunityx_recent_templates_v1';
 
 export const TemplatesPage = () => {
   const { isTablet, orientation } = useDeviceType();
-
-  if (isTablet) {
-    return <TabletTemplateGallery orientation={orientation} />;
-  }
-
   const navigate = useNavigate();
   const { setTemplate, setAccentColor, activeResume } = useResume();
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,6 +80,10 @@ export const TemplatesPage = () => {
   const handleSelectAccent = (colorHex) => {
     setAccentColor(colorHex);
   };
+
+  if (isTablet) {
+    return <TabletTemplateGallery orientation={orientation} />;
+  }
 
   // Filter templates list dynamically
   const filterTemplateItem = (t) => {

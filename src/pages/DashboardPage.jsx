@@ -115,11 +115,6 @@ function ScoreRing({ score, size = 52, strokeWidth = 4, className = '' }) {
 
 export const DashboardPage = () => {
   const { isTablet } = useDeviceType();
-
-  if (isTablet) {
-    return <TabletHomeDashboard />;
-  }
-
   const navigate = useNavigate();
   const {
     resumes, activeResume, activeResumeId, setActiveResumeId,
@@ -216,6 +211,10 @@ export const DashboardPage = () => {
 
   const isLoggedIn = session?.isAuthenticated && !session?.isGuest;
   const hasResumes = resumes.length > 0;
+
+  if (isTablet) {
+    return <TabletHomeDashboard />;
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   //  EMPTY STATE (zero resumes)

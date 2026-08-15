@@ -85,9 +85,10 @@ def get_cors_headers(request: Request) -> dict:
 async def db_exception_handler(request: Request, exc: SQLAlchemyError):
     logger.error(f"Database Exception on {request.method} {request.url.path}: {exc}", exc_info=True)
     headers = get_cors_headers(request)
+    detail_msg = f"Database service temporarily unavailable: {str(exc)}" if settings.is_dev else "Database service temporarily unavailable. Please try again later."
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        content={"detail": f"Database service temporarily unavailable: {str(exc)}"},
+        content={"detail": detail_msg},
         headers=headers
     )
 
@@ -95,9 +96,10 @@ async def db_exception_handler(request: Request, exc: SQLAlchemyError):
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled Exception on {request.method} {request.url.path}: {exc}", exc_info=True)
     headers = get_cors_headers(request)
+    detail_msg = f"Internal Server Error: {str(exc)}" if settings.is_dev else "An unexpected internal server error occurred. Please try again later."
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": f"Internal Server Error: {str(exc)}"},
+        content={"detail": detail_msg},
         headers=headers
     )
 
