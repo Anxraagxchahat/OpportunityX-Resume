@@ -76,7 +76,7 @@ class CashfreeService:
                 "customer_phone": phone_digits
             },
             "order_meta": {
-                "return_url": f"https://resume.opportunityx.co.in/dashboard?order_id={{order_id}}"
+                "return_url": f"{settings.FRONTEND_URL.rstrip('/')}/dashboard?order_id={{order_id}}"
             }
         }
 

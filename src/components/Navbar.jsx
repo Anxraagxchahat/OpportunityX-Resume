@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResume } from '../context/ResumeContext';
-import { AuthModal } from './AuthModal';
 import { ThemeTogglePill } from './ThemeTogglePill';
 import { UserAvatar } from './UserAvatar';
 import { MobileTopBar } from './mobile/MobileTopBar';
@@ -150,8 +149,6 @@ export const Navbar = () => {
         </div>
 
       </div>
-
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </header>
   );
 };

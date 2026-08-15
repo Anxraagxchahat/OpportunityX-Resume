@@ -7,6 +7,7 @@ import { ResumeProvider, useResume } from './context/ResumeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { AuthLoadingScreen } from './components/AuthLoadingScreen';
+import { AuthModal } from './components/AuthModal';
 import { SupportOpportunityXModal } from './components/SupportOpportunityXModal';
 import { DownloadSuccessModal } from './components/DownloadSuccessModal';
 import { UnlockAIModal } from './components/UnlockAIModal';
@@ -117,6 +118,11 @@ function AppContent() {
   );
 }
 
+function AuthModalWrapper() {
+  const { isAuthOpen, setIsAuthOpen } = useResume();
+  return <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />;
+}
+
 export function App() {
   return (
     <ThemeProvider>
@@ -128,6 +134,7 @@ export function App() {
                 <ScrollToTop />
                 <AppContent />
                 <MobileMoreMenuModal />
+                <AuthModalWrapper />
                 <SupportOpportunityXModal />
                 <DownloadSuccessModal />
                 <UnlockAIModal />

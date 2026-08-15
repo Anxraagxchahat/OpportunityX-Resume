@@ -88,6 +88,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     }
 
     const errorMap = {
+      'auth/unauthorized-domain': 'This domain is not authorized in Firebase. Please ensure www.resume.opportunityx.co.in is added to Firebase Authorized Domains.',
       'auth/wrong-password': 'Incorrect password. Please try again.',
       'auth/user-not-found': 'No account found with this email. Try signing up.',
       'auth/email-already-in-use': 'This email already has an account. Please log in instead.',
@@ -101,7 +102,9 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       'auth/network-request-failed': 'Network error. Please check your connection and try again.',
     };
 
-    setError(errorMap[firebaseError.code] || firebaseError.message || 'Authentication failed. Please try again.');
+    const errorCode = firebaseError?.code || '';
+    const rawMsg = firebaseError?.message || (typeof firebaseError === 'string' ? firebaseError : '');
+    setError(errorMap[errorCode] || rawMsg || 'Authentication failed. Please try again.');
   };
 
   const handleOAuthLogin = async (provider, providerInstance) => {
