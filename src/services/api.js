@@ -5,13 +5,13 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD
     ? 'https://opportunityx-resume.onrender.com/api/v1'
-    : 'http://localhost:8000/api/v1');
+    : 'http://localhost:8001/api/v1');
 
 async function getAuthToken() {
   try {
     const currentUser = auth.currentUser;
     if (currentUser) {
-      return await currentUser.getIdToken(true);
+      return await currentUser.getIdToken();
     }
   } catch (e) {
     console.warn("Failed to retrieve Firebase ID Token:", e);
@@ -52,7 +52,9 @@ async function request(endpoint, options = {}) {
       const errJson = await response.json();
       errorDetail = errJson.detail || errJson.message || errorDetail;
     } catch (e) {}
-    throw new Error(errorDetail);
+    const err = new Error(errorDetail);
+    err.status = response.status;
+    throw err;
   }
 
   return response.json();
@@ -68,7 +70,46 @@ export const apiService = {
     return request('/ecosystem/profile');
   },
 
-  // Credits System
+  // ──────────────────────────────────────────
+  // Cloud Resume CRUD (Supabase / Postgres)
+  // ──────────────────────────────────────────
+  async getResumes() {
+    return request('/resumes');
+  },
+
+  async getResume(id) {
+    return request(`/resumes/${id}`);
+  },
+
+  async createResume(resumeData) {
+    return request('/resumes', {
+      method: 'POST',
+      body: JSON.stringify(resumeData)
+    });
+  },
+
+  async updateResume(id, updateData) {
+    return request(`/resumes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData)
+    });
+  },
+
+  async deleteResume(id) {
+    return request(`/resumes/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async shareResume(id) {
+    return request(`/resumes/${id}/share`, {
+      method: 'POST'
+    });
+  },
+
+  // ──────────────────────────────────────────
+  // AI Credits System (Authoritative)
+  // ──────────────────────────────────────────
   async getCreditBalance() {
     return request('/credits/balance');
   },
@@ -77,7 +118,20 @@ export const apiService = {
     return request('/credits/claim-welcome', { method: 'POST' });
   },
 
+  async consumeCredit(actionName = 'AI Feature', credits = 1) {
+    return request('/credits/consume', {
+      method: 'POST',
+      body: JSON.stringify({ action_name: actionName, credits })
+    });
+  },
+
+  async getCreditTransactions() {
+    return request('/credits/transactions');
+  },
+
+  // ──────────────────────────────────────────
   // Cashfree Payment Gateway
+  // ──────────────────────────────────────────
   async createCashfreeOrder(packId, customerPhone = "9999999999") {
     return request('/payments/create-order', {
       method: 'POST',
@@ -92,7 +146,9 @@ export const apiService = {
     });
   },
 
+  // ──────────────────────────────────────────
   // AI Generation
+  // ──────────────────────────────────────────
   async generateAI(feature, prompt, content) {
     return request('/ai/generate', {
       method: 'POST',

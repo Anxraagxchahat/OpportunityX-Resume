@@ -98,41 +98,37 @@ export const hydrateAndNormalizeResume = (resume) => {
           itemCopy.startDate = sDate;
           itemCopy.endDate = finalIsCurrent ? (eDate && !/present|current/i.test(eDate) ? eDate : 'Present') : eDate;
           itemCopy.current = finalIsCurrent;
-          itemCopy.isCurrent = finalIsCurrent;
 
-          // Bullets normalization
+          if (typeof itemCopy.description === 'string' && itemCopy.description && (!itemCopy.bullets || itemCopy.bullets.length === 0)) {
+            const splitLines = itemCopy.description.split(/\r?\n/).map((l) => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+            itemCopy.bullets = splitLines.length > 0 ? splitLines : [itemCopy.description.trim()];
+          }
           if (!Array.isArray(itemCopy.bullets)) {
-            if (typeof itemCopy.description === 'string' && itemCopy.description.trim()) {
-              itemCopy.bullets = itemCopy.description
-                .split(/\n|•|;/)
-                .map((b) => b.trim().replace(/^[-•*]\s*/, ''))
-                .filter(Boolean);
-            } else if (typeof itemCopy.highlights === 'string' && itemCopy.highlights.trim()) {
-              itemCopy.bullets = itemCopy.highlights.split(/\n|•/).map((b) => b.trim()).filter(Boolean);
-            } else {
-              itemCopy.bullets = [];
-            }
-          } else {
-            itemCopy.bullets = itemCopy.bullets.map((b) => (typeof b === 'string' ? b : String(b || ''))).filter(Boolean);
+            itemCopy.bullets = [];
           }
         }
 
         // Normalize Education items
         if (prefix === 'edu') {
-          itemCopy.degree = itemCopy.degree || itemCopy.title || itemCopy.major || '';
-          itemCopy.institution = itemCopy.institution || itemCopy.college || itemCopy.school || itemCopy.university || '';
-          itemCopy.college = itemCopy.institution;
-          itemCopy.gpa = itemCopy.gpa || itemCopy.cgpa || itemCopy.grade || '';
+          itemCopy.institution = itemCopy.institution || itemCopy.school || itemCopy.university || itemCopy.college || '';
+          itemCopy.degree = itemCopy.degree || itemCopy.major || itemCopy.fieldOfStudy || '';
+          itemCopy.location = itemCopy.location || '';
 
           const periodRaw = itemCopy.period || '';
           delete itemCopy.period;
 
           let sDate = cleanDateString(itemCopy.startDate || itemCopy.start_date || '');
-          let eDate = cleanDateString(itemCopy.endDate || itemCopy.end_date || '');
+          let eDate = cleanDateString(itemCopy.endDate || itemCopy.end_date || itemCopy.year || '');
           delete itemCopy.start_date;
           delete itemCopy.end_date;
 
-          if (periodRaw && (!sDate || !eDate)) {
+          const isCurrentMentioned =
+            itemCopy.current === true ||
+            itemCopy.isCurrent === true ||
+            /present|current|till date|now|ongoing/i.test(periodRaw) ||
+            /present|current|till date|now|ongoing/i.test(eDate);
+
+          if (periodRaw && (!sDate || (!eDate && !isCurrentMentioned))) {
             const parts = periodRaw.split(/\s*[-–—]| to \s*/i);
             if (parts.length >= 2) {
               if (!sDate) sDate = cleanDateString(parts[0]);
@@ -142,24 +138,55 @@ export const hydrateAndNormalizeResume = (resume) => {
             }
           }
 
+          const finalIsCurrent = isCurrentMentioned || eDate === 'Present' || /present|current/i.test(eDate);
           itemCopy.startDate = sDate;
-          itemCopy.endDate = eDate;
+          itemCopy.endDate = finalIsCurrent ? (eDate && !/present|current/i.test(eDate) ? eDate : 'Present') : eDate;
+          itemCopy.current = finalIsCurrent;
         }
 
-        // Normalize Projects items
+        // Normalize Project items
         if (prefix === 'proj') {
-          itemCopy.title = itemCopy.title || itemCopy.name || '';
-          itemCopy.name = itemCopy.title;
-          itemCopy.link = itemCopy.link || itemCopy.url || itemCopy.htmlUrl || '';
-
-          if (Array.isArray(itemCopy.technologies)) {
-            itemCopy.techStack = itemCopy.technologies.join(', ');
-          } else if (typeof itemCopy.techStack === 'string') {
-            itemCopy.technologies = itemCopy.techStack.split(',').map((s) => s.trim()).filter(Boolean);
-          } else {
-            itemCopy.technologies = [];
-            itemCopy.techStack = '';
+          itemCopy.title = itemCopy.title || itemCopy.name || itemCopy.projectName || '';
+          itemCopy.description = itemCopy.description || '';
+          itemCopy.liveUrl = itemCopy.liveUrl || itemCopy.link || itemCopy.url || '';
+          itemCopy.githubUrl = itemCopy.githubUrl || itemCopy.github || '';
+          itemCopy.techStack = Array.isArray(itemCopy.techStack) ? itemCopy.techStack : typeof itemCopy.techStack === 'string' ? itemCopy.techStack.split(',').map((s) => s.trim()).filter(Boolean) : [];
+          if (typeof itemCopy.description === 'string' && itemCopy.description && (!itemCopy.bullets || itemCopy.bullets.length === 0)) {
+            const splitLines = itemCopy.description.split(/\r?\n/).map((l) => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+            itemCopy.bullets = splitLines.length > 0 ? splitLines : [itemCopy.description.trim()];
           }
+          if (!Array.isArray(itemCopy.bullets)) {
+            itemCopy.bullets = [];
+          }
+        }
+
+        // Normalize Certificates items
+        if (prefix === 'cert') {
+          itemCopy.title = itemCopy.title || itemCopy.name || '';
+          itemCopy.issuer = itemCopy.issuer || itemCopy.organization || itemCopy.authority || '';
+          itemCopy.date = cleanDateString(itemCopy.date || itemCopy.issueDate || '');
+          itemCopy.link = itemCopy.link || itemCopy.url || '';
+        }
+
+        // Normalize Achievements items
+        if (prefix === 'ach') {
+          itemCopy.title = itemCopy.title || itemCopy.name || '';
+          itemCopy.issuer = itemCopy.issuer || itemCopy.organization || '';
+          itemCopy.date = cleanDateString(itemCopy.date || '');
+          itemCopy.description = itemCopy.description || '';
+        }
+
+        // Normalize Languages items
+        if (prefix === 'lang') {
+          itemCopy.name = itemCopy.name || itemCopy.language || '';
+          itemCopy.proficiency = itemCopy.proficiency || itemCopy.level || 'Fluent';
+        }
+
+        // Normalize Custom Sections items
+        if (prefix === 'cust') {
+          itemCopy.heading = itemCopy.heading || itemCopy.title || 'Custom Section';
+          itemCopy.content = itemCopy.content || '';
+          itemCopy.bullets = Array.isArray(itemCopy.bullets) ? itemCopy.bullets : [];
         }
 
         return itemCopy;
@@ -168,59 +195,28 @@ export const hydrateAndNormalizeResume = (resume) => {
     });
   };
 
-  // Personal Info Hydration
-  const personalRaw = resume.personal || {};
-  const personalSync = {
-    ...personalRaw,
-    fullName: personalRaw.fullName || personalRaw.name || '',
-    jobTitle: personalRaw.jobTitle || personalRaw.targetRole || personalRaw.role || '',
-    email: personalRaw.email || '',
-    phone: personalRaw.phone || '',
-    location: personalRaw.location || '',
-    linkedin: personalRaw.linkedin || '',
-    github: personalRaw.github || '',
-    website: personalRaw.website || personalRaw.portfolio || '',
-    summary: personalRaw.summary || ''
-  };
-
-  // Skills Hydration
-  let skillsSync = { languages: [], frameworks: [], tools: [] };
-  const rawSkills = resume.skills;
-  if (rawSkills) {
-    if (Array.isArray(rawSkills)) {
-      rawSkills.forEach((s) => {
-        if (typeof s === 'string') {
-          skillsSync.tools.push(s);
-        } else if (typeof s === 'object' && s !== null) {
-          const items = Array.isArray(s.items) ? s.items : (Array.isArray(s.skills) ? s.skills : []);
-          const catLower = (s.category || s.name || '').toLowerCase();
-          if (catLower.includes('lang')) {
-            skillsSync.languages.push(...items.map(String));
-          } else if (catLower.includes('frame') || catLower.includes('lib') || catLower.includes('tech')) {
-            skillsSync.frameworks.push(...items.map(String));
-          } else {
-            skillsSync.tools.push(...items.map(String));
-          }
-        }
-      });
-    } else if (typeof rawSkills === 'object') {
-      skillsSync = {
-        languages: Array.isArray(rawSkills.languages) ? rawSkills.languages.map(String) : [],
-        frameworks: Array.isArray(rawSkills.frameworks) ? rawSkills.frameworks.map(String) : [],
-        tools: Array.isArray(rawSkills.tools) ? rawSkills.tools.map(String) : []
-      };
-      Object.keys(rawSkills).forEach((key) => {
-        if (!['languages', 'frameworks', 'tools'].includes(key) && Array.isArray(rawSkills[key])) {
-          skillsSync[key] = rawSkills[key].map(String);
-        }
-      });
-    }
-  }
-
   return {
     ...resume,
-    personal: personalSync,
-    skills: skillsSync,
+    metadata: {
+      ...emptyResumeSchema.metadata,
+      ...(resume.metadata || {}),
+      template: resume.metadata?.template || 'modern',
+      font: resume.metadata?.font || 'Inter',
+      accentColor: resume.metadata?.accentColor || '#F97316'
+    },
+    personal: {
+      ...emptyResumeSchema.personal,
+      ...(resume.personal || {})
+    },
+    socialLinks: {
+      ...emptyResumeSchema.socialLinks,
+      ...(resume.socialLinks || {})
+    },
+    skills: {
+      languages: Array.isArray(resume.skills?.languages) ? resume.skills.languages : [],
+      frameworks: Array.isArray(resume.skills?.frameworks) ? resume.skills.frameworks : [],
+      tools: Array.isArray(resume.skills?.tools) ? resume.skills.tools : []
+    },
     education: fixArray(resume.education, 'edu'),
     experience: fixArray(resume.experience, 'exp'),
     projects: fixArray(resume.projects, 'proj'),
@@ -231,22 +227,18 @@ export const hydrateAndNormalizeResume = (resume) => {
   };
 };
 
-// Pure runtime pass-through for useMemo: ONLY guarantees IDs & array shapes without overwriting user edits/empty strings
-export const ensureResumeItemIds = (resume) => {
+const ensureResumeItemIds = (resume) => {
   if (!resume || typeof resume !== 'object') return resume;
 
   const fixArray = (arr, prefix) => {
     if (!Array.isArray(arr)) return [];
     return arr.map((item, idx) => {
-      if (typeof item === 'string') {
-        return { id: `${prefix}-${idx}-${Date.now()}`, name: item, title: item };
-      }
       if (typeof item === 'object' && item !== null) {
-        let itemCopy = { ...item };
+        const itemCopy = { ...item };
         if (!itemCopy.id) {
           itemCopy.id = `${prefix}-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`;
         }
-        if (prefix === 'exp' && !Array.isArray(itemCopy.bullets)) {
+        if ((prefix === 'exp' || prefix === 'proj') && !Array.isArray(itemCopy.bullets)) {
           itemCopy.bullets = [];
         }
         return itemCopy;
@@ -273,94 +265,22 @@ export const ResumeProvider = ({ children }) => {
   // 0. Firebase Auth Integration
   const { user: firebaseUser, isAuthenticated: fbIsAuth, logout: fbLogout } = useAuth();
 
-  // Derive session from Firebase auth state (backward-compatible shape)
+  // Derive session from Firebase auth state
   const [session, setSession] = useState(() => mapFirebaseUserToSession(null));
+  const [persistenceMode, setPersistenceMode] = useState(() => (firebaseUser ? 'cloud' : 'local'));
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
-  // Non-expiring AI Credits State (0 for guests; loaded per UID on login)
+  // Guest -> Cloud Migration State
+  const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
+  const [localGuestResumes, setLocalGuestResumes] = useState([]);
+  const [isMigrating, setIsMigrating] = useState(false);
+
+  // Authoritative AI Credits State (0 for guests; synced per UID from Supabase)
   const [aiCredits, setAiCredits] = useState({
     remaining: 0,
     totalPurchased: 0,
     usageHistory: []
   });
-
-  // Sync session & AI credits whenever Firebase auth state changes
-  useEffect(() => {
-    const newSession = mapFirebaseUserToSession(firebaseUser);
-    setSession(newSession);
-    cacheSession(newSession);
-
-    if (firebaseUser) {
-      const userCreditsKey = `${AI_CREDITS_KEY}_${firebaseUser.uid}`;
-
-      // Trigger background sync with production FastAPI backend
-      apiService.syncAuth().then(async () => {
-        try {
-          const walletData = await apiService.getCreditBalance();
-          if (walletData && typeof walletData.remaining_credits === 'number') {
-            setAiCredits({
-              remaining: walletData.remaining_credits,
-              totalPurchased: walletData.total_purchased || 0,
-              usageHistory: []
-            });
-            return;
-          }
-        } catch (e) {}
-      }).catch((err) => {
-        console.warn("Backend auth sync offline or unavailable, falling back to local cache:", err.message);
-      });
-
-      try {
-        const saved = localStorage.getItem(userCreditsKey);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && typeof parsed.remaining === 'number') {
-            setAiCredits({
-              remaining: parsed.remaining,
-              totalPurchased: parsed.totalPurchased || 0,
-              usageHistory: Array.isArray(parsed.usageHistory) ? parsed.usageHistory : []
-            });
-            return;
-          }
-        }
-      } catch (e) {}
-
-      // First time login for this Firebase UID: Grant 5 Welcome AI Credits
-      const welcomeCredits = {
-        remaining: 5,
-        totalPurchased: 0,
-        usageHistory: [
-          {
-            id: `welcome-${Date.now()}`,
-            action: '5 Welcome AI Credits Granted',
-            timestamp: new Date().toISOString(),
-            creditsUsed: 0
-          }
-        ]
-      };
-      markWelcomeCreditsClaimed(firebaseUser.uid);
-      setAiCredits(welcomeCredits);
-      try {
-        localStorage.setItem(userCreditsKey, JSON.stringify(welcomeCredits));
-      } catch (e) {}
-    } else {
-      // Guest Mode: 0 AI credits until logged in
-      setAiCredits({
-        remaining: 0,
-        totalPurchased: 0,
-        usageHistory: []
-      });
-    }
-  }, [firebaseUser]);
-
-  // Persist AI credits per-UID whenever aiCredits state changes for a logged in user
-  useEffect(() => {
-    if (firebaseUser?.uid) {
-      const userCreditsKey = `${AI_CREDITS_KEY}_${firebaseUser.uid}`;
-      try {
-        localStorage.setItem(userCreditsKey, JSON.stringify(aiCredits));
-      } catch (e) {}
-    }
-  }, [aiCredits, firebaseUser]);
 
   // 1. Resumes Collection State
   const [resumes, setResumes] = useState(() => {
@@ -392,7 +312,141 @@ export const ResumeProvider = ({ children }) => {
     return resumes[0]?.metadata?.id || 'ox-resume-initial';
   });
 
+  // Sync session, AI credits & Cloud Resumes whenever Firebase auth state changes
+  useEffect(() => {
+    const newSession = mapFirebaseUserToSession(firebaseUser);
+    setSession(newSession);
+    cacheSession(newSession);
 
+    if (firebaseUser) {
+      setPersistenceMode('cloud');
+
+      // 1. Sync User with Backend & Fetch Authoritative Credit Balance
+      apiService.syncAuth().then(async () => {
+        try {
+          let walletData = await apiService.getCreditBalance();
+          if (walletData && typeof walletData.remaining_credits === 'number') {
+            if (!walletData.has_claimed_welcome) {
+              try {
+                walletData = await apiService.claimWelcomeCredits();
+              } catch (e) {}
+            }
+            setAiCredits({
+              remaining: walletData.remaining_credits,
+              totalPurchased: walletData.total_purchased || 0,
+              usageHistory: []
+            });
+            return;
+          }
+        } catch (e) {}
+      }).catch((err) => {
+        console.warn("[CloudSync] Backend auth sync warning:", err.message);
+      });
+
+      // 2. Hydrate Cloud Resumes from Supabase / Backend
+      setIsCloudSyncing(true);
+      apiService.getResumes().then(async (cloudList) => {
+        setIsCloudSyncing(false);
+        let validCloudResumes = [];
+        if (Array.isArray(cloudList) && cloudList.length > 0) {
+          validCloudResumes = cloudList.map(r => hydrateAndNormalizeResume({
+            ...r.content,
+            metadata: {
+              ...(r.content?.metadata || {}),
+              id: r.id,
+              uuid: r.id,
+              title: r.title || r.content?.metadata?.title || 'Untitled Resume',
+              template: r.template_id || r.content?.metadata?.template || 'modern',
+              font: r.font_family || r.content?.metadata?.font || 'Inter',
+              accentColor: r.accent_color || r.content?.metadata?.accentColor || '#F97316',
+              lastSaved: r.updated_at || new Date().toISOString()
+            }
+          }));
+        }
+
+        // Check if un-migrated guest resumes exist in localStorage
+        try {
+          const guestSaved = localStorage.getItem(STORAGE_COLLECTION_KEY);
+          const hasMigratedBefore = localStorage.getItem(`ox_migrated_${firebaseUser.uid}`);
+          if (guestSaved && !hasMigratedBefore) {
+            const parsedGuest = JSON.parse(guestSaved);
+            if (Array.isArray(parsedGuest) && parsedGuest.length > 0) {
+              const hasCustomContent = parsedGuest.some(r =>
+                r.personal?.fullName || (r.experience && r.experience.length > 0) || (r.education && r.education.length > 0)
+              );
+              if (hasCustomContent) {
+                setLocalGuestResumes(parsedGuest);
+                setIsMigrationModalOpen(true);
+              }
+            }
+          }
+        } catch (e) {}
+
+        if (validCloudResumes.length > 0) {
+          setResumes(validCloudResumes);
+          setActiveResumeIdState(validCloudResumes[0].metadata.id);
+        } else {
+          // If no cloud resumes yet and no guest resumes, create first cloud resume
+          const initialTitle = 'My Resume';
+          const newId = `res_${Date.now()}`;
+          const blankResume = {
+            ...emptyResumeSchema,
+            metadata: { ...emptyResumeSchema.metadata, id: newId, uuid: newId, title: initialTitle, template: 'modern', lastSaved: new Date().toISOString() }
+          };
+          apiService.createResume({
+            id: newId,
+            title: initialTitle,
+            content: blankResume,
+            template_id: 'modern'
+          }).then(created => {
+            const formatted = hydrateAndNormalizeResume({
+              ...created.content,
+              metadata: { ...created.content.metadata, id: created.id, uuid: created.id, title: created.title, template: created.template_id }
+            });
+            setResumes([formatted]);
+            setActiveResumeIdState(created.id);
+          }).catch(err => {
+            console.warn('[CloudSync] Fallback initial resume creation:', err);
+            setResumes([blankResume]);
+            setActiveResumeIdState(newId);
+          });
+        }
+      }).catch((err) => {
+        setIsCloudSyncing(false);
+        console.warn("[CloudSync] Failed to fetch cloud resumes:", err);
+      });
+
+    } else {
+      // Guest Mode: Reset to isolated guest state & 0 AI credits
+      setPersistenceMode('local');
+      setAiCredits({
+        remaining: 0,
+        totalPurchased: 0,
+        usageHistory: []
+      });
+
+      try {
+        const saved = localStorage.getItem(STORAGE_COLLECTION_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const guestResumes = parsed.map(r => hydrateAndNormalizeResume(r));
+            setResumes(guestResumes);
+            const savedActiveId = localStorage.getItem(ACTIVE_ID_KEY);
+            setActiveResumeIdState(savedActiveId && guestResumes.some(r => r.metadata?.id === savedActiveId) ? savedActiveId : guestResumes[0].metadata.id);
+            return;
+          }
+        }
+      } catch (e) {}
+
+      const defaultGuest = hydrateAndNormalizeResume({
+        ...emptyResumeSchema,
+        metadata: { ...emptyResumeSchema.metadata, id: 'ox-resume-initial', uuid: 'ox-resume-initial', title: 'My Resume' }
+      });
+      setResumes([defaultGuest]);
+      setActiveResumeIdState('ox-resume-initial');
+    }
+  }, [firebaseUser]);
 
   // Derived Active Resume Object
   const activeResume = useMemo(() => {
@@ -530,7 +584,7 @@ export const ResumeProvider = ({ children }) => {
   }, [selectedAIModel]);
 
   // Save Status
-  const [saveStatus, setSaveStatus] = useState('Saved to LocalStorage');
+  const [saveStatus, setSaveStatus] = useState('Saved');
   const [lastSavedTimeStr, setLastSavedTimeStr] = useState('Just now');
 
   // Undo / Redo Stacks
@@ -549,7 +603,6 @@ export const ResumeProvider = ({ children }) => {
       ]
     };
   });
-
 
   // BYOK Keys loaded securely from environment (.env) or localStorage
   const ENV_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENROUTER_KEY || '';
@@ -584,26 +637,54 @@ export const ResumeProvider = ({ children }) => {
   const [isGitHubImportModalOpen, setIsGitHubImportModalOpen] = useState(false);
   const [isOpportunityXImportModalOpen, setIsOpportunityXImportModalOpen] = useState(false);
 
-
-  // Auto-Save Effect
+  // ──────────────────────────────────────────
+  // Auto-Save Effect (Hybrid Mode)
+  // ──────────────────────────────────────────
   useEffect(() => {
     setSaveStatus('Saving...');
+    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
     const timer = setTimeout(() => {
-      try {
-        localStorage.setItem(STORAGE_COLLECTION_KEY, JSON.stringify(resumes));
-        localStorage.setItem(ACTIVE_ID_KEY, activeResumeId);
-        setSaveStatus('Saved to LocalStorage');
-        const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        setLastSavedTimeStr(nowStr);
-      } catch (e) {
-        setSaveStatus('Storage limit reached');
+      const activeObj = resumes.find(r => r.metadata?.id === activeResumeId || r.metadata?.uuid === activeResumeId) || resumes[0];
+
+      if (firebaseUser) {
+        // Authenticated: Save to Supabase Cloud
+        if (activeObj && activeResumeId) {
+          apiService.updateResume(activeResumeId, {
+            title: activeObj.metadata?.title || 'Untitled Resume',
+            content: activeObj,
+            template_id: activeObj.metadata?.template || 'modern',
+            font_family: activeObj.metadata?.font || 'Inter',
+            accent_color: activeObj.metadata?.accentColor || '#F97316'
+          }).then(() => {
+            setSaveStatus('Saved to OpportunityX Cloud');
+            setLastSavedTimeStr(nowStr);
+          }).catch((err) => {
+            console.warn('[CloudSync] Cloud auto-save warning:', err.message);
+            setSaveStatus('Saved Offline (Sync Pending)');
+            setLastSavedTimeStr(nowStr);
+          });
+        }
+        try {
+          localStorage.setItem(`ox_cloud_cache_${firebaseUser.uid}`, JSON.stringify(resumes));
+        } catch (e) {}
+      } else {
+        // Guest: Save to LocalStorage
+        try {
+          localStorage.setItem(STORAGE_COLLECTION_KEY, JSON.stringify(resumes));
+          localStorage.setItem(ACTIVE_ID_KEY, activeResumeId);
+          setSaveStatus('Saved to LocalStorage');
+          setLastSavedTimeStr(nowStr);
+        } catch (e) {
+          setSaveStatus('Storage limit reached');
+        }
       }
-    }, 400);
+    }, firebaseUser ? 1000 : 400);
+
     return () => clearTimeout(timer);
-  }, [resumes, activeResumeId]);
+  }, [resumes, activeResumeId, firebaseUser]);
 
   useEffect(() => { try { localStorage.setItem(VERSIONS_KEY, JSON.stringify(versionMap)); } catch (e) {} }, [versionMap]);
-  useEffect(() => { try { localStorage.setItem(AI_CREDITS_KEY, JSON.stringify(aiCredits)); } catch (e) {} }, [aiCredits]);
   useEffect(() => { try { localStorage.setItem(BYOK_KEY, JSON.stringify(byokKeys)); } catch (e) {} }, [byokKeys]);
 
   // Mutators & Operations
@@ -630,43 +711,83 @@ export const ResumeProvider = ({ children }) => {
   }, [resumes]);
 
   const createNewResume = useCallback((template = 'modern', customTitle = '') => {
-    const newId = `ox-resume-${Date.now()}`;
+    const newId = `res_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     const title = customTitle || `New ${template.charAt(0).toUpperCase() + template.slice(1)} Resume`;
     const newResume = {
       ...emptyResumeSchema,
       metadata: { ...emptyResumeSchema.metadata, id: newId, uuid: newId, title, template, lastSaved: new Date().toISOString() }
     };
+
+    if (firebaseUser) {
+      apiService.createResume({
+        id: newId,
+        title,
+        content: newResume,
+        template_id: template,
+        font_family: 'Inter',
+        accent_color: '#F97316'
+      }).then((created) => {
+        const formatted = hydrateAndNormalizeResume({
+          ...created.content,
+          metadata: { ...created.content.metadata, id: created.id, uuid: created.id, title: created.title, template: created.template_id }
+        });
+        setResumes((prev) => [formatted, ...prev.filter(r => r.metadata?.id !== newId)]);
+        setActiveResumeIdState(created.id);
+      }).catch((err) => {
+        console.warn('[CloudSync] Fallback creation:', err);
+      });
+    }
+
     setResumes((prev) => [newResume, ...prev]);
     setActiveResumeIdState(newId);
     setPast([]);
     setFuture([]);
     trackEvent(AnalyticsEvents.RESUME_CREATED, { id: newId, template });
     return newId;
-  }, []);
+  }, [firebaseUser]);
 
   const importResumeData = useCallback((importedSchema) => {
     if (!importedSchema || !importedSchema.metadata) return;
     const normalizedSchema = hydrateAndNormalizeResume(importedSchema);
-    const newId = normalizedSchema.metadata.id || `ox-resume-import-${Date.now()}`;
+    const newId = normalizedSchema.metadata.id || `res_${Date.now()}`;
     const formatted = {
       ...normalizedSchema,
       metadata: { ...normalizedSchema.metadata, id: newId, uuid: newId, lastSaved: new Date().toISOString() }
     };
+
+    if (firebaseUser) {
+      apiService.createResume({
+        id: newId,
+        title: formatted.metadata.title || 'Imported Resume',
+        content: formatted,
+        template_id: formatted.metadata.template || 'modern'
+      }).catch(() => {});
+    }
+
     setResumes((prev) => [formatted, ...prev]);
     setActiveResumeIdState(newId);
     setPast([]);
     setFuture([]);
     return newId;
-  }, []);
+  }, [firebaseUser]);
 
   const duplicateResume = useCallback((idToDuplicate) => {
     const target = resumes.find((r) => r.metadata?.id === idToDuplicate) || activeResume;
-    const newId = `ox-resume-${Date.now()}`;
+    const newId = `res_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     const duplicated = JSON.parse(JSON.stringify(target));
     duplicated.metadata.id = newId;
     duplicated.metadata.uuid = newId;
     duplicated.metadata.title = `${target.metadata.title} (Copy)`;
     duplicated.metadata.lastSaved = new Date().toISOString();
+
+    if (firebaseUser) {
+      apiService.createResume({
+        id: newId,
+        title: duplicated.metadata.title,
+        content: duplicated,
+        template_id: duplicated.metadata.template || 'modern'
+      }).catch(() => {});
+    }
 
     setResumes((prev) => [duplicated, ...prev]);
     setActiveResumeIdState(newId);
@@ -674,12 +795,21 @@ export const ResumeProvider = ({ children }) => {
     setFuture([]);
     trackEvent(AnalyticsEvents.RESUME_DUPLICATED, { originalId: idToDuplicate, newId });
     return newId;
-  }, [resumes, activeResume]);
+  }, [resumes, activeResume, firebaseUser]);
 
   const deleteResume = useCallback((idToDelete) => {
+    if (firebaseUser) {
+      apiService.deleteResume(idToDelete).catch((err) => {
+        console.warn('[CloudSync] Delete cloud resume warning:', err);
+      });
+    }
+
     if (resumes.length <= 1) {
-      const newId = `ox-resume-${Date.now()}`;
+      const newId = `res_${Date.now()}`;
       const blank = { ...emptyResumeSchema, metadata: { ...emptyResumeSchema.metadata, id: newId, uuid: newId, title: "My Resume" } };
+      if (firebaseUser) {
+        apiService.createResume({ id: newId, title: "My Resume", content: blank, template_id: "modern" }).catch(() => {});
+      }
       setResumes([blank]);
       setActiveResumeIdState(newId);
     } else {
@@ -692,7 +822,7 @@ export const ResumeProvider = ({ children }) => {
     setPast([]);
     setFuture([]);
     trackEvent(AnalyticsEvents.RESUME_DELETED, { id: idToDelete });
-  }, [resumes, activeResumeId]);
+  }, [resumes, activeResumeId, firebaseUser]);
 
   const renameResume = useCallback((idToRename, newTitle) => {
     if (!newTitle || !newTitle.trim()) return;
@@ -718,140 +848,90 @@ export const ResumeProvider = ({ children }) => {
     });
   }, [updateActiveResume]);
 
-  const updateAssets = useCallback((assetType, base64Url) => {
-    updateActiveResume((prev) => ({ ...prev, assets: { ...(prev.assets || {}), [assetType]: base64Url } }));
+  const updateAssets = useCallback((assetsObj) => {
+    updateActiveResume((prev) => ({
+      ...prev,
+      assets: { ...(prev.assets || {}), ...assetsObj }
+    }));
   }, [updateActiveResume]);
 
-  const updateStyle = useCallback((field, value) => {
-    updateActiveResume((prev) => ({ ...prev, style: { ...(prev.style || {}), [field]: value } }));
+  const updateStyle = useCallback((styleObj) => {
+    updateActiveResume((prev) => ({
+      ...prev,
+      style: { ...(prev.style || {}), ...styleObj }
+    }));
   }, [updateActiveResume]);
 
-  const applyResumePreset = useCallback((presetName) => {
-    updateActiveResume((prev) => {
-      let targetTemplate = prev.metadata?.template || 'modern';
-      let targetProfile = prev.metadata?.targetProfile || 'Software Developer';
-      let accentColor = prev.metadata?.accentColor || '#F97316';
-
-      if (presetName === 'Fresher' || presetName === 'Student') {
-        targetTemplate = 'compact-entry';
-        targetProfile = presetName === 'Fresher' ? 'Fresher & Entry Level' : 'Student & Campus Placement';
-        accentColor = '#F97316';
-      } else if (presetName === 'Experienced') {
-        targetTemplate = 'executive';
-        targetProfile = 'Experienced Professional';
-        accentColor = '#1E293B';
-      } else if (presetName === 'International' || presetName === 'International Resume') {
-        targetTemplate = 'minimal';
-        targetProfile = 'International Applicant';
-        accentColor = '#2563EB';
+  const applyResumePreset = useCallback((preset) => {
+    if (!preset) return;
+    updateActiveResume((prev) => ({
+      ...prev,
+      metadata: {
+        ...prev.metadata,
+        template: preset.template || prev.metadata.template,
+        font: preset.font || prev.metadata.font,
+        accentColor: preset.accentColor || prev.metadata.accentColor,
+        presetId: preset.id
       }
-
-      const caps = getTemplateCapabilities(targetTemplate);
-      const isPhoto = caps.supportsPhoto;
-      const defaultVisiblePos = caps.supportedPhotoPositions?.find(p => p !== 'hidden') || 'top-right';
-
-      let nextPhotoPosition = prev.assets?.photoPosition;
-      if (isPhoto) {
-        if (!nextPhotoPosition || nextPhotoPosition === 'hidden') {
-          nextPhotoPosition = defaultVisiblePos;
-        }
-      }
-
-      return {
-        ...prev,
-        assets: {
-          ...(prev.assets || {}),
-          photoPosition: nextPhotoPosition
-        },
-        metadata: {
-          ...prev.metadata,
-          template: targetTemplate,
-          targetProfile,
-          accentColor,
-          lastSaved: new Date().toISOString()
-        }
-      };
-    });
+    }));
   }, [updateActiveResume]);
 
+  // History & Undo / Redo
   const undo = useCallback(() => {
     if (past.length === 0) return;
     const previous = past[past.length - 1];
-    setPast(past.slice(0, past.length - 1));
+    const newPast = past.slice(0, past.length - 1);
     setFuture((f) => [activeResume, ...f]);
-    setResumes((prev) => prev.map((r) => (r.metadata.id === activeResumeId ? previous : r)));
+    setPast(newPast);
+    setResumes((prev) => prev.map((r) => (r.metadata?.id === activeResumeId ? previous : r)));
   }, [past, activeResume, activeResumeId]);
 
   const redo = useCallback(() => {
     if (future.length === 0) return;
     const next = future[0];
+    const newFuture = future.slice(1);
     setPast((p) => [...p, activeResume]);
-    setFuture(future.slice(1));
-    setResumes((prev) => prev.map((r) => (r.metadata.id === activeResumeId ? next : r)));
+    setFuture(newFuture);
+    setResumes((prev) => prev.map((r) => (r.metadata?.id === activeResumeId ? next : r)));
   }, [future, activeResume, activeResumeId]);
 
   const loadDemoResume = useCallback(() => {
-    const newId = `ox-resume-demo-${Date.now()}`;
-    const demo = {
-      ...defaultResumeData,
-      metadata: { ...defaultResumeData.metadata, id: newId, uuid: newId, title: "Alex Rivera - Full Stack Engineer Resume", lastSaved: new Date().toISOString() }
-    };
-    setResumes((prev) => [demo, ...prev]);
-    setActiveResumeIdState(newId);
-    setPast([]);
+    setPast((p) => [...p, activeResume]);
     setFuture([]);
-  }, []);
+    const demo = hydrateAndNormalizeResume({
+      ...defaultResumeData,
+      metadata: { ...defaultResumeData.metadata, id: activeResumeId, uuid: activeResumeId, lastSaved: new Date().toISOString() }
+    });
+    setResumes((prev) => prev.map((r) => (r.metadata?.id === activeResumeId ? demo : r)));
+  }, [activeResume, activeResumeId]);
 
-  const activeVersions = versionMap[activeResumeId] || [];
+  // Version Snapshots
+  const activeVersions = useMemo(() => versionMap[activeResumeId] || [], [versionMap, activeResumeId]);
 
   const createVersionSnapshot = useCallback((customTitle = '') => {
-    const nextVersionNum = activeVersions.length + 1;
-    const newVersion = {
-      id: `v${nextVersionNum}-${Date.now()}`,
-      versionNumber: nextVersionNum,
-      title: customTitle || `Version ${nextVersionNum} (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
+    const versionNum = (versionMap[activeResumeId]?.length || 0) + 1;
+    const newSnapshot = {
+      id: `v${versionNum}-${Date.now()}`,
+      versionNumber: versionNum,
+      title: customTitle || `Snapshot ${versionNum}`,
       timestamp: new Date().toISOString(),
       data: JSON.parse(JSON.stringify(activeResume))
     };
-    setVersionMap((prev) => ({ ...prev, [activeResumeId]: [newVersion, ...(prev[activeResumeId] || [])] }));
-  }, [activeVersions, activeResume, activeResumeId]);
-
-  const restoreVersionSnapshot = useCallback((versionId) => {
-    const target = activeVersions.find((v) => v.id === versionId);
-    if (target) updateActiveResume(target.data);
-  }, [activeVersions, updateActiveResume]);
-
-  // Auth Operations — delegated to Firebase via AuthContext
-  // handleLogin now opens the AuthModal (actual auth happens via Firebase popup/email)
-  const handleLogin = useCallback(() => {
-    setIsAuthOpen(true);
-  }, []);
-
-  const handleLogout = useCallback(async () => {
-    await fbLogout();
-    const guestSession = await logoutUser();
-    setSession(guestSession);
-  }, [fbLogout]);
-
-  // Credit Management Operations
-  const addPurchasedCredits = useCallback((creditsAmount, packDetails = 'Credit Pack') => {
-    const added = Number(creditsAmount) || 0;
-    if (added <= 0) return;
-
-    setAiCredits((prev) => ({
-      remaining: (prev.remaining || 0) + added,
-      totalPurchased: (prev.totalPurchased || 0) + added,
-      usageHistory: [
-        {
-          id: `buy-${Date.now()}`,
-          action: `Purchased ${added} Credits (${packDetails})`,
-          timestamp: new Date().toISOString(),
-          creditsUsed: 0
-        },
-        ...prev.usageHistory
-      ]
+    setVersionMap((prev) => ({
+      ...prev,
+      [activeResumeId]: [newSnapshot, ...(prev[activeResumeId] || [])]
     }));
-  }, []);
+    return newSnapshot;
+  }, [versionMap, activeResume, activeResumeId]);
+
+  const restoreVersionSnapshot = useCallback((snapshotId) => {
+    const target = activeVersions.find((v) => v.id === snapshotId);
+    if (target && target.data) {
+      setPast((p) => [...p, activeResume]);
+      setFuture([]);
+      setResumes((prev) => prev.map((r) => (r.metadata?.id === activeResumeId ? target.data : r)));
+    }
+  }, [activeVersions, activeResume, activeResumeId]);
 
   // Gate check before running any AI feature
   const checkAIAccess = useCallback((featureName = 'AI Feature') => {
@@ -868,23 +948,138 @@ export const ResumeProvider = ({ children }) => {
     return true;
   }, [session, aiCredits.remaining]);
 
-  const consumeCredit = useCallback((actionName = 'AI Feature') => {
-    if (aiCredits.remaining <= 0) {
+  // Authoritative Backend Credit Consumption
+  const consumeCredit = useCallback(async (actionName = 'AI Feature', creditsToConsume = 1) => {
+    if (!firebaseUser) {
+      setIsUnlockAIModalOpen(true);
+      return false;
+    }
+
+    if (aiCredits.remaining < creditsToConsume) {
       setIsBuyCreditsModalOpen(true);
       return false;
     }
-    setAiCredits((prev) => ({
-      ...prev,
-      remaining: Math.max(0, prev.remaining - 1),
-      usageHistory: [
-        { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: 1 },
-        ...prev.usageHistory
-      ]
-    }));
-    return true;
-  }, [aiCredits.remaining]);
+
+    try {
+      const response = await apiService.consumeCredit(actionName, creditsToConsume);
+      if (response && typeof response.remaining_credits === 'number') {
+        setAiCredits((prev) => ({
+          ...prev,
+          remaining: response.remaining_credits,
+          usageHistory: [
+            { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: creditsToConsume },
+            ...prev.usageHistory
+          ]
+        }));
+        return true;
+      }
+    } catch (err) {
+      console.warn('[Credits] Deduction failed:', err.message);
+      if (err.status === 402 || err.message?.includes('Insufficient')) {
+        setIsBuyCreditsModalOpen(true);
+      }
+      return false;
+    }
+
+    return false;
+  }, [firebaseUser, aiCredits.remaining]);
+
+  const refreshCreditBalance = useCallback(async () => {
+    if (!firebaseUser) return { remaining: 0, totalPurchased: 0 };
+    try {
+      const walletData = await apiService.getCreditBalance();
+      if (walletData && typeof walletData.remaining_credits === 'number') {
+        const updated = {
+          remaining: walletData.remaining_credits,
+          totalPurchased: walletData.total_purchased || 0,
+          usageHistory: []
+        };
+        setAiCredits(prev => ({
+          ...prev,
+          remaining: updated.remaining,
+          totalPurchased: updated.totalPurchased
+        }));
+        return updated;
+      }
+    } catch (e) {
+      console.warn('[Credits] Failed to refresh credit balance:', e);
+    }
+    return aiCredits;
+  }, [firebaseUser]);
+
+  const addPurchasedCredits = useCallback(async (creditsToAdd, description = 'Purchased Credits') => {
+    return refreshCreditBalance();
+  }, [refreshCreditBalance]);
 
   const saveByokKeys = useCallback((newKeys) => setByokKeys(newKeys), []);
+
+  // Guest to Cloud Migration Actions
+  const migrateLocalResumesToCloud = useCallback(async () => {
+    if (!firebaseUser || localGuestResumes.length === 0) {
+      setIsMigrationModalOpen(false);
+      return;
+    }
+
+    setIsMigrating(true);
+    try {
+      for (const guestRes of localGuestResumes) {
+        const title = guestRes.metadata?.title || guestRes.personal?.fullName || 'Migrated Resume';
+        const template = guestRes.metadata?.template || 'modern';
+        const newId = `res_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        await apiService.createResume({
+          id: newId,
+          title,
+          content: guestRes,
+          template_id: template,
+          font_family: guestRes.metadata?.font || 'Inter',
+          accent_color: guestRes.metadata?.accentColor || '#F97316'
+        });
+      }
+
+      // Re-fetch all cloud resumes
+      const cloudList = await apiService.getResumes();
+      if (Array.isArray(cloudList) && cloudList.length > 0) {
+        const normalized = cloudList.map(r => hydrateAndNormalizeResume({
+          ...r.content,
+          metadata: {
+            ...(r.content?.metadata || {}),
+            id: r.id,
+            uuid: r.id,
+            title: r.title || r.content?.metadata?.title || 'Untitled Resume',
+            template: r.template_id || r.content?.metadata?.template || 'modern',
+            font: r.font_family || r.content?.metadata?.font || 'Inter',
+            accentColor: r.accent_color || r.content?.metadata?.accentColor || '#F97316',
+            lastSaved: r.updated_at || new Date().toISOString()
+          }
+        }));
+        setResumes(normalized);
+        setActiveResumeIdState(normalized[0].metadata.id);
+      }
+
+      localStorage.setItem(`ox_migrated_${firebaseUser.uid}`, 'true');
+      setLocalGuestResumes([]);
+      setIsMigrationModalOpen(false);
+    } catch (err) {
+      console.warn('[CloudSync] Migration error:', err);
+    } finally {
+      setIsMigrating(false);
+    }
+  }, [firebaseUser, localGuestResumes]);
+
+  const dismissMigrationModal = useCallback(() => {
+    if (firebaseUser) {
+      localStorage.setItem(`ox_migrated_${firebaseUser.uid}`, 'dismissed');
+    }
+    setIsMigrationModalOpen(false);
+  }, [firebaseUser]);
+
+  const logout = useCallback(async () => {
+    try {
+      await fbLogout();
+    } catch (e) {
+      console.warn('Logout warning:', e);
+    }
+  }, [fbLogout]);
 
   const exportActiveResumeJSON = useCallback((clean = true) => {
     const dataToExport = clean ? stripInternalMetadata(activeResume) : activeResume;
@@ -901,12 +1096,20 @@ export const ResumeProvider = ({ children }) => {
     try {
       const parsed = JSON.parse(jsonContent);
       if (!parsed || typeof parsed !== 'object') throw new Error("Invalid JSON structure");
-      const newId = `ox-resume-import-${Date.now()}`;
+      const newId = `res_${Date.now()}`;
       const imported = {
         ...emptyResumeSchema,
         ...parsed,
         metadata: { ...emptyResumeSchema.metadata, ...(parsed.metadata || {}), id: newId, uuid: newId, title: parsed.metadata?.title ? `${parsed.metadata.title} (Imported)` : "Imported Resume", lastSaved: new Date().toISOString() }
       };
+      if (firebaseUser) {
+        apiService.createResume({
+          id: newId,
+          title: imported.metadata.title,
+          content: imported,
+          template_id: imported.metadata.template || 'modern'
+        }).catch(() => {});
+      }
       setResumes((prev) => [imported, ...prev]);
       setActiveResumeIdState(newId);
       return true;
@@ -914,7 +1117,7 @@ export const ResumeProvider = ({ children }) => {
       alert("Failed to import JSON file.");
       return false;
     }
-  }, []);
+  }, [firebaseUser]);
 
   const importGitHubData = useCallback((payload) => {
     if (!payload) return;
@@ -948,349 +1151,213 @@ export const ResumeProvider = ({ children }) => {
         const projectItem = {
           id: p.id || `proj-gh-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
           title: p.title || p.name,
-          description: Array.isArray(p.bullets) && p.bullets.length > 0 ? p.bullets.join('\n') : (p.description || ''),
-          technologies: Array.isArray(p.technologies) ? p.technologies : [p.language].filter(Boolean),
-          link: p.htmlUrl || p.link || ''
+          description: p.description || '',
+          bullets: p.bullets && p.bullets.length > 0 ? p.bullets : (p.description ? [p.description] : []),
+          techStack: Array.isArray(p.techStack) ? p.techStack : (p.language ? [p.language] : []),
+          liveUrl: p.homepage || p.liveUrl || '',
+          githubUrl: p.htmlUrl || p.githubUrl || ''
         };
 
-        if (matchIndex !== -1) {
-          if (p.action === 'replace') {
-            newProjects[matchIndex] = projectItem;
-          } else if (p.action === 'merge') {
-            const ex = newProjects[matchIndex];
-            newProjects[matchIndex] = {
-              ...ex,
-              description: ex.description ? `${ex.description}\n${projectItem.description}` : projectItem.description,
-              technologies: [...new Set([...(ex.technologies || []), ...(projectItem.technologies || [])])],
-              link: ex.link || projectItem.link
-            };
-          }
-          // If action === 'skip', keep existing without changes
+        if (matchIndex >= 0) {
+          newProjects[matchIndex] = { ...newProjects[matchIndex], ...projectItem };
         } else {
           newProjects.push(projectItem);
         }
       });
 
       // Skills merging
-      const existingSkills = prev.skills || {};
-      let updatedSkills = { ...existingSkills };
-
-      if (Array.isArray(skills) && skills.length > 0) {
-        if (Array.isArray(existingSkills.languages) || Array.isArray(existingSkills.frameworks) || Array.isArray(existingSkills.tools)) {
-          updatedSkills = {
-            languages: [...new Set([...(existingSkills.languages || []), ...skills.filter(s => s.type === 'language').map(s => s.name || s)])],
-            frameworks: [...new Set([...(existingSkills.frameworks || []), ...skills.filter(s => s.type === 'framework').map(s => s.name || s)])],
-            tools: [...new Set([...(existingSkills.tools || []), ...skills.filter(s => s.type === 'tool').map(s => s.name || s)])]
-          };
-        } else if (Array.isArray(existingSkills)) {
-          const ghCategoryName = 'GitHub & Technical Skills';
-          const ghItems = skills.map(s => typeof s === 'string' ? s : (s.name || s));
-          const catIndex = existingSkills.findIndex(c => (c.category || '').toLowerCase() === ghCategoryName.toLowerCase());
-
-          if (catIndex !== -1) {
-            const cat = existingSkills[catIndex];
-            const mergedItems = [...new Set([...(cat.items || []), ...ghItems])];
-            const nextArr = [...existingSkills];
-            nextArr[catIndex] = { ...cat, items: mergedItems };
-            updatedSkills = nextArr;
-          } else {
-            updatedSkills = [
-              ...existingSkills,
-              { id: `cat-gh-${Date.now()}`, category: ghCategoryName, items: ghItems }
-            ];
-          }
-        } else {
-          updatedSkills = {
-            languages: skills.filter(s => s.type === 'language' || !s.type).map(s => s.name || s),
-            frameworks: skills.filter(s => s.type === 'framework').map(s => s.name || s),
-            tools: skills.filter(s => s.type === 'tool').map(s => s.name || s)
-          };
-        }
-      }
+      const existingSkills = prev.skills || { languages: [], frameworks: [], tools: [] };
+      const mergedLanguages = Array.from(new Set([...(existingSkills.languages || []), ...(skills.languages || [])]));
+      const mergedFrameworks = Array.from(new Set([...(existingSkills.frameworks || []), ...(skills.frameworks || [])]));
+      const mergedTools = Array.from(new Set([...(existingSkills.tools || []), ...(skills.tools || [])]));
 
       return {
         ...prev,
         personal: updatedPersonal,
         projects: newProjects,
-        skills: updatedSkills,
+        skills: {
+          languages: mergedLanguages,
+          frameworks: mergedFrameworks,
+          tools: mergedTools
+        },
         metadata: {
           ...prev.metadata,
-          lastSaved: new Date().toISOString()
+          importedFromGitHub: true,
+          githubUsername: personal?.github || prev.metadata?.githubUsername
         }
       };
     });
-
-    setIsGitHubImportModalOpen(false);
   }, [updateActiveResume]);
 
   const importOpportunityXData = useCallback((payload) => {
     if (!payload) return;
-    const {
-      personal,
-      education = [],
-      experience = [],
-      projects = [],
-      skills = [],
-      certificates = [],
-      achievements = [],
-      openSource = []
-    } = payload;
+    const { personal, experience = [], education = [], skills = {}, projects = [] } = payload;
 
     updateActiveResume((prev) => {
-      const existingPersonal = prev.personal || {};
-      const updatedPersonal = {
-        ...existingPersonal,
-        fullName: personal?.fullName || existingPersonal.fullName || '',
-        email: personal?.email || existingPersonal.email || '',
-        phone: personal?.phone || existingPersonal.phone || '',
-        location: personal?.location || existingPersonal.location || '',
-        website: personal?.website || existingPersonal.website || '',
-        linkedin: personal?.linkedin || existingPersonal.linkedin || '',
-        github: personal?.github || existingPersonal.github || '',
-        summary: personal?.summary || existingPersonal.summary || ''
-      };
+      const mergedPersonal = { ...(prev.personal || {}), ...(personal || {}) };
 
-      // Profile photo asset update
-      const updatedAssets = {
-        ...(prev.assets || {}),
-        profilePhoto: personal?.photoUrl || prev.assets?.profilePhoto || null
-      };
-
-      // Education merging
-      const existingEducation = Array.isArray(prev.education) ? [...prev.education] : [];
-      const newEducation = [...existingEducation];
-
-      education.forEach(edu => {
-        const eduDeg = (edu.degree || '').toLowerCase().trim();
-        const matchIndex = newEducation.findIndex(ex => (ex.degree || '').toLowerCase().trim() === eduDeg);
-        const eduItem = {
-          id: edu.id || `edu-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          degree: edu.degree || '',
-          institution: edu.institution || edu.college || '',
-          location: edu.location || '',
-          period: edu.period || edu.graduationYear || '',
-          gpa: edu.gpa || edu.cgpa || ''
-        };
-
-        if (matchIndex !== -1) {
-          if (edu.action === 'replace') newEducation[matchIndex] = eduItem;
-          else if (edu.action === 'merge') {
-            newEducation[matchIndex] = { ...newEducation[matchIndex], ...eduItem };
-          }
-        } else if (edu.action !== 'skip') {
-          newEducation.push(eduItem);
-        }
-      });
-
-      // Verified Experience merging
-      const existingExperience = Array.isArray(prev.experience) ? [...prev.experience] : [];
-      const newExperience = [...existingExperience];
-
+      const existingExp = Array.isArray(prev.experience) ? prev.experience : [];
+      const newExp = [...existingExp];
       experience.forEach(exp => {
-        const expRole = (exp.role || '').toLowerCase().trim();
-        const expComp = (exp.company || '').toLowerCase().trim();
-        const matchIndex = newExperience.findIndex(ex =>
-          (ex.role || '').toLowerCase().trim() === expRole && (ex.company || '').toLowerCase().trim() === expComp
-        );
-        const expItem = {
-          id: exp.id || `exp-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          role: exp.role || '',
-          company: exp.company || '',
-          location: exp.location || '',
-          period: exp.period || '',
-          bullets: Array.isArray(exp.bullets) ? exp.bullets : (exp.description ? [exp.description] : [])
-        };
-
-        if (matchIndex !== -1) {
-          if (exp.action === 'replace') newExperience[matchIndex] = expItem;
-          else if (exp.action === 'merge') {
-            const ex = newExperience[matchIndex];
-            newExperience[matchIndex] = {
-              ...ex,
-              bullets: [...new Set([...(ex.bullets || []), ...(expItem.bullets || [])])]
-            };
-          }
-        } else if (exp.action !== 'skip') {
-          newExperience.push(expItem);
+        if (!newExp.some(e => (e.company || '').toLowerCase() === (exp.company || '').toLowerCase())) {
+          newExp.push({
+            id: exp.id || `exp-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            company: exp.company || '',
+            role: exp.role || exp.title || '',
+            title: exp.role || exp.title || '',
+            location: exp.location || '',
+            startDate: exp.startDate || '',
+            endDate: exp.endDate || '',
+            current: exp.current || false,
+            bullets: Array.isArray(exp.bullets) ? exp.bullets : []
+          });
         }
       });
 
-      // Projects merging
-      const existingProjects = Array.isArray(prev.projects) ? [...prev.projects] : [];
-      const newProjects = [...existingProjects];
+      const existingEdu = Array.isArray(prev.education) ? prev.education : [];
+      const newEdu = [...existingEdu];
+      education.forEach(edu => {
+        if (!newEdu.some(e => (e.institution || '').toLowerCase() === (edu.institution || '').toLowerCase())) {
+          newEdu.push({
+            id: edu.id || `edu-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            institution: edu.institution || '',
+            degree: edu.degree || '',
+            location: edu.location || '',
+            startDate: edu.startDate || '',
+            endDate: edu.endDate || '',
+            gpa: edu.gpa || ''
+          });
+        }
+      });
 
+      const existingSkills = prev.skills || { languages: [], frameworks: [], tools: [] };
+      const mergedSkills = {
+        languages: Array.from(new Set([...(existingSkills.languages || []), ...(skills.languages || [])])),
+        frameworks: Array.from(new Set([...(existingSkills.frameworks || []), ...(skills.frameworks || [])])),
+        tools: Array.from(new Set([...(existingSkills.tools || []), ...(skills.tools || [])]))
+      };
+
+      const existingProj = Array.isArray(prev.projects) ? prev.projects : [];
+      const newProj = [...existingProj];
       projects.forEach(p => {
-        const pTitle = (p.title || p.name || '').toLowerCase().trim();
-        const matchIndex = newProjects.findIndex(ex => (ex.title || ex.name || '').toLowerCase().trim() === pTitle);
-        const projectItem = {
-          id: p.id || `proj-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          title: p.title || p.name,
-          description: p.description || '',
-          technologies: Array.isArray(p.technologies) ? p.technologies : [],
-          link: p.link || ''
-        };
-
-        if (matchIndex !== -1) {
-          if (p.action === 'replace') newProjects[matchIndex] = projectItem;
-          else if (p.action === 'merge') {
-            const ex = newProjects[matchIndex];
-            newProjects[matchIndex] = {
-              ...ex,
-              description: `${ex.description}\n${projectItem.description}`,
-              technologies: [...new Set([...(ex.technologies || []), ...(projectItem.technologies || [])])],
-              link: ex.link || projectItem.link
-            };
-          }
-        } else if (p.action !== 'skip') {
-          newProjects.push(projectItem);
-        }
-      });
-
-      // Skills merging
-      const existingSkills = prev.skills || {};
-      let updatedSkills = { ...existingSkills };
-
-      if (Array.isArray(skills) && skills.length > 0) {
-        if (Array.isArray(existingSkills.languages) || Array.isArray(existingSkills.frameworks) || Array.isArray(existingSkills.tools)) {
-          updatedSkills = {
-            languages: [...new Set([...(existingSkills.languages || []), ...skills.filter(s => s.type === 'language').map(s => s.name || s)])],
-            frameworks: [...new Set([...(existingSkills.frameworks || []), ...skills.filter(s => s.type === 'framework').map(s => s.name || s)])],
-            tools: [...new Set([...(existingSkills.tools || []), ...skills.filter(s => s.type === 'tool').map(s => s.name || s)])]
-          };
-        } else if (Array.isArray(existingSkills)) {
-          const oxCatName = 'OpportunityX Verified Skills';
-          const oxItems = skills.map(s => typeof s === 'string' ? s : (s.name || s));
-          const catIndex = existingSkills.findIndex(c => (c.category || '').toLowerCase() === oxCatName.toLowerCase());
-
-          if (catIndex !== -1) {
-            const cat = existingSkills[catIndex];
-            const mergedItems = [...new Set([...(cat.items || []), ...oxItems])];
-            const nextArr = [...existingSkills];
-            nextArr[catIndex] = { ...cat, items: mergedItems };
-            updatedSkills = nextArr;
-          } else {
-            updatedSkills = [
-              ...existingSkills,
-              { id: `cat-ox-${Date.now()}`, category: oxCatName, items: oxItems }
-            ];
-          }
-        } else {
-          updatedSkills = {
-            languages: skills.filter(s => s.type === 'language' || !s.type).map(s => s.name || s),
-            frameworks: skills.filter(s => s.type === 'framework').map(s => s.name || s),
-            tools: skills.filter(s => s.type === 'tool').map(s => s.name || s)
-          };
-        }
-      }
-
-      // Verified Certificates merging
-      const existingCerts = Array.isArray(prev.certificates) ? [...prev.certificates] : [];
-      const newCerts = [...existingCerts];
-      certificates.forEach(c => {
-        const cName = (c.name || '').toLowerCase().trim();
-        const matchIndex = newCerts.findIndex(ex => (ex.name || '').toLowerCase().trim() === cName);
-        const certItem = {
-          id: c.id || `cert-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          name: c.name || '',
-          issuer: c.issuer || 'OpportunityX Academy',
-          date: c.date || '',
-          link: c.link || ''
-        };
-
-        if (matchIndex !== -1) {
-          if (c.action === 'replace') newCerts[matchIndex] = certItem;
-        } else if (c.action !== 'skip') {
-          newCerts.push(certItem);
-        }
-      });
-
-      // Achievements & Hackathons merging
-      const existingAch = Array.isArray(prev.achievements) ? [...prev.achievements] : [];
-      const newAch = [...existingAch];
-      achievements.forEach(a => {
-        const aTitle = (a.title || '').toLowerCase().trim();
-        const matchIndex = newAch.findIndex(ex => (ex.title || '').toLowerCase().trim() === aTitle);
-        const achItem = {
-          id: a.id || `ach-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          title: a.title || '',
-          description: a.description || ''
-        };
-        if (matchIndex === -1 && a.action !== 'skip') {
-          newAch.push(achItem);
+        if (!newProj.some(ex => (ex.title || '').toLowerCase() === (p.title || '').toLowerCase())) {
+          newProj.push({
+            id: p.id || `proj-ox-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            title: p.title || '',
+            description: p.description || '',
+            bullets: Array.isArray(p.bullets) ? p.bullets : [],
+            techStack: Array.isArray(p.techStack) ? p.techStack : [],
+            liveUrl: p.liveUrl || '',
+            githubUrl: p.githubUrl || ''
+          });
         }
       });
 
       return {
         ...prev,
-        personal: updatedPersonal,
-        assets: updatedAssets,
-        education: newEducation,
-        experience: newExperience,
-        projects: newProjects,
-        skills: updatedSkills,
-        certificates: newCerts,
-        achievements: newAch,
+        personal: mergedPersonal,
+        experience: newExp,
+        education: newEdu,
+        skills: mergedSkills,
+        projects: newProj,
         metadata: {
           ...prev.metadata,
-          lastSaved: new Date().toISOString()
+          importedFromOpportunityX: true
         }
       };
     });
-
-    setIsOpportunityXImportModalOpen(false);
   }, [updateActiveResume]);
 
-  const updatePersonal = (field, value) => updateActiveResume((prev) => ({ ...prev, personal: { ...prev.personal, [field]: value } }));
-  const updateExperience = (items) => updateActiveResume((prev) => ({ ...prev, experience: items }));
-  const updateEducation = (items) => updateActiveResume((prev) => ({ ...prev, education: items }));
-  const updateProjects = (items) => updateActiveResume((prev) => ({ ...prev, projects: items }));
-  const updateSkills = (skillsObj) => updateActiveResume((prev) => ({ ...prev, skills: skillsObj }));
-  const updateCertificates = (items) => updateActiveResume((prev) => ({ ...prev, certificates: items }));
-  const updateAchievements = (items) => updateActiveResume((prev) => ({ ...prev, achievements: items }));
-  const updateLanguages = (items) => updateActiveResume((prev) => ({ ...prev, languages: items }));
-  const updateSocialLinks = (field, value) => updateActiveResume((prev) => ({ ...prev, socialLinks: { ...prev.socialLinks, [field]: value } }));
-  const updateCustomSections = (items) => updateActiveResume((prev) => ({ ...prev, customSections: items }));
-
-  const setTemplate = (templateName) => updateActiveResume((prev) => {
-    const caps = getTemplateCapabilities(templateName);
-    const isPhoto = caps.supportsPhoto;
-    const defaultVisiblePos = caps.supportedPhotoPositions?.find(p => p !== 'hidden') || 'sidebar';
-
-    let nextPhotoPosition = prev.assets?.photoPosition;
-    if (isPhoto) {
-      if (!nextPhotoPosition || nextPhotoPosition === 'hidden' || !caps.supportedPhotoPositions?.includes(nextPhotoPosition)) {
-        nextPhotoPosition = defaultVisiblePos;
-      }
-    } else {
-      nextPhotoPosition = 'hidden';
-    }
-
-    const updatedAssets = {
-      ...(prev.assets || {}),
-      photoPosition: nextPhotoPosition,
-      profilePhoto: (isPhoto && !prev.assets?.profilePhoto) ? DEFAULT_PROFILE_PHOTO : (prev.assets?.profilePhoto || DEFAULT_PROFILE_PHOTO)
-    };
-
-    return {
+  // Section Specific Updaters
+  const updatePersonal = useCallback((field, value) => {
+    updateActiveResume((prev) => ({
       ...prev,
-      assets: updatedAssets,
-      metadata: { ...prev.metadata, template: templateName }
-    };
-  });
-  const setFontFamily = (fontName) => updateActiveResume((prev) => ({ ...prev, metadata: { ...prev.metadata, fontFamily: fontName } }));
-  const setAccentColor = (colorHex) => updateActiveResume((prev) => ({ ...prev, metadata: { ...prev.metadata, accentColor: colorHex } }));
+      personal: { ...(prev.personal || {}), [field]: value }
+    }));
+  }, [updateActiveResume]);
+
+  const updateExperience = useCallback((expArray) => {
+    updateActiveResume((prev) => ({ ...prev, experience: expArray }));
+  }, [updateActiveResume]);
+
+  const updateEducation = useCallback((eduArray) => {
+    updateActiveResume((prev) => ({ ...prev, education: eduArray }));
+  }, [updateActiveResume]);
+
+  const updateProjects = useCallback((projArray) => {
+    updateActiveResume((prev) => ({ ...prev, projects: projArray }));
+  }, [updateActiveResume]);
+
+  const updateSkills = useCallback((skillsObj) => {
+    updateActiveResume((prev) => ({ ...prev, skills: skillsObj }));
+  }, [updateActiveResume]);
+
+  const updateCertificates = useCallback((certArray) => {
+    updateActiveResume((prev) => ({ ...prev, certificates: certArray }));
+  }, [updateActiveResume]);
+
+  const updateAchievements = useCallback((achArray) => {
+    updateActiveResume((prev) => ({ ...prev, achievements: achArray }));
+  }, [updateActiveResume]);
+
+  const updateLanguages = useCallback((langArray) => {
+    updateActiveResume((prev) => ({ ...prev, languages: langArray }));
+  }, [updateActiveResume]);
+
+  const updateSocialLinks = useCallback((socialObj) => {
+    updateActiveResume((prev) => ({ ...prev, socialLinks: { ...(prev.socialLinks || {}), ...socialObj } }));
+  }, [updateActiveResume]);
+
+  const updateCustomSections = useCallback((customArray) => {
+    updateActiveResume((prev) => ({ ...prev, customSections: customArray }));
+  }, [updateActiveResume]);
+
+  const setTemplate = useCallback((templateId) => {
+    updateActiveResume((prev) => {
+      const isTargetPhoto = isPhotoTemplate(templateId);
+      const currentPhoto = prev.assets?.profilePhoto;
+      let nextPhoto = currentPhoto;
+      if (isTargetPhoto && (!currentPhoto || currentPhoto.trim() === '')) {
+        nextPhoto = DEFAULT_PROFILE_PHOTO;
+      }
+      return {
+        ...prev,
+        metadata: { ...prev.metadata, template: templateId },
+        assets: { ...(prev.assets || {}), profilePhoto: nextPhoto }
+      };
+    });
+    trackEvent(AnalyticsEvents.TEMPLATE_SELECTED, { template: templateId });
+  }, [updateActiveResume]);
+
+  const setFontFamily = useCallback((font) => {
+    updateActiveResume((prev) => ({
+      ...prev,
+      metadata: { ...prev.metadata, font }
+    }));
+  }, [updateActiveResume]);
+
+  const setAccentColor = useCallback((accentColor) => {
+    updateActiveResume((prev) => ({
+      ...prev,
+      metadata: { ...prev.metadata, accentColor }
+    }));
+  }, [updateActiveResume]);
 
   return (
     <ResumeContext.Provider
       value={{
         session,
-        handleLogin,
-        handleLogout,
-        checkAIAccess,
-        addPurchasedCredits,
+        persistenceMode,
+        isCloudSyncing,
+        isMigrationModalOpen,
+        setIsMigrationModalOpen,
+        localGuestResumes,
+        migrateLocalResumesToCloud,
+        dismissMigrationModal,
+        isMigrating,
         resumes,
-        activeResume,
         activeResumeId,
+        activeResume,
         setActiveResumeId,
         createNewResume,
         duplicateResume,
@@ -1333,7 +1400,11 @@ export const ResumeProvider = ({ children }) => {
         createVersionSnapshot,
         restoreVersionSnapshot,
         aiCredits,
+        setAiCredits,
         consumeCredit,
+        refreshCreditBalance,
+        addPurchasedCredits,
+        checkAIAccess,
         byokKeys,
         saveByokKeys,
         exportActiveResumeJSON,
@@ -1351,6 +1422,7 @@ export const ResumeProvider = ({ children }) => {
         setTemplate,
         setFontFamily,
         setAccentColor,
+        logout,
         isKeyboardHelpOpen,
         setIsKeyboardHelpOpen,
         isBYOKModalOpen,
@@ -1401,4 +1473,3 @@ export const useResume = () => {
   if (!context) throw new Error('useResume must be used within a ResumeProvider');
   return context;
 };
-
