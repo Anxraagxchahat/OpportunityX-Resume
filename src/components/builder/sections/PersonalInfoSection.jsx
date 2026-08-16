@@ -32,32 +32,40 @@ export const PersonalInfoSection = ({
         </button>
       </div>
 
-      {/* Profile Photo Quick Card (Only for photo templates) */}
-      {isPhotoTemplate(metadata.template) && (
-        <div className="p-3.5 rounded-xl bg-[#10131D] border border-slate-800 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-slate-900 border border-orange-500/40 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md">
-              {assets?.profilePhoto ? (
-                <img src={assets.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+      {/* Profile Photo Quick Card */}
+      <div className="p-3.5 rounded-xl bg-[#10131D] border border-slate-800 flex items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-slate-900 border border-orange-500/40 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md">
+            {assets?.profilePhoto ? (
+              <img src={assets.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <Camera className="w-5 h-5 text-slate-400" />
+            )}
+          </div>
+          <div>
+            <div className="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>Profile Photo</span>
+              {isPhotoTemplate(metadata.template) ? (
+                <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Active on Template</span>
               ) : (
-                <Camera className="w-5 h-5 text-slate-400" />
+                <span className="text-[10px] font-semibold text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded border border-slate-700">Photo Template Feature</span>
               )}
             </div>
-            <div>
-              <div className="text-xs font-bold text-white">Profile Photo</div>
-              <div className="text-[10px] text-slate-400">
-                {assets?.profilePhoto ? 'Photo is active on photo templates' : 'No photo uploaded yet'}
-              </div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              {assets?.profilePhoto
+                ? (isPhotoTemplate(metadata.template) ? 'Photo is active on this template' : 'Photo saved (displays when photo template is active)')
+                : 'Upload your headshot or select a sample avatar'}
             </div>
           </div>
-          <button
-            onClick={() => setActiveSection('photo')}
-            className="px-3.5 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
-          >
-            <Camera className="w-3.5 h-3.5" /> Manage Photo
-          </button>
         </div>
-      )}
+        <button
+          type="button"
+          onClick={() => setActiveSection('photo')}
+          className="px-3.5 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+        >
+          <Camera className="w-3.5 h-3.5" /> Manage Photo
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-1">

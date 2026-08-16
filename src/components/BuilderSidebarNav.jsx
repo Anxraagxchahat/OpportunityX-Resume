@@ -26,10 +26,8 @@ export const BuilderSidebarNav = ({ activeSection, onSelectSection }) => {
   const { resumeHealth, activeResume, toggleSectionVisibility } = useResume();
   const { percentage, completedCount, totalCount } = resumeHealth;
   const hiddenSections = activeResume?.metadata?.hiddenSections || [];
-  const templateId = activeResume?.metadata?.template || 'modern';
-  const hasPhotoSupport = isPhotoTemplate(templateId);
 
-  const visibleSections = builderSections.filter((sec) => sec.id !== 'photo' || hasPhotoSupport);
+  const visibleSections = builderSections;
 
   // Pinned state persisted in localStorage; Hover state triggers Instagram-like expansion
   const [isPinned, setIsPinned] = useState(() => {

@@ -350,7 +350,7 @@ export const ResumeBuilderPage = () => {
             )}
 
             {/* 1.5 PROFILE PHOTO */}
-            {isPhotoTemplate(metadata.template) && activeSection === 'photo' && (
+            {activeSection === 'photo' && (
               <PhotoSection
                 metadata={metadata}
                 assets={assets}
@@ -466,6 +466,19 @@ export const ResumeBuilderPage = () => {
                 updateCustomSections={updateCustomSections}
                 addCustomSection={addCustomSection}
                 removeCustomSection={removeCustomSection}
+              />
+            )}
+
+            {/* Safe Fallback for any Unrecognized Section */}
+            {!['personal', 'photo', 'summary', 'experience', 'education', 'projects', 'skills', 'certificates', 'achievements', 'languages', 'socialLinks', 'customSections'].includes(activeSection) && (
+              <PersonalInfoSection
+                personal={personal}
+                updatePersonal={updatePersonal}
+                metadata={metadata}
+                assets={assets}
+                hiddenSections={hiddenSections}
+                toggleSectionVisibility={toggleSectionVisibility}
+                setActiveSection={setActiveSection}
               />
             )}
           </div>

@@ -1,6 +1,6 @@
-import React from 'react';
-import { Camera, Sparkles, Upload, Crop, Trash2, MoveVertical, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
-import { SAMPLE_AVATARS, isPhotoTemplate } from '../../../utils/photoDefaults';
+import React, { useState } from 'react';
+import { Camera, Sparkles, Upload, Crop, Trash2, MoveVertical, Image as ImageIcon, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { SAMPLE_AVATARS, isPhotoTemplate, optimizeProfileImage } from '../../../utils/photoDefaults';
 import { getTemplateCapabilities } from '../../../templates';
 
 export const PhotoSection = ({
@@ -11,6 +11,22 @@ export const PhotoSection = ({
   toggleSectionVisibility,
   setIsPhotoCropOpen
 }) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handlePhotoUpload = async (file) => {
+    if (!file) return;
+    try {
+      setIsProcessing(true);
+      const optimized = await optimizeProfileImage(file, 500, 500, 0.88);
+      updateAssets('profilePhoto', optimized);
+      setIsPhotoCropOpen(true);
+    } catch (err) {
+      console.error('[PhotoSection] Photo upload failed:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -84,25 +100,14 @@ export const PhotoSection = ({
             <div className="text-xs font-bold text-[var(--ox-text-primary)]">Upload & Position Photo</div>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
               <label className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all cursor-pointer flex items-center gap-2 shadow-sm">
-                <Upload className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Choose Photo File</span>
+                {isProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5 stroke-[2.5]" />}
+                <span>{isProcessing ? 'Optimizing Image...' : 'Choose Photo File'}</span>
                 <input
                   type="file"
                   accept="image/*"
+                  disabled={isProcessing}
                   className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (evt) => {
-                        if (evt.target?.result) {
-                          updateAssets('profilePhoto', evt.target.result);
-                          setIsPhotoCropOpen(true);
-                        }
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
+                  onChange={(e) => handlePhotoUpload(e.target.files?.[0])}
                 />
               </label>
 
