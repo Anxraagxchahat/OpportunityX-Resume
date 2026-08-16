@@ -121,10 +121,13 @@ export const ResumeProvider = ({ children }) => {
                 walletData = await apiService.claimWelcomeCredits();
               } catch (e) {}
             }
+            const txList = await apiService.getCreditTransactions().catch(() => []);
+            const calculatedUsed = (txList || []).filter(t => t.credits_changed < 0).reduce((acc, t) => acc + Math.abs(t.credits_changed), 0);
             setAiCredits({
               remaining: walletData.remaining_credits,
               totalPurchased: walletData.total_purchased || 0,
-              usageHistory: []
+              totalUsed: walletData.total_used ?? calculatedUsed,
+              usageHistory: txList || []
             });
           }
         } catch (e) {
@@ -739,12 +742,9 @@ export const ResumeProvider = ({ children }) => {
 
   // Gate check before running any AI feature
   const checkAIAccess = useCallback((featureName = 'AI Feature') => {
-    // If an API key is configured (BYOK or environment key), allow immediate execution
-    const hasKey = Boolean(
-      (byokKeys?.openrouter?.trim() && byokKeys.openrouter.trim().length > 10) ||
-      (import.meta.env.VITE_OPENROUTER_API_KEY && import.meta.env.VITE_OPENROUTER_API_KEY.trim().length > 10)
-    );
-    if (hasKey) {
+    // If user has configured custom BYOK key, allow immediate execution
+    const hasBYOK = Boolean(byokKeys?.openrouter?.trim() && byokKeys.openrouter.trim().length > 10);
+    if (hasBYOK) {
       return true;
     }
 
@@ -765,100 +765,106 @@ export const ResumeProvider = ({ children }) => {
     return true;
   }, [session, aiCredits.remaining, byokKeys]);
 
-  // Authoritative Backend Credit Consumption (with optimistic local support)
-  const consumeCredit = useCallback(async (actionName = 'AI Feature', creditsToConsume = 1) => {
-    const hasKey = Boolean(
-      (byokKeys?.openrouter?.trim() && byokKeys.openrouter.trim().length > 10) ||
-      (import.meta.env.VITE_OPENROUTER_API_KEY && import.meta.env.VITE_OPENROUTER_API_KEY.trim().length > 10)
-    );
-    if (hasKey) {
-      setAiCredits((prev) => ({
-        ...prev,
-        usageHistory: [
-          { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: creditsToConsume },
-          ...prev.usageHistory
-        ]
-      }));
-      return true;
-    }
-
-    if (!firebaseUser) {
-      if (aiCredits.remaining >= creditsToConsume) {
-        setAiCredits((prev) => ({
-          ...prev,
-          remaining: Math.max(0, prev.remaining - creditsToConsume),
-          usageHistory: [
-            { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: creditsToConsume },
-            ...prev.usageHistory
-          ]
-        }));
-        return true;
-      }
-      setIsUnlockAIModalOpen(true);
-      return false;
-    }
-
-    if (aiCredits.remaining < creditsToConsume) {
-      setIsBuyCreditsModalOpen(true);
-      return false;
-    }
-
-    try {
-      const response = await apiService.consumeCredit(actionName, creditsToConsume);
-      if (response && typeof response.remaining_credits === 'number') {
-        setAiCredits((prev) => ({
-          ...prev,
-          remaining: response.remaining_credits,
-          usageHistory: [
-            { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: creditsToConsume },
-            ...prev.usageHistory
-          ]
-        }));
-        return true;
-      }
-    } catch (err) {
-      console.warn('[Credits] Authoritative deduction failed, using optimistic state:', err.message);
-      setAiCredits((prev) => ({
-        ...prev,
-        remaining: Math.max(0, prev.remaining - creditsToConsume),
-        usageHistory: [
-          { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: creditsToConsume },
-          ...prev.usageHistory
-        ]
-      }));
-      return true;
-    }
-
-    return false;
-  }, [firebaseUser, aiCredits.remaining, byokKeys]);
-
+  // Authoritative Credit Refresh from Backend Ledger
   const refreshCreditBalance = useCallback(async () => {
-    if (!firebaseUser) return { remaining: 0, totalPurchased: 0 };
+    if (!firebaseUser) return { remaining: 0, totalPurchased: 0, totalUsed: 0, usageHistory: [] };
     try {
-      let walletData = await apiService.getCreditBalance();
-      if (walletData && typeof walletData.remaining_credits === 'number') {
-        if (!walletData.has_claimed_welcome) {
-          try {
-            walletData = await apiService.claimWelcomeCredits();
-          } catch (e) {}
-        }
-        const updated = {
-          remaining: walletData.remaining_credits,
-          totalPurchased: walletData.total_purchased || 0,
-          usageHistory: []
-        };
-        setAiCredits(prev => ({
-          ...prev,
-          remaining: updated.remaining,
-          totalPurchased: updated.totalPurchased
-        }));
-        return updated;
-      }
+      const walletData = await apiService.getCreditBalance();
+      const txList = await apiService.getCreditTransactions().catch(() => []);
+      const calculatedUsed = (txList || []).filter(t => t.credits_changed < 0).reduce((acc, t) => acc + Math.abs(t.credits_changed), 0);
+      const updated = {
+        remaining: walletData.remaining_credits || 0,
+        totalPurchased: walletData.total_purchased || 0,
+        totalUsed: walletData.total_used ?? calculatedUsed,
+        usageHistory: txList || []
+      };
+      setAiCredits(updated);
+      return updated;
     } catch (e) {
       console.warn('[Credits] Failed to refresh credit balance:', e);
     }
     return aiCredits;
   }, [firebaseUser, aiCredits]);
+
+  // Central Authoritative AI Execution Function (Secure Server-Side Proxy + Dual BYOK)
+  const executeAIGeneration = useCallback(async ({
+    feature = 'summary',
+    prompt = '',
+    content = {},
+    model = null,
+    targetRole = null,
+    targetJobDescription = null
+  } = {}) => {
+    const customByokKey = byokKeys?.openrouter?.trim();
+    const isUsingBYOK = Boolean(customByokKey && customByokKey.length > 10);
+
+    // If using OpportunityX Credits, enforce user authentication & balance
+    if (!isUsingBYOK) {
+      if (!firebaseUser || !session.isAuthenticated || session.isGuest) {
+        setIsUnlockAIModalOpen(true);
+        throw new Error('Please log in to use OpportunityX AI Resume Assistant.');
+      }
+      if (aiCredits.remaining <= 0) {
+        setIsBuyCreditsModalOpen(true);
+        throw new Error('Insufficient AI Credits. Please purchase credits or configure your personal API key in AI Settings.');
+      }
+    }
+
+    const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const effectiveTargetRole = targetRole || activeResume?.personal?.targetRole || activeResume?.personal?.jobTitle || 'Software Engineer';
+
+    // Call server-side generation proxy
+    const response = await apiService.generateAI({
+      feature,
+      prompt,
+      content,
+      model: model || selectedAIModel || 'google/gemini-2.5-flash',
+      targetRole: effectiveTargetRole,
+      targetJobDescription,
+      requestId,
+      byokKey: isUsingBYOK ? customByokKey : undefined
+    });
+
+    if (response && response.success) {
+      // Authoritatively update credit counts from server response immediately
+      if (typeof response.remaining_credits === 'number') {
+        setAiCredits((prev) => ({
+          ...prev,
+          remaining: response.remaining_credits,
+          totalUsed: response.total_used ?? ((prev.totalUsed || 0) + (response.credits_deducted || 0)),
+          totalPurchased: response.total_purchased ?? prev.totalPurchased
+        }));
+      }
+      return response;
+    }
+
+    throw new Error(response?.detail || response?.message || 'AI generation failed.');
+  }, [firebaseUser, session, aiCredits, byokKeys, selectedAIModel, activeResume]);
+
+  const consumeCredit = useCallback(async (actionName = 'AI Feature', creditsToConsume = 1) => {
+    const hasBYOK = Boolean(byokKeys?.openrouter?.trim() && byokKeys.openrouter.trim().length > 10);
+    if (hasBYOK) return true;
+    if (!firebaseUser) {
+      if (aiCredits.remaining >= creditsToConsume) {
+        setAiCredits((prev) => ({ ...prev, remaining: Math.max(0, prev.remaining - creditsToConsume) }));
+        return true;
+      }
+      setIsUnlockAIModalOpen(true);
+      return false;
+    }
+    try {
+      const res = await apiService.consumeCredit(actionName, creditsToConsume);
+      if (res && typeof res.remaining_credits === 'number') {
+        setAiCredits((prev) => ({
+          ...prev,
+          remaining: res.remaining_credits,
+          totalUsed: (prev.totalUsed || 0) + creditsToConsume
+        }));
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }, [firebaseUser, aiCredits, byokKeys]);
 
   const addPurchasedCredits = useCallback(async (creditsToAdd, description = 'Purchased Credits') => {
     return refreshCreditBalance();
@@ -1305,6 +1311,7 @@ export const ResumeProvider = ({ children }) => {
         refreshCreditBalance,
         addPurchasedCredits,
         checkAIAccess,
+        executeAIGeneration,
         byokKeys,
         saveByokKeys,
         clearByokKey,
