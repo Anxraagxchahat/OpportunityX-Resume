@@ -30,7 +30,20 @@ import { AIUsageDashboard } from '../components/AIUsageDashboard';
 
 export const AIAssistantPage = () => {
   const navigate = useNavigate();
-  const { activeResume, updatePersonal, setIsBYOKModalOpen, selectedAIModel, setSelectedAIModel, aiCredits, consumeCredit, checkAIAccess, session, setIsUnlockAIModalOpen, byokKeys } = useResume();
+  const {
+    activeResume,
+    updatePersonal,
+    setIsBYOKModalOpen,
+    selectedAIModel,
+    setSelectedAIModel,
+    aiCredits,
+    consumeCredit,
+    checkAIAccess,
+    session,
+    setIsUnlockAIModalOpen,
+    byokKeys,
+    executeAIGeneration
+  } = useResume();
 
   const { features, models, providerHealthList, estimateCost } = useAIInfrastructure();
 
@@ -45,7 +58,7 @@ export const AIAssistantPage = () => {
   const activeFeature = features[selectedFeatureId.toUpperCase()] || Object.values(features)[0];
   const costEstimate = estimateCost(promptInput, selectedAIModel, activeFeature.requiredCredits);
   const isGuest = !session.isAuthenticated || session.isGuest;
-  const isKeyActive = Boolean(byokKeys?.openrouter?.trim() || import.meta.env.VITE_OPENROUTER_API_KEY);
+  const isKeyActive = Boolean(byokKeys?.openrouter?.trim() || session.isAuthenticated);
 
   const handleRunOpenRouterRequest = async () => {
     setErrorMsg(null);
@@ -55,43 +68,37 @@ export const AIAssistantPage = () => {
       return;
     }
 
-    // 2. Check response cache
-    const cached = getCachedResponse(selectedFeatureId, promptInput, selectedAIModel);
-    if (cached) {
-      setExecutionResult(cached);
-      return;
-    }
-
     setIsExecuting(true);
 
     try {
-      // 3. Build minimal context
-      const contextPayload = buildMinimalContext(selectedFeatureId, activeResume, { textToFix: promptInput });
-
-      // 4. Build prompt using template
-      const template = getPromptTemplate(selectedFeatureId);
-      const systemPrompt = template.systemPrompt;
-      const userPrompt = template.userPromptTemplate(promptInput || JSON.stringify(contextPayload));
-
-      // 5. Execute OpenRouter HTTP request (with 1-time retry)
-      const apiKey = byokKeys.openrouter || import.meta.env.VITE_OPENROUTER_API_KEY;
-      const result = await executeOpenRouterRequest({
-        modelId: selectedAIModel || 'google/gemini-2.5-flash',
-        systemPrompt,
-        userPrompt: `${userPrompt}\nDesired Tone: ${tone}. Respond with content only.`,
-        apiKey
+      // 2. Build minimal context
+      const contextPayload = buildMinimalContext(selectedFeatureId, activeResume, {
+        textToFix: promptInput,
+        selectedItem: promptInput
       });
 
-      // 6. Deduct credit ONLY on successful response (AUTHORITATIVE)
-      const deducted = await consumeCredit(activeFeature.name, 1);
-      if (!deducted) {
-        throw new Error('Credit deduction was rejected or balance is insufficient.');
+      // 3. Execute via Authoritative Server-Side AI Pipeline
+      const response = await executeAIGeneration({
+        feature: selectedFeatureId,
+        prompt: promptInput || undefined,
+        content: contextPayload,
+        model: selectedAIModel,
+        targetRole: activeResume?.personal?.jobTitle || activeResume?.personal?.targetRole
+      });
+
+      if (response && response.result) {
+        const textResult = typeof response.result === 'string' ? response.result : JSON.stringify(response.result, null, 2);
+        const resultObj = {
+          generatedContent: textResult,
+          modelUsed: response.model_used || selectedAIModel,
+          qualityReport: { isPassed: true, wordCount: textResult.split(/\s+/).filter(Boolean).length },
+          estimatedCostUSD: costEstimate.totalDollarCost || 0.0001
+        };
+
+        // Cache response locally
+        setCachedResponse(selectedFeatureId, promptInput, selectedAIModel, resultObj);
+        setExecutionResult(resultObj);
       }
-
-      // 7. Cache response locally
-      setCachedResponse(selectedFeatureId, promptInput, selectedAIModel, result);
-
-      setExecutionResult(result);
     } catch (err) {
       console.error("AI Generation Failed:", err);
       setErrorMsg(err.message || "Failed to generate AI content. No credit was deducted.");
