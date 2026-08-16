@@ -31,8 +31,8 @@ async def get_credit_balance(
         photo_url=user.photo_url
     )
     repo = CreditRepository(db)
-    wallet = repo.get_or_create_wallet(user.uid, auto_grant_starter=True)
-    return wallet
+    summary = repo.get_user_credit_summary(user.uid)
+    return summary
 
 @router.get("/rewards-overview", response_model=RewardsOverviewResponse)
 async def get_rewards_overview(
