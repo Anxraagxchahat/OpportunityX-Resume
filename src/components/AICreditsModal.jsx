@@ -45,26 +45,32 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
   const [claimingTaskId, setClaimingTaskId] = useState(null);
   const [socialMessage, setSocialMessage] = useState({ text: '', isError: false });
 
-  const { remaining = 0, totalPurchased = 0, usageHistory = [] } = aiCredits;
-  const totalUsed = usageHistory.reduce((acc, curr) => acc + (curr.creditsUsed || 0), 0);
+  const { remaining = 0, totalPurchased = 0, totalUsed = 0, usageHistory = [] } = aiCredits;
   const isLoggedIn = session.isAuthenticated && !session.isGuest;
 
-  // Load rewards overview whenever modal opens
+  // Load rewards overview & ledger transactions whenever modal opens
   const fetchRewards = useCallback(async () => {
     if (!isLoggedIn) return;
     setIsLoadingRewards(true);
     setRewardsError(null);
     try {
-      const data = await apiService.getRewardsOverview();
+      const [data, txList] = await Promise.all([
+        apiService.getRewardsOverview().catch(() => null),
+        apiService.getCreditTransactions().catch(() => [])
+      ]);
+
       if (data) {
         setRewardsData(data);
-        if (typeof data.remaining_credits === 'number') {
-          setAiCredits(prev => ({
-            ...prev,
-            remaining: data.remaining_credits
-          }));
-        }
       }
+
+      const calculatedUsed = (txList || []).filter(t => t.credits_changed < 0).reduce((acc, t) => acc + Math.abs(t.credits_changed), 0);
+
+      setAiCredits(prev => ({
+        ...prev,
+        remaining: typeof data?.remaining_credits === 'number' ? data.remaining_credits : prev.remaining,
+        totalUsed: calculatedUsed || prev.totalUsed || 0,
+        usageHistory: txList || prev.usageHistory || []
+      }));
     } catch (err) {
       console.warn('[Rewards] Failed to fetch rewards overview:', err.message);
       setRewardsError(err.message || 'Unable to load referral profile.');
@@ -546,28 +552,42 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
               No usage activity logged yet.
             </div>
           ) : (
-            <div className="space-y-1.5 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-              {usageHistory.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-2.5 rounded-2xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] flex items-center justify-between text-xs"
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
-                    <span className="text-[var(--ox-text-primary)] truncate">{item.action}</span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[10px] font-mono text-[var(--ox-text-muted)]">
-                      {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    {item.creditsUsed > 0 && (
-                      <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">
-                        -{item.creditsUsed} Cr
+            <div className="space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar pr-1">
+              {usageHistory.map((item) => {
+                const actionLabel = item.metadata_info?.feature
+                  ? `AI Generation (${item.metadata_info.feature})`
+                  : item.action_type
+                  ? item.action_type.replace(/_/g, ' ')
+                  : item.action || 'AI Operation';
+                const dateStr = item.created_at || item.timestamp;
+                const creditsDiff = typeof item.credits_changed === 'number' ? item.credits_changed : -(item.creditsUsed || 0);
+
+                return (
+                  <div
+                    key={item.id}
+                    className="p-2.5 rounded-2xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] flex items-center justify-between text-xs"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${creditsDiff < 0 ? 'bg-orange-500' : 'bg-emerald-500'}`} />
+                      <span className="text-[var(--ox-text-primary)] truncate capitalize font-medium">{actionLabel}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-[10px] font-mono text-[var(--ox-text-muted)]">
+                        {dateStr ? new Date(dateStr).toLocaleDateString([], { month: 'short', day: 'numeric' }) : ''}
                       </span>
-                    )}
+                      {creditsDiff !== 0 && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                          creditsDiff < 0
+                            ? 'text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20'
+                            : 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                        }`}>
+                          {creditsDiff > 0 ? `+${creditsDiff}` : creditsDiff} Cr
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
