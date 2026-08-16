@@ -17,6 +17,8 @@ import { ThemeCustomizerModal } from '../components/ThemeCustomizerModal';
 import { PhotoCropModal } from '../components/PhotoCropModal';
 import { DEFAULT_PROFILE_PHOTO, isPhotoTemplate } from '../utils/photoDefaults';
 import { useDeviceType } from '../hooks/useDeviceType';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { downloadDirectPDF } from '../utils/pdfDownloader';
 import { MobileResumeBuilder } from '../components/mobile/MobileResumeBuilder';
 import { TabletAppShell } from '../components/tablet/TabletAppShell';
 
@@ -41,6 +43,7 @@ export const ResumeBuilderPage = () => {
 
   const {
     activeResume,
+    activeResumeId,
     updatePersonal,
     updateExperience,
     updateEducation,
@@ -55,7 +58,11 @@ export const ResumeBuilderPage = () => {
     restoreVersionSnapshot,
     createVersionSnapshot,
     checkAIAccess,
-    toggleSectionVisibility
+    toggleSectionVisibility,
+    undo,
+    redo,
+    duplicateResume,
+    setIsKeyboardHelpOpen
   } = useResume();
 
   const [activeSection, setActiveSection] = useState('personal');
@@ -122,27 +129,34 @@ export const ResumeBuilderPage = () => {
     }
   }, []);
 
-  // 2. Auto-Focus First Incomplete Section
-  useEffect(() => {
-    if (!activeResume) return;
-
-    const p = activeResume.personal || {};
-    const exp = activeResume.experience || [];
-    const proj = activeResume.projects || [];
-    const sk = activeResume.skills || {};
-
-    if (!p.fullName || !p.email) {
-      setActiveSection('personal');
-    } else if (!p.summary || p.summary.trim().length < 20) {
-      setActiveSection('summary');
-    } else if (!Array.isArray(exp) || exp.length === 0) {
-      setActiveSection('experience');
-    } else if (!Array.isArray(proj) || proj.length === 0) {
-      setActiveSection('projects');
-    } else if (!sk || (Array.isArray(sk) ? sk.length === 0 : (!sk.languages?.length && !sk.frameworks?.length && !sk.tools?.length))) {
-      setActiveSection('skills');
+  // 2. Global Keyboard Shortcuts (Strictly guarded against editable inputs)
+  useKeyboardShortcuts({
+    onSaveSnapshot: () => {
+      createVersionSnapshot();
+      setToastMessage('Snapshot saved to Version History');
+      const timer = setTimeout(() => setToastMessage(''), 4000);
+      return () => clearTimeout(timer);
+    },
+    onUndo: undo,
+    onRedo: redo,
+    onDuplicate: () => {
+      if (activeResumeId) {
+        duplicateResume(activeResumeId);
+        setToastMessage('Resume duplicated successfully');
+        const timer = setTimeout(() => setToastMessage(''), 4000);
+        return () => clearTimeout(timer);
+      }
+    },
+    onDownloadPDF: () => {
+      if (activeResume) {
+        const candidateName = activeResume.personal?.fullName || activeResume.metadata?.title || 'Resume';
+        downloadDirectPDF('resume-a4-preview', candidateName);
+      }
+    },
+    onToggleShortcutsModal: () => {
+      setIsKeyboardHelpOpen((prev) => !prev);
     }
-  }, [activeResume]);
+  });
 
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
   const [isMobilePreviewActive, setIsMobilePreviewActive] = useState(false);

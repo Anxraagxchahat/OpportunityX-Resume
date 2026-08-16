@@ -9,16 +9,40 @@ import { PhotoCropModal } from '../PhotoCropModal';
 import { ResumeRecoveryBanner } from '../ResumeRecoveryBanner';
 import { useDeviceType } from '../../hooks/useDeviceType';
 import { useResume } from '../../context/ResumeContext';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { downloadDirectPDF } from '../../utils/pdfDownloader';
 import { DEFAULT_PROFILE_PHOTO } from '../../utils/photoDefaults';
 
 export const TabletAppShell = () => {
   const { orientation, width } = useDeviceType();
   const isLandscape = orientation === 'landscape';
-  const { activeResume } = useResume();
+  const {
+    activeResume,
+    activeResumeId,
+    createVersionSnapshot,
+    undo,
+    redo,
+    duplicateResume,
+    setIsKeyboardHelpOpen
+  } = useResume();
 
   const [activeSection, setActiveSection] = useState('personal');
   const [viewMode, setViewMode] = useState('editor'); // 'editor' | 'preview'
   const [isSplitView, setIsSplitView] = useState(true); // Split view on by default for tablet landscape
+
+  useKeyboardShortcuts({
+    onSaveSnapshot: createVersionSnapshot,
+    onUndo: undo,
+    onRedo: redo,
+    onDuplicate: () => activeResumeId && duplicateResume(activeResumeId),
+    onDownloadPDF: () => {
+      if (activeResume) {
+        const candidateName = activeResume.personal?.fullName || activeResume.metadata?.title || 'Resume';
+        downloadDirectPDF('resume-a4-preview', candidateName);
+      }
+    },
+    onToggleShortcutsModal: () => setIsKeyboardHelpOpen((prev) => !prev)
+  });
 
   const [isExportCenterOpen, setIsExportCenterOpen] = useState(false);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
