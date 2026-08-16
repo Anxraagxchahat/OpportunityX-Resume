@@ -175,23 +175,63 @@ class CreditRepository:
         self.db.refresh(wallet)
         return wallet
 
-    def deduct_credits(self, user_id: str, credits: int, feature: str) -> tuple[AICreditWallet, bool]:
+    def deduct_credits(
+        self,
+        user_id: str,
+        credits: int,
+        feature: str,
+        request_id: Optional[str] = None,
+        model: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> tuple[AICreditWallet, bool]:
+        # Idempotency guard: If this request_id was already billed, do not double deduct
+        if request_id:
+            existing_tx = (
+                self.db.query(AICreditTransaction)
+                .filter(AICreditTransaction.user_id == user_id)
+                .all()
+            )
+            for tx in existing_tx:
+                if tx.metadata_info and tx.metadata_info.get("request_id") == request_id:
+                    wallet = self.get_or_create_wallet(user_id, auto_grant_starter=False)
+                    return wallet, True
+
         wallet = self.get_or_create_wallet(user_id, auto_grant_starter=True)
         if wallet.remaining_credits < credits:
             return wallet, False
 
         wallet.remaining_credits -= credits
+        tx_meta = {
+            "feature": feature,
+            "request_id": request_id,
+            "model": model or "openrouter/auto",
+            **(metadata or {})
+        }
+
         tx = AICreditTransaction(
             user_id=user_id,
             action_type="AI_GENERATION",
             credits_changed=-credits,
             resulting_balance=wallet.remaining_credits,
-            metadata_info={"feature": feature}
+            metadata_info=tx_meta
         )
         self.db.add(tx)
         self.db.commit()
         self.db.refresh(wallet)
         return wallet, True
+
+    def get_user_credit_summary(self, user_id: str) -> Dict[str, Any]:
+        wallet = self.get_or_create_wallet(user_id, auto_grant_starter=True)
+        transactions = self.get_transactions(user_id, limit=50)
+        total_used = sum(abs(t.credits_changed) for t in transactions if t.credits_changed < 0)
+        return {
+            "user_id": user_id,
+            "remaining_credits": wallet.remaining_credits,
+            "total_purchased": wallet.total_purchased,
+            "total_used": total_used,
+            "has_claimed_welcome": bool(wallet.has_claimed_welcome),
+            "updated_at": wallet.updated_at
+        }
 
     def get_transactions(self, user_id: str, limit: int = 50) -> List[AICreditTransaction]:
         return (
