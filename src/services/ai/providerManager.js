@@ -46,11 +46,10 @@ export function getProviderHealth(providerId, byokKeys = {}) {
   const key = byokKeys[providerId]?.trim() || byokKeys.openrouter?.trim() || import.meta.env.VITE_OPENROUTER_API_KEY;
 
   if (key && typeof key === 'string' && key.trim().length > 10) {
-    const masked = key.length > 8 ? `••••${key.slice(-4)}` : '••••';
     return {
       providerId,
       status: 'Ready',
-      badgeLabel: `Active (${masked})`,
+      badgeLabel: 'Active & Connected',
       color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
       isConfigured: true,
       canExecute: true

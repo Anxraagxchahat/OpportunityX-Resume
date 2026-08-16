@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Key, Sparkles, Check, AlertCircle, RefreshCw, Eye, EyeOff, ExternalLink, ShieldCheck, Trash2 } from 'lucide-react';
+import { X, Sparkles, Check, AlertCircle, RefreshCw, Eye, EyeOff, ExternalLink, ShieldCheck, Trash2, Sliders } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 import { AI_MODELS, resolveOpenRouterModelId } from '../services/ai/modelRegistry';
 import { executeOpenRouterRequest } from '../services/ai/providerManager';
@@ -21,26 +21,21 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
   const [inputKey, setInputKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState(null); // { success: boolean, message: string }
+  const [testResult, setTestResult] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   if (!showModal) return null;
 
   const envKey = (import.meta.env.VITE_OPENROUTER_API_KEY || '').trim();
   const customKey = byokKeys?.openrouter?.trim() || '';
-  const activeKey = customKey || envKey;
   const isUsingCustomKey = Boolean(customKey && customKey !== envKey);
-
-  const getMaskedKey = (key) => {
-    if (!key || key.length < 8) return 'Not Configured';
-    return `${key.slice(0, 10)}••••••••••••${key.slice(-4)}`;
-  };
+  const isGatewayReady = Boolean(customKey || envKey);
 
   const handleTestConnection = async () => {
     setIsTesting(true);
     setTestResult(null);
 
-    const testTargetKey = inputKey.trim() || activeKey;
+    const testTargetKey = inputKey.trim() || customKey || envKey;
     if (!testTargetKey) {
       setTestResult({ success: false, message: 'Please enter an OpenRouter API key to test.' });
       setIsTesting(false);
@@ -59,7 +54,7 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
       if (res?.generatedContent) {
         setTestResult({
           success: true,
-          message: `Connected successfully to OpenRouter (${resolveOpenRouterModelId(selectedAIModel)})!`
+          message: `Connection Verified: Successfully reached OpenRouter (${resolveOpenRouterModelId(selectedAIModel)})!`
         });
       } else {
         setTestResult({ success: false, message: 'Received empty response from OpenRouter.' });
@@ -79,14 +74,14 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
     saveByokKeys((prev) => ({ ...prev, openrouter: inputKey.trim() }));
     setInputKey('');
     setSaveSuccess(true);
-    setTestResult({ success: true, message: 'Custom API key saved securely in local browser storage.' });
+    setTestResult({ success: true, message: 'Custom BYOK key saved securely in your browser session.' });
     setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   const handleClearCustomKey = () => {
     clearByokKey('openrouter');
     setInputKey('');
-    setTestResult({ success: true, message: 'Custom API key cleared. Reverted to default environment key.' });
+    setTestResult({ success: true, message: 'Reverted to standard cloud AI gateway.' });
   };
 
   return (
@@ -104,14 +99,14 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)]">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/30">
-              <Key className="w-5 h-5" />
+              <Sliders className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-black text-[var(--ox-text-primary)]">
-                AI Provider & API Key Settings
+                AI Generation & Model Preferences
               </h3>
               <p className="text-xs text-[var(--ox-text-secondary)]">
-                Configure OpenRouter integration and model preferences
+                Configure preferred AI models and execution options
               </p>
             </div>
           </div>
@@ -124,31 +119,36 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Current Status Box */}
+        {/* Current Gateway Status Box */}
         <div className="p-3.5 sm:p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-[var(--ox-text-secondary)]">Active Key Status:</span>
-            {activeKey ? (
+            <span className="font-bold text-[var(--ox-text-secondary)]">AI Gateway Status:</span>
+            {isGatewayReady ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 text-[11px]">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                {isUsingCustomKey ? 'Custom BYOK Active' : 'Environment Key Active'}
+                {isUsingCustomKey ? 'Custom BYOK Active' : 'Cloud AI Ready (Active)'}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-400 font-bold border border-red-500/30 text-[11px]">
                 <AlertCircle className="w-3.5 h-3.5" />
-                Missing API Key
+                AI Gateway Offline
               </span>
             )}
           </div>
-          <div className="text-xs font-mono text-[var(--ox-text-primary)] bg-[var(--ox-surface-primary)] p-2.5 rounded-lg border border-[var(--ox-border)] truncate">
-            {getMaskedKey(activeKey)}
+
+          <div className="text-xs font-mono text-[var(--ox-text-primary)] bg-[var(--ox-surface-primary)] p-2.5 rounded-lg border border-[var(--ox-border)] flex items-center justify-between">
+            <span className="text-[var(--ox-text-secondary)] font-sans">
+              {isUsingCustomKey ? 'Custom OpenRouter Key' : 'OpportunityX AI High-Speed Pipeline'}
+            </span>
+            <span className="text-emerald-400 font-bold font-mono text-[11px]">● Secured & Connected</span>
           </div>
+
           {isUsingCustomKey && (
             <button
               onClick={handleClearCustomKey}
               className="text-[11px] font-bold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 pt-1 cursor-pointer"
             >
-              <Trash2 className="w-3 h-3" /> Reset to Environment Key
+              <Trash2 className="w-3 h-3" /> Reset to Default Cloud AI
             </button>
           )}
         </div>
@@ -186,15 +186,15 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
             ))}
           </select>
           <p className="text-[11px] text-[var(--ox-text-muted)]">
-            Active OpenRouter slug: <code className="font-mono text-orange-400">{resolveOpenRouterModelId(selectedAIModel)}</code>
+            Active model engine: <code className="font-mono text-orange-400">{resolveOpenRouterModelId(selectedAIModel)}</code>
           </p>
         </div>
 
-        {/* Custom BYOK Key Input */}
+        {/* Optional Custom BYOK Key Input */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-[var(--ox-text-secondary)]">
-              Custom OpenRouter API Key (Optional BYOK)
+              Use Custom OpenRouter Key (Optional BYOK)
             </label>
             <a
               href="https://openrouter.ai/keys"
@@ -202,7 +202,7 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
               rel="noreferrer"
               className="text-[11px] font-bold text-orange-400 hover:text-orange-300 inline-flex items-center gap-1"
             >
-              Get API Key <ExternalLink className="w-3 h-3" />
+              Get Personal Key <ExternalLink className="w-3 h-3" />
             </a>
           </div>
 
@@ -211,7 +211,7 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
               type={showKey ? 'text' : 'password'}
               value={inputKey}
               onChange={(e) => setInputKey(e.target.value)}
-              placeholder="sk-or-v1-..."
+              placeholder="Paste custom key (e.g. sk-or-v1-...)"
               className="w-full min-h-[42px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3 pr-10 text-xs font-mono text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
             />
             <button
@@ -223,7 +223,7 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
             </button>
           </div>
           <p className="text-[11px] text-[var(--ox-text-muted)]">
-            Your key is never sent to our servers; it is stored securely in your local browser sandbox.
+            Optional: Bring your own OpenRouter key for unlimited personal requests. Your personal key is stored locally in your browser.
           </p>
         </div>
 
@@ -237,11 +237,11 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
           >
             {isTesting ? (
               <>
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Testing Connection...
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Testing Pipeline...
               </>
             ) : (
               <>
-                <Sparkles className="w-3.5 h-3.5 text-orange-400" /> Test Connection
+                <Sparkles className="w-3.5 h-3.5 text-orange-400" /> Test AI Pipeline
               </>
             )}
           </button>

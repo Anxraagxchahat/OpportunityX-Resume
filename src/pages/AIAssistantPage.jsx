@@ -193,7 +193,7 @@ export const AIAssistantPage = () => {
               onClick={() => setIsBYOKModalOpen(true)}
               className="min-h-[40px] px-3 rounded-xl bg-[var(--ox-surface-primary)] hover:bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-xs font-bold text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <Key className="w-3.5 h-3.5 text-orange-400" />
+              <Sliders className="w-3.5 h-3.5 text-orange-400" />
               <span>AI Settings</span>
             </button>
 
