@@ -43,3 +43,6 @@ export const isPhotoTemplate = (templateId) => {
   if (!templateId) return false;
   return getTemplateCapabilities(templateId).supportsPhoto;
 };
+
+export { optimizeProfileImage } from './photoOptimizer';
+
