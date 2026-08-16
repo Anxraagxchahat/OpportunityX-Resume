@@ -1,7 +1,18 @@
 import os
+from pathlib import Path
 from typing import List, Union
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+ROOT_DIR = BACKEND_DIR.parent
+
+ENV_FILE_PATHS = [
+    str(BACKEND_DIR / ".env"),
+    str(ROOT_DIR / ".env"),
+    str(ROOT_DIR / ".env.local"),
+    ".env"
+]
 
 class Settings(BaseSettings):
     APP_NAME: str = "OpportunityX Resume Backend"
@@ -63,6 +74,18 @@ class Settings(BaseSettings):
     PREMIUM_AI_MODEL: str = "anthropic/claude-3.5-haiku"
     FALLBACK_AI_MODEL: str = "openai/gpt-4o-mini"
 
+    @field_validator("OPENROUTER_API_KEY", mode="before")
+    @classmethod
+    def assemble_openrouter_key(cls, v: str) -> str:
+        if not v or "your_" in v:
+            return (
+                os.getenv("OPENROUTER_API_KEY")
+                or os.getenv("VITE_OPENROUTER_API_KEY")
+                or os.getenv("VITE_OPENROUTER_KEY")
+                or ""
+            )
+        return v
+
     # Default Feature Flags
     AI_ENABLED: bool = True
     CREDITS_ENABLED: bool = True
@@ -81,9 +104,10 @@ class Settings(BaseSettings):
         return "https://sandbox.cashfree.com/pg"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=ENV_FILE_PATHS,
         env_file_encoding="utf-8",
         extra="ignore"
     )
 
 settings = Settings()
+

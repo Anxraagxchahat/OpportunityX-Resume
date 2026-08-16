@@ -80,7 +80,15 @@ class AIProviderManager:
         byok_key: Optional[str] = None
     ) -> str:
         # If user supplied BYOK key, use it; otherwise use backend server secret
-        active_key = (byok_key or self.api_key or settings.OPENROUTER_API_KEY or "").strip()
+        active_key = (
+            byok_key
+            or self.api_key
+            or settings.OPENROUTER_API_KEY
+            or os.getenv("OPENROUTER_API_KEY")
+            or os.getenv("VITE_OPENROUTER_API_KEY")
+            or os.getenv("VITE_OPENROUTER_KEY")
+            or ""
+        ).strip()
         if not active_key or "your_" in active_key:
             raise ValueError("OpenRouter API key is not configured on the backend server. Please configure OPENROUTER_API_KEY in backend/.env.")
 
