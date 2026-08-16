@@ -5,7 +5,7 @@ import { useMobileNavigation } from '../../context/MobileNavigationContext';
 import { executeOpenRouterRequest } from '../../services/ai/providerManager';
 
 export const MobileAIConfirmationModal = () => {
-  const { aiCredits, checkAIAccess, consumeCredit, byokKeys } = useResume();
+  const { aiCredits, checkAIAccess, executeAIGeneration, byokKeys } = useResume();
   const { aiModalConfig, setAiModalConfig, addToast } = useMobileNavigation();
 
   const [stage, setStage] = useState('confirm'); // 'confirm' | 'loading' | 'preview' | 'error'
@@ -41,27 +41,18 @@ export const MobileAIConfirmationModal = () => {
       if (typeof aiModalConfig.onGenerate === 'function') {
         resultText = await aiModalConfig.onGenerate();
       } else {
-        // Direct OpenRouter request
-        const apiKey = byokKeys.openrouter || import.meta.env.VITE_OPENROUTER_API_KEY;
-        const res = await executeOpenRouterRequest({
-          modelId: 'google/gemini-2.5-flash',
-          systemPrompt: 'You are an executive resume writer. Enhance this content to be impactful, quantifiable, and ATS-optimized.',
-          userPrompt: `Improve this resume content:\n${aiModalConfig.initialPrompt || 'Software Engineer with experience in cloud technologies.'}`,
-          apiKey
+        // Authoritative Server-Side AI Generation
+        const res = await executeAIGeneration({
+          feature: 'summary',
+          prompt: aiModalConfig.initialPrompt || 'Software Engineer with experience in cloud technologies.',
+          content: { rawText: aiModalConfig.initialPrompt || '' }
         });
-        resultText = res.generatedContent;
+        resultText = typeof res?.result === 'string' ? res.result : JSON.stringify(res?.result, null, 2);
       }
 
       if (resultText && resultText.trim()) {
-        // Authoritative Backend Credit Consumption
-        const creditDeducted = await consumeCredit(aiModalConfig.title || 'AI Feature', 1);
-        if (creditDeducted) {
-          setGeneratedResult(resultText);
-          setStage('preview');
-        } else {
-          setErrorMessage('Credit deduction was rejected by server. Please check your credit balance.');
-          setStage('error');
-        }
+        setGeneratedResult(resultText);
+        setStage('preview');
       } else {
         setErrorMessage('AI server returned empty suggestion. No credits were deducted.');
         setStage('error');
