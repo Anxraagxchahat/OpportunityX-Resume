@@ -23,7 +23,8 @@ export const MobileSectionEditor = () => {
     updateAchievements,
     updateLanguages,
     updateSocialLinks,
-    toggleSectionVisibility
+    toggleSectionVisibility,
+    executeAIGeneration
   } = useResume();
 
   const { activeSection, setActiveSection, openCardEditor, setAiModalConfig, addToast } = useMobileNavigation();
@@ -519,14 +520,17 @@ export const MobileSectionEditor = () => {
                 title: 'Improve Summary with AI',
                 initialPrompt: personal.summary || `Professional summary for a ${personal.targetRole || 'Software Engineer'} with strong background and measurable results.`,
                 onGenerate: async () => {
-                  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-                  const res = await executeOpenRouterRequest({
-                    modelId: 'google/gemini-2.5-flash',
-                    systemPrompt: 'You are an executive resume writer. Enhance the professional summary to be concise, impactful, quantifiable, and ATS-optimized. Respond with only the enhanced summary text.',
-                    userPrompt: `Improve this resume summary for role "${personal.targetRole || 'Professional'}":\n${personal.summary || 'Aspiring software engineer with strong technical skills and problem-solving background.'}`,
-                    apiKey
+                  const res = await executeAIGeneration({
+                    feature: 'summary',
+                    prompt: personal.summary || undefined,
+                    content: {
+                      jobTitle: personal.targetRole || personal.jobTitle || 'Professional',
+                      existingSummary: personal.summary || '',
+                      skills: activeResume?.skills || {}
+                    },
+                    targetRole: personal.targetRole || personal.jobTitle
                   });
-                  return res.generatedContent;
+                  return typeof res?.result === 'string' ? res.result : JSON.stringify(res?.result, null, 2);
                 },
                 onApply: (newSummary) => handlePersonalChange('summary', newSummary)
               });
