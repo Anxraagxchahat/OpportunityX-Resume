@@ -15,7 +15,7 @@ export const AIFloatingAssistModal = ({
   initialText = '',
   onApply = () => {}
 }) => {
-  const { activeResume, selectedAIModel, aiCredits, consumeCredit, checkAIAccess, byokKeys } = useResume();
+  const { activeResume, selectedAIModel, aiCredits, consumeCredit, checkAIAccess, byokKeys, executeAIGeneration } = useResume();
   const [tone, setTone] = useState('Professional');
   const [isGenerating, setIsGenerating] = useState(false);
   const [responsePayload, setResponsePayload] = useState(null);
@@ -31,47 +31,32 @@ export const AIFloatingAssistModal = ({
       return;
     }
 
-    // 2. Check response cache first
-    const cached = getCachedResponse(targetField, initialText, selectedAIModel);
-    if (cached) {
-      setResponsePayload(cached);
-      return;
-    }
-
     setIsGenerating(true);
 
     try {
-      // 3. Build minimal context
-      const contextPayload = buildMinimalContext(
-        targetField === 'summary' ? 'summary_generator' : 'experience_rewrite',
-        activeResume,
-        { textToFix: initialText }
-      );
+      // 2. Build minimal context
+      const featureName = targetField === 'summary' ? 'summary_generator' : 'experience_rewrite';
+      const contextPayload = buildMinimalContext(featureName, activeResume, { textToFix: initialText, selectedItem: initialText });
 
-      // 4. Build prompt using template
-      const template = getPromptTemplate(targetField === 'summary' ? 'summary_generator' : 'experience_rewrite');
-      const systemPrompt = template.systemPrompt;
-      const userPrompt = template.userPromptTemplate(initialText || JSON.stringify(contextPayload));
-
-      // 5. Execute OpenRouter Request with 1-time retry
-      const apiKey = byokKeys.openrouter || import.meta.env.VITE_OPENROUTER_API_KEY;
-      const result = await executeOpenRouterRequest({
-        modelId: selectedAIModel || 'google/gemini-2.5-flash',
-        systemPrompt,
-        userPrompt: `${userPrompt}\nDesired Tone: ${tone}. Respond with content only.`,
-        apiKey
+      // 3. Execute via Authoritative Server-Side AI Pipeline
+      const response = await executeAIGeneration({
+        feature: featureName,
+        prompt: initialText || undefined,
+        content: contextPayload,
+        model: selectedAIModel,
+        targetRole: activeResume?.personal?.jobTitle || activeResume?.personal?.targetRole
       });
 
-      // 6. Deduct credit ONLY on successful response (AUTHORITATIVE)
-      const deducted = await consumeCredit(`AI ${targetField.toUpperCase()}`, 1);
-      if (!deducted) {
-        throw new Error('Credit deduction failed or balance insufficient. Please check your AI credits.');
+      if (response && response.result) {
+        const textResult = typeof response.result === 'string' ? response.result : JSON.stringify(response.result, null, 2);
+        const resultObj = {
+          generatedContent: textResult,
+          modelUsed: response.model_used || selectedAIModel
+        };
+
+        setCachedResponse(targetField, initialText, selectedAIModel, resultObj);
+        setResponsePayload(resultObj);
       }
-
-      // 7. Cache response locally
-      setCachedResponse(targetField, initialText, selectedAIModel, result);
-
-      setResponsePayload(result);
     } catch (err) {
       console.error("AI Request Failed:", err);
       setErrorMsg(err.message || "Failed to generate AI content. No credit was deducted.");
