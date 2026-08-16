@@ -60,6 +60,7 @@ class CreditWalletResponse(BaseModel):
     user_id: str
     remaining_credits: int
     total_purchased: int
+    total_used: Optional[int] = 0
     has_claimed_welcome: bool
     updated_at: datetime
 
@@ -177,17 +178,25 @@ class ResumeResponse(BaseModel):
 
 # AI Service Schemas
 class AIRequest(BaseModel):
-    feature: str  # 'summary', 'review', 'rewrite', 'cover_letter', 'ats_analysis'
+    feature: str = Field(default="summary", description="Feature identifier (summary, bullet_rewrite, experience_enhance, project_describe, ats_optimize, job_match, skills_suggest, cover_letter, review)")
     prompt: Optional[str] = None
-    content: Dict[str, Any]
+    content: Dict[str, Any] = Field(default_factory=dict, description="Candidate context or section data")
+    model: Optional[str] = None
+    target_role: Optional[str] = None
     target_job_description: Optional[str] = None
+    request_id: Optional[str] = None
+    byok_key: Optional[str] = None
 
 class AIResponse(BaseModel):
     success: bool
     result: Any
     credits_deducted: int = 1
     remaining_credits: int
+    total_used: int = 0
+    total_purchased: int = 0
     model_used: str
+    request_id: Optional[str] = None
+    message: Optional[str] = "AI content generated successfully."
 
 # Health & Metrics Schemas
 class HealthStatusResponse(BaseModel):
