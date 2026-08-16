@@ -521,7 +521,7 @@ export const MobileSectionEditor = () => {
                 onGenerate: async () => {
                   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
                   const res = await executeOpenRouterRequest({
-                    modelId: 'google/gemini-2.5-flash:free',
+                    modelId: 'google/gemini-2.5-flash',
                     systemPrompt: 'You are an executive resume writer. Enhance the professional summary to be concise, impactful, quantifiable, and ATS-optimized. Respond with only the enhanced summary text.',
                     userPrompt: `Improve this resume summary for role "${personal.targetRole || 'Professional'}":\n${personal.summary || 'Aspiring software engineer with strong technical skills and problem-solving background.'}`,
                     apiKey

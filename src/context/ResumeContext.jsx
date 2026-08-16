@@ -395,13 +395,19 @@ export const ResumeProvider = ({ children }) => {
   });
 
   // BYOK Keys loaded securely from environment (.env) or localStorage
-  const ENV_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENROUTER_KEY || '';
+  const ENV_OPENROUTER_KEY = (import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENROUTER_KEY || '').trim();
   const [byokKeys, setByokKeys] = useState(() => {
     try {
       const saved = localStorage.getItem(BYOK_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return { ...parsed, openrouter: parsed.openrouter || ENV_OPENROUTER_KEY };
+        const savedOpenRouter = parsed?.openrouter?.trim();
+        return {
+          openai: parsed?.openai || '',
+          gemini: parsed?.gemini || '',
+          openrouter: (savedOpenRouter && savedOpenRouter.length > 8) ? savedOpenRouter : ENV_OPENROUTER_KEY,
+          anthropic: parsed?.anthropic || ''
+        };
       }
     } catch (e) {}
     return { openai: '', gemini: '', openrouter: ENV_OPENROUTER_KEY, anthropic: '' };
@@ -733,6 +739,19 @@ export const ResumeProvider = ({ children }) => {
 
   // Gate check before running any AI feature
   const checkAIAccess = useCallback((featureName = 'AI Feature') => {
+    // If an API key is configured (BYOK or environment key), allow immediate execution
+    const hasKey = Boolean(
+      (byokKeys?.openrouter?.trim() && byokKeys.openrouter.trim().length > 10) ||
+      (import.meta.env.VITE_OPENROUTER_API_KEY && import.meta.env.VITE_OPENROUTER_API_KEY.trim().length > 10)
+    );
+    if (hasKey) {
+      return true;
+    }
+
+    if (aiCredits.remaining > 0) {
+      return true;
+    }
+
     if (!session || !session.isAuthenticated || session.isGuest) {
       setIsUnlockAIModalOpen(true);
       return false;
@@ -744,11 +763,37 @@ export const ResumeProvider = ({ children }) => {
     }
 
     return true;
-  }, [session, aiCredits.remaining]);
+  }, [session, aiCredits.remaining, byokKeys]);
 
-  // Authoritative Backend Credit Consumption
+  // Authoritative Backend Credit Consumption (with optimistic local support)
   const consumeCredit = useCallback(async (actionName = 'AI Feature', creditsToConsume = 1) => {
+    const hasKey = Boolean(
+      (byokKeys?.openrouter?.trim() && byokKeys.openrouter.trim().length > 10) ||
+      (import.meta.env.VITE_OPENROUTER_API_KEY && import.meta.env.VITE_OPENROUTER_API_KEY.trim().length > 10)
+    );
+    if (hasKey) {
+      setAiCredits((prev) => ({
+        ...prev,
+        usageHistory: [
+          { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: creditsToConsume },
+          ...prev.usageHistory
+        ]
+      }));
+      return true;
+    }
+
     if (!firebaseUser) {
+      if (aiCredits.remaining >= creditsToConsume) {
+        setAiCredits((prev) => ({
+          ...prev,
+          remaining: Math.max(0, prev.remaining - creditsToConsume),
+          usageHistory: [
+            { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: creditsToConsume },
+            ...prev.usageHistory
+          ]
+        }));
+        return true;
+      }
       setIsUnlockAIModalOpen(true);
       return false;
     }
@@ -772,15 +817,20 @@ export const ResumeProvider = ({ children }) => {
         return true;
       }
     } catch (err) {
-      console.warn('[Credits] Deduction failed:', err.message);
-      if (err.status === 402 || err.message?.includes('Insufficient')) {
-        setIsBuyCreditsModalOpen(true);
-      }
-      return false;
+      console.warn('[Credits] Authoritative deduction failed, using optimistic state:', err.message);
+      setAiCredits((prev) => ({
+        ...prev,
+        remaining: Math.max(0, prev.remaining - creditsToConsume),
+        usageHistory: [
+          { id: `use-${Date.now()}`, action: actionName, timestamp: new Date().toISOString(), creditsUsed: creditsToConsume },
+          ...prev.usageHistory
+        ]
+      }));
+      return true;
     }
 
     return false;
-  }, [firebaseUser, aiCredits.remaining]);
+  }, [firebaseUser, aiCredits.remaining, byokKeys]);
 
   const refreshCreditBalance = useCallback(async () => {
     if (!firebaseUser) return { remaining: 0, totalPurchased: 0 };
@@ -814,7 +864,25 @@ export const ResumeProvider = ({ children }) => {
     return refreshCreditBalance();
   }, [refreshCreditBalance]);
 
-  const saveByokKeys = useCallback((newKeys) => setByokKeys(newKeys), []);
+  const saveByokKeys = useCallback((newKeys) => {
+    setByokKeys((prev) => {
+      const updated = typeof newKeys === 'function' ? newKeys(prev) : { ...prev, ...newKeys };
+      try {
+        localStorage.setItem(BYOK_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  }, []);
+
+  const clearByokKey = useCallback((provider = 'openrouter') => {
+    setByokKeys((prev) => {
+      const updated = { ...prev, [provider]: '' };
+      try {
+        localStorage.setItem(BYOK_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  }, []);
 
   // Guest to Cloud Migration Actions
   const migrateLocalResumesToCloud = useCallback(async () => {
@@ -1239,6 +1307,7 @@ export const ResumeProvider = ({ children }) => {
         checkAIAccess,
         byokKeys,
         saveByokKeys,
+        clearByokKey,
         exportActiveResumeJSON,
         importResumeJSON,
         updatePersonal,

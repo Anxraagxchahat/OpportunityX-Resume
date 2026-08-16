@@ -9,12 +9,13 @@ class AIProviderManager:
     def __init__(self):
         self.api_key = settings.OPENROUTER_API_KEY
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
-        # Waterfall Priority Array (Free -> Low Cost -> Premium -> Fallback)
+        # Waterfall Priority Array (Fast / Free -> High Quality -> Alternative)
         self.models_waterfall = [
-            settings.FREE_AI_MODEL,
-            settings.LOW_COST_AI_MODEL,
-            settings.PREMIUM_AI_MODEL,
-            settings.FALLBACK_AI_MODEL
+            settings.LOW_COST_AI_MODEL or "google/gemini-2.5-flash",
+            settings.FREE_AI_MODEL or "google/gemini-2.5-flash",
+            settings.PREMIUM_AI_MODEL or "openai/gpt-4o-mini",
+            settings.FALLBACK_AI_MODEL or "anthropic/claude-3.5-haiku",
+            "openrouter/auto"
         ]
         self.stats = {
             "total_requests": 0,
@@ -65,15 +66,15 @@ class AIProviderManager:
         temperature: float,
         max_tokens: int
     ) -> str:
-        if not self.api_key or "your_" in self.api_key:
-            # Smart Mock Fallback when API key is not configured locally
-            logger.info(f"[AI Mock] Mocking completion for model '{model}'")
-            return self._generate_mock_response(messages)
+        # Dynamically reload key from settings if initialized earlier
+        active_key = self.api_key or settings.OPENROUTER_API_KEY
+        if not active_key or "your_" in active_key:
+            raise ValueError("OpenRouter API key is not configured on the backend server. Please configure OPENROUTER_API_KEY in backend/.env.")
 
         headers = {
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {active_key.strip()}",
             "HTTP-Referer": "https://resume.opportunityx.co.in",
-            "X-Title": "OpportunityX Resume AI",
+            "X-Title": "OpportunityX Resume AI Engine",
             "Content-Type": "application/json"
         }
         payload = {
@@ -83,22 +84,17 @@ class AIProviderManager:
             "max_tokens": max_tokens
         }
 
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(self.base_url, json=payload, headers=headers)
             if response.status_code != 200:
-                raise ValueError(f"HTTP {response.status_code}: {response.text}")
+                raise ValueError(f"OpenRouter HTTP {response.status_code}: {response.text}")
             data = response.json()
             choices = data.get("choices", [])
             if not choices:
-                raise ValueError("No choices returned from AI model.")
-            return choices[0].get("message", {}).get("content", "")
-
-    def _generate_mock_response(self, messages: List[Dict[str, str]]) -> str:
-        last_msg = messages[-1].get("content", "") if messages else ""
-        if "summary" in last_msg.lower():
-            return "Results-driven Software Engineer with expertise in full-stack cloud applications, scalable APIs, and performance optimization."
-        elif "review" in last_msg.lower() or "ats" in last_msg.lower():
-            return "Your resume scores 88% on ATS compatibility. Consider adding metrics (e.g. 'boosted API speed by 40%') for impact."
-        return "Professional resume section optimized for high ATS match and recruiter readability."
+                raise ValueError("No completion choices returned from OpenRouter.")
+            content = choices[0].get("message", {}).get("content", "")
+            if not content:
+                raise ValueError("Empty response received from AI model.")
+            return content
 
 ai_provider_manager = AIProviderManager()

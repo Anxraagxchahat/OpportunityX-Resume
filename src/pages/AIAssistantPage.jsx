@@ -45,6 +45,7 @@ export const AIAssistantPage = () => {
   const activeFeature = features[selectedFeatureId.toUpperCase()] || Object.values(features)[0];
   const costEstimate = estimateCost(promptInput, selectedAIModel, activeFeature.requiredCredits);
   const isGuest = !session.isAuthenticated || session.isGuest;
+  const isKeyActive = Boolean(byokKeys?.openrouter?.trim() || import.meta.env.VITE_OPENROUTER_API_KEY);
 
   const handleRunOpenRouterRequest = async () => {
     setErrorMsg(null);
@@ -75,7 +76,7 @@ export const AIAssistantPage = () => {
       // 5. Execute OpenRouter HTTP request (with 1-time retry)
       const apiKey = byokKeys.openrouter || import.meta.env.VITE_OPENROUTER_API_KEY;
       const result = await executeOpenRouterRequest({
-        modelId: selectedAIModel || 'google/gemini-2.5-flash:free',
+        modelId: selectedAIModel || 'google/gemini-2.5-flash',
         systemPrompt,
         userPrompt: `${userPrompt}\nDesired Tone: ${tone}. Respond with content only.`,
         apiKey
@@ -176,7 +177,7 @@ export const AIAssistantPage = () => {
         </div>
       </div>
 
-      {/* AI Test Bench */}
+      {/* Main Suite Card */}
       <div className="p-5 sm:p-6 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-6 max-w-4xl mx-auto shadow-lg">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-[var(--ox-border)]">
           <div>
@@ -186,15 +187,26 @@ export const AIAssistantPage = () => {
             <p className="text-xs text-[var(--ox-text-secondary)]">Configure parameters and execute real LLM generation</p>
           </div>
 
-          <select
-            value={selectedAIModel}
-            onChange={(e) => setSelectedAIModel(e.target.value)}
-            className="min-h-[40px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-orange-500 cursor-pointer"
-          >
-            {Object.values(models).map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setIsBYOKModalOpen(true)}
+              className="min-h-[40px] px-3 rounded-xl bg-[var(--ox-surface-primary)] hover:bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-xs font-bold text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Key className="w-3.5 h-3.5 text-orange-400" />
+              <span>AI Settings</span>
+            </button>
+
+            <select
+              value={selectedAIModel}
+              onChange={(e) => setSelectedAIModel(e.target.value)}
+              className="min-h-[40px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-orange-500 cursor-pointer flex-1 sm:flex-initial"
+            >
+              {Object.values(models).map((m) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {errorMsg && (
@@ -209,7 +221,12 @@ export const AIAssistantPage = () => {
           <div><span className="text-[var(--ox-text-secondary)]">Est. Tokens:</span> <strong className="text-[var(--ox-text-primary)] block font-mono">{costEstimate.totalTokens}</strong></div>
           <div><span className="text-[var(--ox-text-secondary)]">Est. Cost:</span> <strong className="text-emerald-400 block font-mono">${costEstimate.totalDollarCost}</strong></div>
           <div><span className="text-[var(--ox-text-secondary)]">Required Credits:</span> <strong className="text-orange-400 block font-mono">{activeFeature.requiredCredits} Credit</strong></div>
-          <div><span className="text-[var(--ox-text-secondary)]">Status:</span> <strong className="text-amber-400 block font-mono">OpenRouter Ready</strong></div>
+          <div>
+            <span className="text-[var(--ox-text-secondary)]">Status:</span>
+            <strong className={`block font-mono ${isKeyActive ? 'text-emerald-400' : 'text-red-400'}`}>
+              {isKeyActive ? 'OpenRouter Ready' : 'Missing API Key'}
+            </strong>
+          </div>
         </div>
 
         {/* Tone Selector */}

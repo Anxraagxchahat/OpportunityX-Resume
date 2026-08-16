@@ -56,7 +56,7 @@ export const AIFloatingAssistModal = ({
       // 5. Execute OpenRouter Request with 1-time retry
       const apiKey = byokKeys.openrouter || import.meta.env.VITE_OPENROUTER_API_KEY;
       const result = await executeOpenRouterRequest({
-        modelId: selectedAIModel || 'google/gemini-2.5-flash:free',
+        modelId: selectedAIModel || 'google/gemini-2.5-flash',
         systemPrompt,
         userPrompt: `${userPrompt}\nDesired Tone: ${tone}. Respond with content only.`,
         apiKey

@@ -231,6 +231,19 @@ export const apiService = {
     return request('/credits/transactions');
   },
 
+  // AI Generation Infrastructure (Server-Side Proxy)
+  async generateAI(feature = 'summary', prompt = '', content = {}) {
+    const payloadContent = typeof content === 'object' && content !== null ? content : { rawText: String(content || '') };
+    return request('/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        feature,
+        prompt: prompt || undefined,
+        content: payloadContent
+      })
+    });
+  },
+
   // Feature Flags
   async getFeatureFlags() {
     return request('/flags');

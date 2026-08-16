@@ -1,9 +1,13 @@
 import React from 'react';
+import { AISettingsModal } from './AISettingsModal';
 
 /**
- * Production Security Enforcement:
- * API Key Management & BYOK UI is completely hidden in production to protect application credentials.
+ * OpportunityX Resume — BYOK / AI Settings Modal
+ * Secure modal for reviewing active API key status, testing OpenRouter connectivity,
+ * and configuring custom keys or preferred LLM models.
  */
-export const BYOKSettingsModal = () => {
-  return null;
+export const BYOKSettingsModal = (props) => {
+  return <AISettingsModal {...props} />;
 };
+
+export default BYOKSettingsModal;

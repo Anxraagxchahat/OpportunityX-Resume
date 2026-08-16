@@ -44,7 +44,7 @@ export const MobileAIConfirmationModal = () => {
         // Direct OpenRouter request
         const apiKey = byokKeys.openrouter || import.meta.env.VITE_OPENROUTER_API_KEY;
         const res = await executeOpenRouterRequest({
-          modelId: 'google/gemini-2.5-flash:free',
+          modelId: 'google/gemini-2.5-flash',
           systemPrompt: 'You are an executive resume writer. Enhance this content to be impactful, quantifiable, and ATS-optimized.',
           userPrompt: `Improve this resume content:\n${aiModalConfig.initialPrompt || 'Software Engineer with experience in cloud technologies.'}`,
           apiKey
