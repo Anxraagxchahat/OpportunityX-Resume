@@ -7,7 +7,7 @@ import {
 import { useResume } from '../../context/ResumeContext';
 import { useMobileNavigation } from '../../context/MobileNavigationContext';
 import { builderSections, getBuilderSections } from './MobileSectionNav';
-import { isPhotoTemplate, DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS } from '../../utils/photoDefaults';
+import { isPhotoTemplate, DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS, optimizeProfileImage } from '../../utils/photoDefaults';
 import { executeOpenRouterRequest } from '../../services/ai/providerManager';
 
 export const MobileSectionEditor = () => {
@@ -208,19 +208,16 @@ export const MobileSectionEditor = () => {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          if (file.size > 5 * 1024 * 1024) {
-                            addToast('Image too large (max 5MB)', 'error');
-                            return;
-                          }
-                          const reader = new FileReader();
-                          reader.onload = (evt) => {
-                            updateAssets('profilePhoto', evt.target?.result);
+                          try {
+                            const opt = await optimizeProfileImage(file);
+                            updateAssets('profilePhoto', opt);
                             addToast('Profile photo updated', 'success');
-                          };
-                          reader.readAsDataURL(file);
+                          } catch (err) {
+                            addToast('Failed to optimize image', 'error');
+                          }
                         }
                       }}
                     />
@@ -365,8 +362,29 @@ export const MobileSectionEditor = () => {
       )}
 
       {/* 1.5 DEDICATED PHOTO SECTION */}
-      {activeSection === 'photo' && hasPhotoSupport && (
+      {activeSection === 'photo' && (
         <div className="space-y-4">
+          {/* Active Template Status Badge */}
+          <div className={`p-3.5 rounded-2xl border text-xs flex items-start gap-2.5 ${
+            hasPhotoSupport
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              : 'bg-orange-500/10 border-orange-500/30 text-orange-300'
+          }`}>
+            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="font-bold">
+                {hasPhotoSupport
+                  ? `Active Template (${activeResume.metadata?.template}) Features Profile Photo!`
+                  : `Current Template (${activeResume.metadata?.template || 'Modern ATS'}) does not display photos.`}
+              </div>
+              <div className="text-[11px] text-[var(--ox-text-secondary)] mt-0.5 leading-relaxed">
+                {hasPhotoSupport
+                  ? 'Your photo is rendered cleanly on your resume.'
+                  : 'Switch to a photo template (e.g. Marketing Accent, Creative Sidebar) in Templates page to display your photo.'}
+              </div>
+            </div>
+          </div>
+
           <div className="p-4 rounded-2xl bg-[var(--ox-card-bg)] border border-orange-500/30 space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -421,19 +439,16 @@ export const MobileSectionEditor = () => {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    if (file.size > 5 * 1024 * 1024) {
-                      addToast('Image too large (max 5MB)', 'error');
-                      return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = (evt) => {
-                      updateAssets('profilePhoto', evt.target?.result);
+                    try {
+                      const opt = await optimizeProfileImage(file);
+                      updateAssets('profilePhoto', opt);
                       addToast('Profile photo updated', 'success');
-                    };
-                    reader.readAsDataURL(file);
+                    } catch (err) {
+                      addToast('Failed to optimize image', 'error');
+                    }
                   }
                 }}
               />

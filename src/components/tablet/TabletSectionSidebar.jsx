@@ -25,9 +25,7 @@ export const TabletSectionSidebar = ({ activeSection, onSelectSection }) => {
   const { activeResume, toggleSectionVisibility } = useResume();
 
   const hiddenSections = activeResume?.metadata?.hiddenSections || [];
-  const templateId = activeResume?.metadata?.template || 'modern';
-  const hasPhotoSupport = isPhotoTemplate(templateId);
-  const visibleSections = ALL_SECTIONS.filter((sec) => sec.id !== 'photo' || hasPhotoSupport);
+  const visibleSections = ALL_SECTIONS;
 
   // Determine section completion status dynamically
   const isSectionComplete = (secId) => {

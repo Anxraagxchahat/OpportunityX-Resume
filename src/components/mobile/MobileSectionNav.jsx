@@ -19,8 +19,8 @@ export const ALL_BUILDER_SECTIONS = [
   { id: 'customSections', label: 'Custom Sections', icon: Layers }
 ];
 
-export const getBuilderSections = (hasPhoto = false) => {
-  return ALL_BUILDER_SECTIONS.filter((s) => s.id !== 'photo' || hasPhoto);
+export const getBuilderSections = () => {
+  return ALL_BUILDER_SECTIONS;
 };
 
 export const builderSections = ALL_BUILDER_SECTIONS;

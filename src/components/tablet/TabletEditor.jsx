@@ -7,7 +7,7 @@ import {
 import { useResume } from '../../context/ResumeContext';
 import { InlineAIBadge } from '../InlineAIBadge';
 import { getTemplateCapabilities } from '../../templates';
-import { isPhotoTemplate, DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS } from '../../utils/photoDefaults';
+import { isPhotoTemplate, DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS, optimizeProfileImage } from '../../utils/photoDefaults';
 
 export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'portrait', isLandscape = false, onOpenPhotoCrop }) => {
   const {
@@ -239,71 +239,79 @@ export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'po
               </button>
             </div>
 
-            {/* Profile Photo Quick Card (Only for photo templates) */}
-            {isPhotoTemplate(metadata?.template) && (
-              <div className="p-3.5 rounded-xl bg-[var(--ox-surface-secondary)] border border-orange-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-12 h-12 bg-[var(--ox-surface-primary)] border-2 border-orange-500/40 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md"
-                    style={{
-                      borderRadius: assets?.photoShape === 'square' ? '8px' : assets?.photoShape === 'rounded' ? '14px' : '9999px'
-                    }}
-                  >
-                    {assets?.profilePhoto ? (
-                      <img src={assets.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+            {/* Profile Photo Quick Card */}
+            <div className="p-3.5 rounded-xl bg-[var(--ox-surface-secondary)] border border-orange-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-12 h-12 bg-[var(--ox-surface-primary)] border-2 border-orange-500/40 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md"
+                  style={{
+                    borderRadius: assets?.photoShape === 'square' ? '8px' : assets?.photoShape === 'rounded' ? '14px' : '9999px'
+                  }}
+                >
+                  {assets?.profilePhoto ? (
+                    <img src={assets.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera className="w-5 h-5 text-slate-400" />
+                  )}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[var(--ox-text-primary)] flex items-center gap-1.5">
+                    <span>Profile Photo</span>
+                    {isPhotoTemplate(metadata?.template) ? (
+                      <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Active</span>
                     ) : (
-                      <Camera className="w-5 h-5 text-slate-400" />
+                      <span className="text-[10px] font-semibold text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded border border-slate-700">Photo Template Feature</span>
                     )}
                   </div>
-                  <div>
-                    <div className="text-xs font-bold text-[var(--ox-text-primary)]">Profile Photo</div>
-                    <div className="text-[10px] text-[var(--ox-text-secondary)]">
-                      {assets?.profilePhoto ? 'Photo is active on photo templates' : 'No photo uploaded yet'}
-                    </div>
+                  <div className="text-[10px] text-[var(--ox-text-secondary)] mt-0.5">
+                    {assets?.profilePhoto
+                      ? (isPhotoTemplate(metadata?.template) ? 'Photo is active on this template' : 'Photo saved (displays when photo template is active)')
+                      : 'Upload your headshot or select an avatar'}
                   </div>
                 </div>
+              </div>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                  <label className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (evt) => {
-                            updateAssets('profilePhoto', evt.target?.result);
-                          };
-                          reader.readAsDataURL(file);
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <label className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const opt = await optimizeProfileImage(file);
+                          updateAssets('profilePhoto', opt);
+                        } catch (err) {
+                          console.error(err);
                         }
-                      }}
-                    />
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{assets?.profilePhoto ? 'Change' : 'Upload'}</span>
-                  </label>
+                      }
+                    }}
+                  />
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>{assets?.profilePhoto ? 'Change' : 'Upload'}</span>
+                </label>
 
-                  {assets?.profilePhoto && (
-                    <button
-                      type="button"
-                      onClick={() => updateAssets('profilePhoto', null)}
-                      className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Remove
-                    </button>
-                  )}
-
+                {assets?.profilePhoto && (
                   <button
                     type="button"
-                    onClick={() => onSelectSection && onSelectSection('photo')}
-                    className="px-3 py-1.5 bg-[var(--ox-surface-primary)] hover:bg-orange-500/10 text-[var(--ox-text-secondary)] hover:text-orange-400 border border-[var(--ox-border)] rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    onClick={() => updateAssets('profilePhoto', null)}
+                    className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-bold transition-all cursor-pointer"
                   >
-                    <Camera className="w-3.5 h-3.5" /> Manage
+                    Remove
                   </button>
-                </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => onSelectSection && onSelectSection('photo')}
+                  className="px-3 py-1.5 bg-[var(--ox-surface-primary)] hover:bg-orange-500/10 text-[var(--ox-text-secondary)] hover:text-orange-400 border border-[var(--ox-border)] rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Camera className="w-3.5 h-3.5" /> Manage
+                </button>
               </div>
-            )}
+            </div>
 
             <div className={formGridClass}>
               <div className="space-y-1">
@@ -398,7 +406,7 @@ export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'po
         )}
 
         {/* 1.5 PROFILE PHOTO */}
-        {isPhotoTemplate(metadata?.template) && activeSection === 'photo' && (
+        {activeSection === 'photo' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)]">
               <div>
@@ -417,6 +425,27 @@ export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'po
                 {hiddenSections.includes('photo') ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-slate-400" />}
                 <span>{hiddenSections.includes('photo') ? 'Hidden in PDF' : 'Visible in PDF'}</span>
               </button>
+            </div>
+
+            {/* Active Template Status Badge */}
+            <div className={`p-3.5 rounded-xl border text-xs flex items-start gap-3 ${
+              isPhotoTemplate(metadata?.template)
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : 'bg-orange-500/10 border-orange-500/30 text-orange-300'
+            }`}>
+              <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-bold">
+                  {isPhotoTemplate(metadata?.template)
+                    ? `Active Template (${metadata?.template}) Features Profile Photo!`
+                    : `Current Template (${metadata?.template || 'Modern ATS'}) does not display photos.`}
+                </div>
+                <div className="text-[11px] text-[var(--ox-text-secondary)] mt-0.5 leading-relaxed">
+                  {isPhotoTemplate(metadata?.template)
+                    ? 'Your photo is active and rendered cleanly on your resume.'
+                    : 'Switch to a photo template (e.g. Marketing Accent, Creative Sidebar, Developer Dark) in Templates to display your photo.'}
+                </div>
+              </div>
             </div>
 
             {/* Photo Upload & Preview Card */}
@@ -455,17 +484,16 @@ export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'po
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (evt) => {
-                              if (evt.target?.result) {
-                                updateAssets('profilePhoto', evt.target.result);
-                                if (onOpenPhotoCrop) onOpenPhotoCrop();
-                              }
-                            };
-                            reader.readAsDataURL(file);
+                            try {
+                              const opt = await optimizeProfileImage(file);
+                              updateAssets('profilePhoto', opt);
+                              if (onOpenPhotoCrop) onOpenPhotoCrop();
+                            } catch (err) {
+                              console.error(err);
+                            }
                           }
                         }}
                       />

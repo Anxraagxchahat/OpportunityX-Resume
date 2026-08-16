@@ -13,13 +13,11 @@ export const TabletBottomActionBar = ({
   isSplitView = false,
   onToggleSplitView
 }) => {
-  const { activeResume } = useResume();
-  const templateId = activeResume?.metadata?.template || 'modern';
-  const hasPhotoSupport = isPhotoTemplate(templateId);
-
-  const sections = hasPhotoSupport
-    ? ['personal', 'photo', 'summary', 'experience', 'education', 'projects', 'skills', 'certificates', 'achievements', 'languages', 'socialLinks', 'customSections']
-    : ['personal', 'summary', 'experience', 'education', 'projects', 'skills', 'certificates', 'achievements', 'languages', 'socialLinks', 'customSections'];
+  const sections = [
+    'personal', 'photo', 'summary', 'experience', 'education',
+    'projects', 'skills', 'certificates', 'achievements',
+    'languages', 'socialLinks', 'customSections'
+  ];
 
   const currentIdx = sections.indexOf(activeSection);
 
@@ -97,7 +95,7 @@ export const TabletBottomActionBar = ({
         <button
           type="button"
           onClick={handleNext}
-          disabled={currentIdx >= SECTIONS.length - 1}
+          disabled={currentIdx >= sections.length - 1}
           className="min-h-[44px] px-3 sm:px-4 py-2 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-xs font-bold text-[var(--ox-text-primary)] hover:border-orange-500/40 disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
         >
           <span className="hidden sm:inline">Save & Next</span>
