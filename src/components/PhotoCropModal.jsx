@@ -37,9 +37,11 @@ export const PhotoCropModal = ({ isOpen, onClose, photoSrc }) => {
   if (!isOpen || !photoSrc) return null;
 
   const handleApply = () => {
-    updateAssets('photoOffsetY', offsetY);
-    updateAssets('photoZoom', zoom);
-    updateAssets('photoShape', shape);
+    updateAssets({
+      photoOffsetY: offsetY,
+      photoZoom: zoom,
+      photoShape: shape
+    });
     onClose();
   };
 

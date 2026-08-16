@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Image, Upload, Trash2, ShieldCheck, UserCheck, FileCheck } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
+import { optimizeProfileImage } from '../utils/photoDefaults';
 
 export const AssetManagerModal = () => {
   const { isAssetManagerOpen, setIsAssetManagerOpen, activeResume, updateAssets } = useResume();
@@ -9,17 +10,14 @@ export const AssetManagerModal = () => {
 
   const assets = activeResume.assets || { profilePhoto: null, digitalSignature: null, personalLogo: null };
 
-  const handleFileUpload = (assetType, file) => {
+  const handleFileUpload = async (assetType, file) => {
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      alert("File size exceeds 2MB limit for local storage.");
-      return;
+    try {
+      const optimized = await optimizeProfileImage(file, assetType === 'profilePhoto' ? 500 : 800, assetType === 'profilePhoto' ? 500 : 400, 0.88);
+      updateAssets(assetType, optimized);
+    } catch (err) {
+      console.error('[AssetManager] Optimization failed:', err);
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      updateAssets(assetType, e.target?.result);
-    };
-    reader.readAsDataURL(file);
   };
 
   const removeAsset = (assetType) => {
