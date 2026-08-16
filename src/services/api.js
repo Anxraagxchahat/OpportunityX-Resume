@@ -231,15 +231,42 @@ export const apiService = {
     return request('/credits/transactions');
   },
 
-  // AI Generation Infrastructure (Server-Side Proxy)
-  async generateAI(feature = 'summary', prompt = '', content = {}) {
+  // AI Generation Infrastructure (Secure Server-Side Execution Proxy)
+  async generateAI(firstArg = 'summary', secondArg = '', thirdArg = {}) {
+    let payload = {};
+    if (typeof firstArg === 'object' && firstArg !== null && !Array.isArray(firstArg)) {
+      payload = firstArg;
+    } else {
+      payload = {
+        feature: firstArg,
+        prompt: secondArg,
+        content: thirdArg
+      };
+    }
+
+    const {
+      feature = 'summary',
+      prompt = '',
+      content = {},
+      model = null,
+      targetRole = null,
+      targetJobDescription = null,
+      requestId = null,
+      byokKey = null
+    } = payload;
+
     const payloadContent = typeof content === 'object' && content !== null ? content : { rawText: String(content || '') };
     return request('/ai/generate', {
       method: 'POST',
       body: JSON.stringify({
         feature,
         prompt: prompt || undefined,
-        content: payloadContent
+        content: payloadContent,
+        model: model || undefined,
+        target_role: targetRole || undefined,
+        target_job_description: targetJobDescription || undefined,
+        request_id: requestId || undefined,
+        byok_key: byokKey || undefined
       })
     });
   },
