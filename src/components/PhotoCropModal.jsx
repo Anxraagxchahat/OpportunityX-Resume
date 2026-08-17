@@ -50,7 +50,7 @@ export const PhotoCropModal = ({ isOpen, onClose, photoSrc }) => {
     setZoom(100);
   };
 
-  // Drag handler for dragging up & down directly on the image preview
+  // Drag handler for dragging up & down directly on the image preview (Mouse & Touch)
   const handleMouseDown = (e) => {
     setIsDragging(true);
     startYRef.current = e.clientY;
@@ -61,13 +61,35 @@ export const PhotoCropModal = ({ isOpen, onClose, photoSrc }) => {
     if (!isDragging) return;
     const deltaY = e.clientY - startYRef.current;
     const scale = (zoom || 100) / 100;
-    // Map mouse drag delta Y to 0-100 percentage range with zoom sensitivity adjustment
+    // Map drag delta Y to 0-100 percentage range with zoom sensitivity adjustment
     const sensitivity = 0.45 / scale;
     const newOffset = Math.max(0, Math.min(100, startOffsetYRef.current - (deltaY * sensitivity)));
     setOffsetY(Math.round(newOffset));
   };
 
   const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Touch handlers for mobile devices
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      setIsDragging(true);
+      startYRef.current = e.touches[0].clientY;
+      startOffsetYRef.current = offsetY;
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging || !e.touches || e.touches.length === 0) return;
+    const deltaY = e.touches[0].clientY - startYRef.current;
+    const scale = (zoom || 100) / 100;
+    const sensitivity = 0.45 / scale;
+    const newOffset = Math.max(0, Math.min(100, startOffsetYRef.current - (deltaY * sensitivity)));
+    setOffsetY(Math.round(newOffset));
+  };
+
+  const handleTouchEnd = () => {
     setIsDragging(false);
   };
 
@@ -80,15 +102,18 @@ export const PhotoCropModal = ({ isOpen, onClose, photoSrc }) => {
   return (
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md no-print overflow-y-auto"
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md no-print overflow-y-auto"
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6 text-[var(--ox-text-primary)] relative my-auto transition-colors duration-300"
+          className="bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-5 text-[var(--ox-text-primary)] relative my-auto max-h-[92vh] overflow-y-auto transition-colors duration-300"
         >
           {/* Close Button */}
           <button
@@ -104,22 +129,24 @@ export const PhotoCropModal = ({ isOpen, onClose, photoSrc }) => {
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 text-xs font-bold border border-orange-500/30">
               <Crop className="w-3.5 h-3.5" /> Interactive Photo Crop & Alignment
             </div>
-            <h2 className="text-xl font-extrabold text-[var(--ox-text-primary)]">Adjust Profile Photo Position</h2>
+            <h2 className="text-lg sm:text-xl font-extrabold text-[var(--ox-text-primary)]">Adjust Profile Photo Position</h2>
             <p className="text-xs text-[var(--ox-text-secondary)] font-medium">
               Drag image up & down or use sliders to adjust vertical position and zoom scale.
             </p>
           </div>
 
           {/* Preview Box & Crop Frame */}
-          <div className="flex flex-col items-center justify-center space-y-2 py-4 bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-xl relative select-none shadow-inner">
+          <div className="flex flex-col items-center justify-center space-y-2 py-3 bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-xl relative select-none shadow-inner">
             <div className="text-[10px] text-[var(--ox-text-secondary)] font-bold uppercase tracking-wider flex items-center gap-1">
-              <MoveVertical className="w-3.5 h-3.5 text-orange-500" /> Click & Drag Up / Down to Position
+              <MoveVertical className="w-3.5 h-3.5 text-orange-500" /> Touch / Click & Drag Up / Down
             </div>
 
             {/* Interactive Photo Frame */}
             <div
               onMouseDown={handleMouseDown}
-              className={`w-36 h-36 border-2 border-orange-500 shadow-xl overflow-hidden cursor-grab active:cursor-grabbing relative flex items-center justify-center bg-[var(--ox-surface-secondary)] ${
+              onTouchStart={handleTouchStart}
+              style={{ touchAction: 'none' }}
+              className={`w-36 h-36 border-2 border-orange-500 shadow-xl overflow-hidden cursor-grab active:cursor-grabbing relative flex items-center justify-center bg-[var(--ox-surface-secondary)] touch-none select-none ${
                 shape === 'square' ? 'rounded-lg' : shape === 'rounded' ? 'rounded-2xl' : 'rounded-full'
               }`}
             >

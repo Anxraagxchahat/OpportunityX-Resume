@@ -13,6 +13,7 @@ import { DEFAULT_PROFILE_PHOTO, isPhotoTemplate } from '../utils/photoDefaults';
 import { getTemplateCapabilities } from '../utils/templateCapabilities';
 
 import { apiService } from '../services/api';
+import { executeOpenRouterRequest } from '../services/ai/providerManager';
 
 const ResumeContext = createContext(null);
 
@@ -814,31 +815,77 @@ export const ResumeProvider = ({ children }) => {
     const effectiveTargetRole = targetRole || activeResume?.personal?.targetRole || activeResume?.personal?.jobTitle || 'Software Engineer';
 
     // Call server-side generation proxy
-    const response = await apiService.generateAI({
-      feature,
-      prompt,
-      content,
-      model: model || selectedAIModel || 'google/gemini-2.5-flash',
-      targetRole: effectiveTargetRole,
-      targetJobDescription,
-      requestId,
-      byokKey: isUsingBYOK ? customByokKey : undefined
-    });
+    try {
+      const response = await apiService.generateAI({
+        feature,
+        prompt,
+        content,
+        model: model || selectedAIModel || 'google/gemini-2.5-flash',
+        targetRole: effectiveTargetRole,
+        targetJobDescription,
+        requestId,
+        byokKey: isUsingBYOK ? customByokKey : undefined
+      });
 
-    if (response && response.success) {
-      // Authoritatively update credit counts from server response immediately
-      if (typeof response.remaining_credits === 'number') {
-        setAiCredits((prev) => ({
-          ...prev,
-          remaining: response.remaining_credits,
-          totalUsed: response.total_used ?? ((prev.totalUsed || 0) + (response.credits_deducted || 0)),
-          totalPurchased: response.total_purchased ?? prev.totalPurchased
-        }));
+      if (response && response.success) {
+        // Authoritatively update credit counts from server response immediately
+        if (typeof response.remaining_credits === 'number') {
+          setAiCredits((prev) => ({
+            ...prev,
+            remaining: response.remaining_credits,
+            totalUsed: response.total_used ?? ((prev.totalUsed || 0) + (response.credits_deducted || 0)),
+            totalPurchased: response.total_purchased ?? prev.totalPurchased
+          }));
+        }
+        return response;
       }
-      return response;
-    }
 
-    throw new Error(response?.detail || response?.message || 'AI generation failed.');
+      throw new Error(response?.detail || response?.message || 'AI generation failed.');
+    } catch (serverErr) {
+      console.warn('[ResumeContext] Server AI generation failed, checking client fallback:', serverErr);
+
+      // Fallback: If backend is missing key or fails on Render, fallback to client-side OpenRouter
+      const fallbackKey = customByokKey || import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
+      if (fallbackKey && typeof fallbackKey === 'string' && fallbackKey.trim().length > 10) {
+        console.info('[ResumeContext] Executing resilient client OpenRouter generation...');
+        let userPrompt = prompt;
+        if (!userPrompt || !userPrompt.trim()) {
+          if (feature === 'summary') {
+            userPrompt = `Write a high-impact, 3-4 sentence professional executive summary for a ${effectiveTargetRole}. Background / skills: ${JSON.stringify(content?.skills || {})}. Current summary: ${content?.existingSummary || ''}`;
+          } else if (feature === 'bullet') {
+            userPrompt = `Generate 3 strong, action-driven resume bullet points with quantifiable metrics for a ${effectiveTargetRole}. Context: ${JSON.stringify(content)}`;
+          } else {
+            userPrompt = `Improve and generate professional content for resume feature '${feature}' for a ${effectiveTargetRole}. Context: ${JSON.stringify(content)}`;
+          }
+        }
+
+        const fallbackRes = await executeOpenRouterRequest({
+          modelId: model || selectedAIModel || 'google/gemini-2.5-flash',
+          systemPrompt: 'You are an expert executive resume writer and ATS optimization specialist. Return only the polished final text without markdown headings, introductions, or conversational preambles.',
+          userPrompt,
+          apiKey: fallbackKey
+        });
+
+        if (!isUsingBYOK) {
+          setAiCredits((prev) => ({
+            ...prev,
+            remaining: Math.max(0, (prev.remaining || 10) - 1),
+            totalUsed: (prev.totalUsed || 0) + 1
+          }));
+        }
+
+        return {
+          success: true,
+          result: fallbackRes.generatedContent,
+          feature,
+          model_used: fallbackRes.modelId,
+          credits_deducted: isUsingBYOK ? 0 : 1,
+          remaining_credits: Math.max(0, (aiCredits.remaining || 10) - 1)
+        };
+      }
+
+      throw serverErr;
+    }
   }, [firebaseUser, session, aiCredits, byokKeys, selectedAIModel, activeResume]);
 
   const consumeCredit = useCallback(async (actionName = 'AI Feature', creditsToConsume = 1) => {

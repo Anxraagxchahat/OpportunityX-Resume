@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import {
   User, FileText, Briefcase, GraduationCap, FolderGit2, Cpu, Award, Trophy,
   Languages, Share2, Layers, Plus, Trash2, Edit3, Eye, EyeOff, Sparkles,
-  ChevronLeft, ChevronRight, Check, X, Globe, Link, Camera, Upload, RefreshCw
+  ChevronLeft, ChevronRight, Check, X, Globe, Link, Camera, Upload, RefreshCw,
+  Crop, MoveVertical, ZoomIn, RotateCcw, Sliders, Image as ImageIcon
 } from 'lucide-react';
 import { useResume } from '../../context/ResumeContext';
 import { useMobileNavigation } from '../../context/MobileNavigationContext';
 import { builderSections, getBuilderSections } from './MobileSectionNav';
 import { isPhotoTemplate, DEFAULT_PROFILE_PHOTO, SAMPLE_AVATARS, optimizeProfileImage } from '../../utils/photoDefaults';
 import { executeOpenRouterRequest } from '../../services/ai/providerManager';
+import { PhotoCropModal } from '../PhotoCropModal';
 
 export const MobileSectionEditor = () => {
   const {
@@ -44,6 +46,22 @@ export const MobileSectionEditor = () => {
   const achievements = Array.isArray(activeResume.achievements) ? activeResume.achievements : [];
   const languages = Array.isArray(activeResume.languages) ? activeResume.languages : [];
   const socialLinks = activeResume.socialLinks || {};
+
+  const [isPhotoCropOpen, setIsPhotoCropOpen] = useState(false);
+
+  // Physical Y shift and Zoom transform calculation for mobile live previews
+  const photoZoom = assets?.photoZoom ?? 100;
+  const photoOffsetY = assets?.photoOffsetY ?? 50;
+  const photoScale = (photoZoom || 100) / 100;
+
+  // Frame size calculations for preview:
+  // For 64px personal thumbnail (preview size 64px)
+  const personalMaxShiftPx = (64 * 0.45) * photoScale;
+  const personalShiftY = ((50 - photoOffsetY) / 50) * personalMaxShiftPx;
+
+  // For 96px photo section preview (preview size 96px)
+  const sectionMaxShiftPx = (96 * 0.45) * photoScale;
+  const sectionShiftY = ((50 - photoOffsetY) / 50) * sectionMaxShiftPx;
 
   // Form Field Change Helper
   const handlePersonalChange = (field, value) => {
@@ -183,9 +201,9 @@ export const MobileSectionEditor = () => {
               </div>
 
               <div className="flex items-center gap-3.5">
-                {/* Photo Preview Thumbnail */}
+                {/* Photo Preview Thumbnail with Real-Time Transform */}
                 <div
-                  className="relative w-16 h-16 shrink-0 bg-[var(--ox-surface-secondary)] border-2 border-orange-500/30 overflow-hidden flex items-center justify-center shadow-inner"
+                  className="relative w-16 h-16 shrink-0 bg-[var(--ox-surface-secondary)] border-2 border-orange-500/30 overflow-hidden flex items-center justify-center shadow-inner select-none"
                   style={{
                     borderRadius: assets?.photoShape === 'square' ? '8px' : assets?.photoShape === 'rounded' ? '16px' : '9999px'
                   }}
@@ -194,7 +212,11 @@ export const MobileSectionEditor = () => {
                     <img
                       src={assets.profilePhoto}
                       alt="Profile"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-100 ease-out"
+                      style={{
+                        transform: `translateY(${personalShiftY}px) scale(${photoScale})`,
+                        transformOrigin: 'center center'
+                      }}
                     />
                   ) : (
                     <User className="w-8 h-8 text-[var(--ox-text-muted)]" />
@@ -203,26 +225,55 @@ export const MobileSectionEditor = () => {
 
                 {/* Upload & Choose Controls */}
                 <div className="flex-1 space-y-2">
-                  <label className="block w-full text-center py-2.5 px-3 rounded-xl bg-orange-500 text-white font-bold text-xs shadow-md active:scale-95 transition-transform cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          try {
-                            const opt = await optimizeProfileImage(file);
-                            updateAssets('profilePhoto', opt);
-                            addToast('Profile photo updated', 'success');
-                          } catch (err) {
-                            addToast('Failed to optimize image', 'error');
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <label className="block w-full text-center py-2 px-2 rounded-xl bg-orange-500 text-white font-bold text-xs shadow-md active:scale-95 transition-transform cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            try {
+                              const opt = await optimizeProfileImage(file);
+                              updateAssets('profilePhoto', opt);
+                              addToast('Profile photo updated', 'success');
+                              setIsPhotoCropOpen(true);
+                            } catch (err) {
+                              addToast('Failed to optimize image', 'error');
+                            }
                           }
-                        }
-                      }}
-                    />
-                    <span>{assets?.profilePhoto ? 'Change Photo' : 'Upload Photo'}</span>
-                  </label>
+                        }}
+                      />
+                      <span>{assets?.profilePhoto ? 'Change' : 'Upload'}</span>
+                    </label>
+
+                    {assets?.profilePhoto ? (
+                      <button
+                        type="button"
+                        onClick={() => setIsPhotoCropOpen(true)}
+                        className="py-2 px-2 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-400 font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition-transform cursor-pointer"
+                      >
+                        <Crop className="w-3.5 h-3.5" />
+                        <span>Adjust</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const randomAvatar = SAMPLE_AVATARS[0]?.url;
+                          if (randomAvatar) {
+                            updateAssets('profilePhoto', randomAvatar);
+                            addToast('Sample headshot applied', 'success');
+                            setIsPhotoCropOpen(true);
+                          }
+                        }}
+                        className="py-2 px-2 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-secondary)] font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition-transform cursor-pointer"
+                      >
+                        <span>Sample</span>
+                      </button>
+                    )}
+                  </div>
 
                   {/* Shape Selector */}
                   <div className="flex items-center gap-1.5">
@@ -259,6 +310,7 @@ export const MobileSectionEditor = () => {
                       onClick={() => {
                         updateAssets('profilePhoto', av.url);
                         addToast(`Applied ${av.label}`, 'success');
+                        setIsPhotoCropOpen(true);
                       }}
                       className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 border-2 border-[var(--ox-border)] hover:border-orange-500 active:scale-95 transition-all cursor-pointer"
                       title={av.label}
@@ -410,10 +462,10 @@ export const MobileSectionEditor = () => {
               )}
             </div>
 
-            {/* Photo Large Preview */}
+            {/* Photo Large Preview with Real-Time Transform */}
             <div className="flex flex-col items-center justify-center p-4 bg-[var(--ox-surface-secondary)]/50 rounded-2xl border border-[var(--ox-border)] gap-3">
               <div
-                className="relative w-24 h-24 bg-[var(--ox-surface-primary)] border-2 border-orange-500/40 overflow-hidden flex items-center justify-center shadow-md"
+                className="relative w-24 h-24 bg-[var(--ox-surface-primary)] border-2 border-orange-500/40 overflow-hidden flex items-center justify-center shadow-md select-none"
                 style={{
                   borderRadius: assets?.photoShape === 'square' ? '12px' : assets?.photoShape === 'rounded' ? '24px' : '9999px'
                 }}
@@ -422,41 +474,153 @@ export const MobileSectionEditor = () => {
                   <img
                     src={assets.profilePhoto}
                     alt="Profile Preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-100 ease-out"
+                    style={{
+                      transform: `translateY(${sectionShiftY}px) scale(${photoScale})`,
+                      transformOrigin: 'center center'
+                    }}
                   />
                 ) : (
                   <User className="w-12 h-12 text-[var(--ox-text-muted)]" />
                 )}
               </div>
-              <span className="text-[11px] text-[var(--ox-text-secondary)] font-medium">
-                {assets?.profilePhoto ? 'Photo is active on photo templates' : 'No photo uploaded yet'}
-              </span>
+              <div className="text-center space-y-0.5">
+                <span className="text-[11px] text-[var(--ox-text-secondary)] font-medium">
+                  {assets?.profilePhoto ? 'Photo is active on photo templates' : 'No photo uploaded yet'}
+                </span>
+                {assets?.profilePhoto && (
+                  <div className="text-[10px] text-orange-400 font-bold">
+                    Shift Y: {photoOffsetY}% • Zoom: {photoZoom}%
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Upload Button */}
-            <label className="block w-full text-center py-3 px-4 rounded-2xl bg-orange-500 text-white font-bold text-xs shadow-md active:scale-95 transition-transform cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    try {
-                      const opt = await optimizeProfileImage(file);
-                      updateAssets('profilePhoto', opt);
-                      addToast('Profile photo updated', 'success');
-                    } catch (err) {
-                      addToast('Failed to optimize image', 'error');
+            {/* Action Buttons: Upload & Interactive Crop Modal */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label className="block w-full text-center py-3 px-4 rounded-2xl bg-orange-500 text-white font-bold text-xs shadow-md active:scale-95 transition-transform cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      try {
+                        const opt = await optimizeProfileImage(file);
+                        updateAssets('profilePhoto', opt);
+                        addToast('Profile photo updated', 'success');
+                        setIsPhotoCropOpen(true);
+                      } catch (err) {
+                        addToast('Failed to optimize image', 'error');
+                      }
                     }
-                  }
-                }}
-              />
-              <span className="flex items-center justify-center gap-2">
-                <Upload className="w-4 h-4" />
-                {assets?.profilePhoto ? 'Choose Different Photo File' : 'Upload Profile Photo'}
-              </span>
-            </label>
+                  }}
+                />
+                <span className="flex items-center justify-center gap-2">
+                  <Upload className="w-4 h-4" />
+                  {assets?.profilePhoto ? 'Change Photo File' : 'Upload Profile Photo'}
+                </span>
+              </label>
+
+              {assets?.profilePhoto && (
+                <button
+                  type="button"
+                  onClick={() => setIsPhotoCropOpen(true)}
+                  className="w-full py-3 px-4 rounded-2xl bg-orange-500/15 border border-orange-500/40 text-orange-400 font-extrabold text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer shadow-sm"
+                >
+                  <Crop className="w-4 h-4 text-orange-500" />
+                  <span>Interactive Crop & Drag</span>
+                </button>
+              )}
+            </div>
+
+            {/* In-Line Vertical Alignment (Shift Up/Down) Controls */}
+            {assets?.profilePhoto && (
+              <div className="space-y-2.5 p-3.5 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)]">
+                <div className="flex items-center justify-between text-xs font-bold text-[var(--ox-text-primary)]">
+                  <span className="flex items-center gap-1.5">
+                    <MoveVertical className="w-3.5 h-3.5 text-orange-500" /> Vertical Position (Shift Up / Down)
+                  </span>
+                  <span className="text-orange-400 font-mono font-bold">{photoOffsetY}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={photoOffsetY}
+                  onChange={(e) => updateAssets('photoOffsetY', Number(e.target.value))}
+                  className="w-full accent-orange-500 cursor-pointer h-2 bg-[var(--ox-card-bg)] rounded-lg"
+                />
+                {/* Quick Alignment Focus Presets */}
+                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                  {[
+                    { label: 'Top (Face)', val: 10 },
+                    { label: 'Center (50%)', val: 50 },
+                    { label: 'Bottom (Body)', val: 90 }
+                  ].map((preset) => (
+                    <button
+                      key={preset.val}
+                      type="button"
+                      onClick={() => updateAssets('photoOffsetY', preset.val)}
+                      className={`py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                        photoOffsetY === preset.val
+                          ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 shadow-sm'
+                          : 'bg-[var(--ox-card-bg)] text-[var(--ox-text-secondary)] border-[var(--ox-border)]'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* In-Line Zoom & Scale Slider */}
+            {assets?.profilePhoto && (
+              <div className="space-y-2 p-3.5 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)]">
+                <div className="flex items-center justify-between text-xs font-bold text-[var(--ox-text-primary)]">
+                  <span className="flex items-center gap-1.5">
+                    <ZoomIn className="w-3.5 h-3.5 text-amber-500" /> Zoom Scale
+                  </span>
+                  <span className="text-orange-400 font-mono font-bold">{photoZoom}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={100}
+                  max={220}
+                  step={5}
+                  value={photoZoom}
+                  onChange={(e) => updateAssets('photoZoom', Number(e.target.value))}
+                  className="w-full accent-orange-500 cursor-pointer h-2 bg-[var(--ox-card-bg)] rounded-lg"
+                />
+              </div>
+            )}
+
+            {/* Photo Display Size */}
+            <div className="space-y-1.5 pt-1">
+              <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Photo Display Size</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'sm', label: 'Small (64px)' },
+                  { id: 'md', label: 'Medium (80px)' },
+                  { id: 'lg', label: 'Large (96px)' }
+                ].map((sz) => (
+                  <button
+                    key={sz.id}
+                    type="button"
+                    onClick={() => updateAssets('photoSize', sz.id)}
+                    className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                      (assets?.photoSize || 'md') === sz.id
+                        ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 shadow-sm'
+                        : 'bg-[var(--ox-surface-secondary)] text-[var(--ox-text-secondary)] border-[var(--ox-border)]'
+                    }`}
+                  >
+                    {sz.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Shape Selector */}
             <div className="space-y-1.5 pt-1">
@@ -494,6 +658,7 @@ export const MobileSectionEditor = () => {
                     onClick={() => {
                       updateAssets('profilePhoto', av.url);
                       addToast(`Selected ${av.label}`, 'success');
+                      setIsPhotoCropOpen(true);
                     }}
                     className="flex items-center gap-2 p-2 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] hover:border-orange-500 text-left active:scale-95 transition-all cursor-pointer"
                   >
@@ -808,6 +973,13 @@ export const MobileSectionEditor = () => {
           </div>
         </div>
       )}
+
+      {/* Photo Crop Modal for Mobile Touch & Sliders */}
+      <PhotoCropModal
+        isOpen={isPhotoCropOpen}
+        onClose={() => setIsPhotoCropOpen(false)}
+        photoSrc={assets?.profilePhoto || DEFAULT_PROFILE_PHOTO}
+      />
 
     </div>
   );
