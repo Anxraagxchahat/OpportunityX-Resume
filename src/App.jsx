@@ -21,6 +21,7 @@ import ResumeMigrationModal from './components/ResumeMigrationModal';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { MobileNavigationProvider } from './context/MobileNavigationContext';
 import { MobileMoreMenuModal } from './components/mobile/MobileMoreMenuModal';
+import { RouteSkeletonLoader } from './components/skeleton';
 
 import { ScrollToTop } from './components/ScrollToTop';
 
@@ -80,16 +81,6 @@ function ResumeMigrationModalWrapper() {
   );
 }
 
-function RouteLoadingFallback() {
-  return (
-    <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
-        <span className="text-xs font-semibold text-slate-400">Loading module...</span>
-      </div>
-    </div>
-  );
-}
 function AppContent() {
   const location = useLocation();
   const isWorkspace = location.pathname === '/builder';
@@ -103,7 +94,7 @@ function AppContent() {
     <div className="min-h-screen bg-[var(--ox-bg)] text-[var(--ox-text-primary)] font-sans flex flex-col transition-colors duration-300 selection:bg-orange-500/30 selection:text-slate-950 dark:selection:text-orange-100">
       <Navbar />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Suspense fallback={<RouteLoadingFallback />}>
+        <Suspense fallback={<RouteSkeletonLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />

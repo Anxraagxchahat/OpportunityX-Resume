@@ -465,3 +465,64 @@ p, li, ul, ol, blockquote, span {
   box-shadow: 0 0 16px rgba(249, 115, 22, 0.12);
 }
 
+/* ==========================================================================
+   OPPORTUNITYX UNIFIED SKELETON SHIMMER SYSTEM
+   ========================================================================== */
+
+@keyframes ox-skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.ox-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--ox-surface-secondary, #111111) 0%,
+    rgba(249, 115, 22, 0.08) 35%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(249, 115, 22, 0.08) 65%,
+    var(--ox-surface-secondary, #111111) 100%
+  );
+  background-size: 200% 100%;
+  animation: ox-skeleton-shimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme='light'] .ox-skeleton {
+  background: linear-gradient(
+    90deg,
+    #E2E8F0 0%,
+    rgba(249, 115, 22, 0.1) 35%,
+    #FFFFFF 50%,
+    rgba(249, 115, 22, 0.1) 65%,
+    #E2E8F0 100%
+  );
+  background-size: 200% 100%;
+}
+
+.ox-skeleton-subtle {
+  background: linear-gradient(
+    90deg,
+    var(--ox-surface-primary, #0A0A0A) 0%,
+    rgba(255, 255, 255, 0.04) 50%,
+    var(--ox-surface-primary, #0A0A0A) 100%
+  );
+  background-size: 200% 100%;
+  animation: ox-skeleton-shimmer 2s ease-in-out infinite;
+}
+
+[data-theme='light'] .ox-skeleton-subtle {
+  background: linear-gradient(
+    90deg,
+    #F1F5F9 0%,
+    #FFFFFF 50%,
+    #F1F5F9 100%
+  );
+  background-size: 200% 100%;
+}
+

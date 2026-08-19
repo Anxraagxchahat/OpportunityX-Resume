@@ -286,6 +286,28 @@ export const AIAssistantPage = () => {
           )}
         </button>
 
+        {/* Shimmering AI Response Skeleton Loader while executing */}
+        {isExecuting && (
+          <div className="p-6 rounded-2xl border border-orange-500/30 bg-[var(--ox-surface-primary)] shadow-[0_0_25px_rgba(249,115,22,0.1)] space-y-4 animate-pulse">
+            <div className="flex items-center justify-between border-b border-[var(--ox-border)] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500" />
+                </span>
+                <span className="text-xs font-bold text-orange-400">Synthesizing AI Content with OpenRouter...</span>
+              </div>
+              <div className="h-5 w-16 rounded-md bg-orange-500/20 ox-skeleton" />
+            </div>
+            <div className="space-y-2.5">
+              <div className="h-3.5 w-full rounded-md ox-skeleton" />
+              <div className="h-3.5 w-[92%] rounded-md ox-skeleton" />
+              <div className="h-3.5 w-[85%] rounded-md ox-skeleton" />
+              <div className="h-3.5 w-[60%] rounded-md ox-skeleton" />
+            </div>
+          </div>
+        )}
+
         {/* Interactive Response Viewer */}
         {executionResult && (
           <AIResponseViewer

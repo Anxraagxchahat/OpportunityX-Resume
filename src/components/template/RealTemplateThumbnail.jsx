@@ -69,8 +69,29 @@ export const RealTemplateThumbnail = ({ template, type = 'thumbnail' }) => {
   return (
     <div className="w-full h-full rounded border border-[var(--ox-border)] overflow-hidden relative bg-[var(--ox-surface-secondary)]">
       {isLoading && (
-        <div className="absolute inset-0 bg-[var(--ox-surface-primary)] animate-pulse flex items-center justify-center">
-          <div className="w-5 h-5 border-2 border-orange-500/40 border-t-orange-500 rounded-full animate-spin" />
+        <div className="absolute inset-0 bg-[var(--ox-surface-primary)] p-3 flex flex-col justify-between ox-skeleton select-none">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 border-b border-[var(--ox-border)] pb-2">
+              <div className="w-5 h-5 rounded-full bg-[var(--ox-surface-secondary)] flex-shrink-0" />
+              <div className="space-y-1 flex-1">
+                <div className="h-2 w-3/4 rounded bg-orange-500/20" />
+                <div className="h-1.5 w-1/2 rounded bg-[var(--ox-surface-secondary)]" />
+              </div>
+            </div>
+            <div className="space-y-1 pt-1">
+              <div className="h-1.5 w-1/3 rounded bg-[var(--ox-surface-secondary)]" />
+              <div className="h-1.5 w-full rounded bg-[var(--ox-surface-secondary)]" />
+              <div className="h-1.5 w-4/5 rounded bg-[var(--ox-surface-secondary)]" />
+            </div>
+            <div className="space-y-1 pt-1">
+              <div className="h-1.5 w-2/5 rounded bg-[var(--ox-surface-secondary)]" />
+              <div className="h-1.5 w-full rounded bg-[var(--ox-surface-secondary)]" />
+            </div>
+          </div>
+          <div className="flex justify-between items-center pt-2 border-t border-[var(--ox-border)] opacity-50">
+            <div className="h-1.5 w-12 rounded bg-[var(--ox-surface-secondary)]" />
+            <div className="h-1.5 w-6 rounded bg-[var(--ox-surface-secondary)]" />
+          </div>
         </div>
       )}
       <img

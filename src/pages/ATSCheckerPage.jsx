@@ -209,7 +209,41 @@ export const ATSCheckerPage = () => {
           className="w-full bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-xl p-3 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
         />
 
-        {jdMatchResult && (
+        {/* Shimmering ATS Analysis Skeleton Loader */}
+        {isMatching && (
+          <div className="p-4 rounded-xl bg-[var(--ox-surface-primary)] border border-orange-500/30 space-y-3 pt-3 animate-pulse shadow-[0_0_20px_rgba(249,115,22,0.1)]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500" />
+                </span>
+                <span className="text-xs font-bold text-orange-400">Parsing Job Posting & Calculating ATS Fit...</span>
+              </div>
+              <div className="h-4 w-20 rounded-md bg-orange-500/20 ox-skeleton" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div className="space-y-2">
+                <div className="h-3 w-28 rounded ox-skeleton" />
+                <div className="flex flex-wrap gap-1.5">
+                  <div className="h-5 w-16 rounded-lg ox-skeleton" />
+                  <div className="h-5 w-20 rounded-lg ox-skeleton" />
+                  <div className="h-5 w-14 rounded-lg ox-skeleton" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 w-32 rounded ox-skeleton" />
+                <div className="flex flex-wrap gap-1.5">
+                  <div className="h-5 w-18 rounded-lg ox-skeleton" />
+                  <div className="h-5 w-16 rounded-lg ox-skeleton" />
+                  <div className="h-5 w-22 rounded-lg ox-skeleton" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {jdMatchResult && !isMatching && (
           <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 space-y-3 pt-3 animate-fadeIn">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-[var(--ox-text-primary)]">Overall Keyword Match Score: <strong className="text-orange-400">{jdMatchResult.matchScore}%</strong></span>
