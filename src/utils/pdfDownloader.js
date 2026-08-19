@@ -1,8 +1,10 @@
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 /**
  * Direct Client-Side PDF Downloader for OpportunityX Resume Engine
  * Generates and downloads a clean A4 PDF file directly to the device without opening browser print windows.
+ * Renders each discrete A4 page individually to eliminate extra blank trailing pages.
  *
  * @param {string} elementId - Target DOM element ID to render into PDF
  * @param {string} candidateName - Candidate name for filename formatting
@@ -23,11 +25,18 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
     return false;
   }
 
-  // Clean filename: e.g. "Anurag_Verma_Resume.pdf"
+  // Clean filename: e.g. "Anxraag_Verma_Resume.pdf"
   const safeName = nameStr && nameStr.trim()
     ? nameStr.trim().replace(/[^a-zA-Z0-9\s_-]/g, '').replace(/\s+/g, '_')
     : 'OpportunityX';
   const filename = `${safeName}_Resume.pdf`;
+
+  // Wait for all custom fonts (Inter, Roboto, Poppins, etc.) to finish loading
+  if (document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch (e) {}
+  }
 
   // Create isolated, top-level export container directly attached to document.body
   const tempWrapper = document.createElement('div');
@@ -66,12 +75,24 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   tempWrapper.appendChild(clonedContent);
   document.body.appendChild(tempWrapper);
 
-  const opt = {
-    margin: [0, 0, 0, 0], // Precise A4 edge alignment
-    filename: filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,
+  try {
+    // Find discrete A4 page elements to render page-by-page
+    let pageNodes = clonedContent.querySelectorAll('.pdf-a4-page');
+    if (pageNodes.length === 0) {
+      pageNodes = clonedContent.querySelectorAll('.a4-paper-container');
+    }
+
+    const pagesToRender = pageNodes.length > 0 ? Array.from(pageNodes) : [clonedContent];
+
+    const pdf = new jsPDF({
+      unit: 'mm',
+      format: 'a4',
+      orientation: 'portrait',
+      compress: true
+    });
+
+    const canvasOptions = {
+      scale: 2, // High resolution (300 DPI equivalent)
       useCORS: true,
       allowTaint: true,
       letterRendering: true,
@@ -80,30 +101,20 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
       windowWidth: 794, // 210mm @ 96 DPI
       scrollX: 0,
       scrollY: 0
-    },
-    jsPDF: {
-      unit: 'mm',
-      format: 'a4',
-      orientation: 'portrait'
-    },
-    pagebreak: {
-      mode: ['avoid-all', 'css', 'legacy'],
-      before: '.pdf-page-break-before',
-      after: '.pdf-page-break-after',
-      avoid: [
-        '.pdf-block',
-        '.pdf-item',
-        '.pdf-section-header',
-        '.pdf-skills-group',
-        '.pdf-keep-together',
-        '.break-inside-avoid',
-        'h1', 'h2', 'h3', 'h4'
-      ]
-    }
-  };
+    };
 
-  try {
-    await html2pdf().set(opt).from(clonedContent).save();
+    for (let i = 0; i < pagesToRender.length; i++) {
+      const pageEl = pagesToRender[i];
+      if (i > 0) {
+        pdf.addPage('a4', 'portrait');
+      }
+
+      const canvas = await html2canvas(pageEl, canvasOptions);
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+    }
+
+    pdf.save(filename);
     return true;
   } catch (err) {
     console.warn('Direct PDF download fallback triggered:', err);
