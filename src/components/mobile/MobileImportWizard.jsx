@@ -153,7 +153,7 @@ export const MobileImportWizard = () => {
               </div>
               <div>
                 <span className="text-[var(--ox-text-muted)] block text-[10px]">Target Role</span>
-                <span className="font-bold text-[var(--ox-text-primary)]">{extractedData.personal?.targetRole || 'Not specified'}</span>
+                <span className="font-bold text-[var(--ox-text-primary)]">{extractedData.personal?.jobTitle || extractedData.personal?.targetRole || 'Not specified'}</span>
               </div>
               <div>
                 <span className="text-[var(--ox-text-muted)] block text-[10px]">Extracted Sections</span>

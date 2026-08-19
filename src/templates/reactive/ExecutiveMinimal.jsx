@@ -57,7 +57,7 @@ export const ExecutiveMinimalTemplate = ({ resumeData, accentHex, fontFamily }) 
       <div className="flex-1 p-5 space-y-4 text-slate-800">
         <div className="pb-3">
           <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Your Name'}</h1>
-          <p className="text-sm font-semibold text-slate-500 mt-0.5">{personal.jobTitle || 'Job Title'}</p>
+          <p className="text-sm font-semibold text-slate-500 mt-0.5">{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
           <div className="h-[2px] mt-2 rounded-full" style={{ backgroundColor: accentHex }} />
         </div>
 

@@ -20,7 +20,7 @@ export const ProfessionalCleanTemplate = ({ resumeData, accentHex, fontFamily })
       {/* Header */}
       <div className="pb-3 border-b-2" style={{ borderColor: accentHex }}>
         <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Your Name'}</h1>
-        <p className="text-sm font-bold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || 'Job Title'}</p>
+        <p className="text-sm font-bold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
         <div className="mt-2">
           <ContactInfo personal={personal} variant="inline" />
         </div>

@@ -21,6 +21,9 @@ export const AsiaCompactTemplate = ({ resumeData, accentHex, fontFamily }) => {
       {/* Compact Header */}
       <div className="pb-2 mb-3">
         <h1 className="text-xl font-black text-slate-900">{personal.fullName || 'Your Name'}</h1>
+        {(personal.jobTitle || personal.targetRole) && (
+          <p className="text-xs font-semibold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole}</p>
+        )}
         <div className="mt-1">
           <ContactInfo personal={personal} variant="columns" />
         </div>

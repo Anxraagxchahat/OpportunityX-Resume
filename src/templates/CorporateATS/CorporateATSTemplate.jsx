@@ -13,7 +13,7 @@ export const CorporateATSTemplate = ({ resumeData, accentHex, fontFamily, visibl
         <div data-block-id="header" className="pb-3 border-b-2" style={{ borderColor: accentHex }}>
           <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Candidate Name'}</h1>
           <div className="flex justify-between items-center text-xs mt-1">
-            <span className="font-bold" style={{ color: accentHex }}>{personal.jobTitle || 'Target Role'}</span>
+            <span className="font-bold" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole || 'Target Role'}</span>
             <span className="text-slate-500 font-mono">{personal.location}</span>
           </div>
           <div className="text-[11px] text-slate-600 mt-1 flex gap-3">

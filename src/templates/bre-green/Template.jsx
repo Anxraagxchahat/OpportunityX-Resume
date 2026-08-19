@@ -14,7 +14,7 @@ export const BREGreenTemplate = ({ resumeData, accentHex, fontFamily }) => {
       <div className="bre-green-header flex items-center justify-between" style={{ borderColor: accentColor }}>
         <div>
           <div className="bre-green-name">{personal.fullName || 'Your Name'}</div>
-          <div className="bre-green-title" style={{ color: accentColor }}>{personal.jobTitle || 'Job Title'}</div>
+          <div className="bre-green-title" style={{ color: accentColor }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</div>
           <div className="mt-2 text-[11px] text-slate-600 flex flex-wrap gap-x-3 gap-y-0.5">
             {personal.email && <span>{personal.email}</span>}
             {personal.phone && <span>• {personal.phone}</span>}

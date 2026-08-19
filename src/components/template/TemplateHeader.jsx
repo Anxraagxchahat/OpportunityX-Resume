@@ -12,7 +12,7 @@ export const TemplateHeader = ({ personal = {}, accentHex = '#F97316', align = '
       <div className="space-y-1">
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">{personal.fullName || 'Your Full Name'}</h1>
         <p className="text-sm font-bold uppercase tracking-wider" style={{ color: accentHex }}>
-          {personal.jobTitle || 'Professional Role'}
+          {personal.jobTitle || personal.targetRole || 'Professional Role'}
         </p>
 
         <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 font-medium pt-1 ${align === 'center' ? 'justify-center' : ''}`}>

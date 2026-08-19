@@ -1196,9 +1196,21 @@ export const ResumeProvider = ({ children }) => {
   const updatePersonal = useCallback((arg1, arg2) => {
     updateActiveResume((prev) => {
       const current = prev.personal || {};
-      const next = typeof arg1 === 'string'
-        ? { ...current, [arg1]: arg2 }
-        : { ...current, ...(arg1 || {}) };
+      let next;
+      if (typeof arg1 === 'string') {
+        next = { ...current, [arg1]: arg2 };
+        if (arg1 === 'jobTitle' || arg1 === 'targetRole') {
+          next.jobTitle = arg2;
+          next.targetRole = arg2;
+        }
+      } else {
+        next = { ...current, ...(arg1 || {}) };
+        if (next.jobTitle && !next.targetRole) {
+          next.targetRole = next.jobTitle;
+        } else if (next.targetRole && !next.jobTitle) {
+          next.jobTitle = next.targetRole;
+        }
+      }
       return { ...prev, personal: next };
     });
   }, [updateActiveResume]);

@@ -54,7 +54,7 @@ export const CompactEntryTemplate = ({ resumeData, accentHex = '#F97316', fontFa
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">{personal.fullName || 'Your Name'}</h1>
           <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: accentHex }}>
-            {personal.jobTitle || 'Job Title / Target Role'}
+            {personal.jobTitle || personal.targetRole || 'Job Title / Target Role'}
           </p>
         </div>
 

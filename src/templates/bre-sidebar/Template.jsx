@@ -13,7 +13,7 @@ export const BRESidebarTemplate = ({ resumeData, accentHex, fontFamily }) => {
       {/* Top Title Bar */}
       <div className="bre-sidebar-top" style={{ backgroundColor: headerBg }}>
         <div className="bre-sidebar-name">{personal.fullName || 'Your Name'}</div>
-        <div className="bre-sidebar-title">{personal.jobTitle || 'Job Title'}</div>
+        <div className="bre-sidebar-title">{personal.jobTitle || personal.targetRole || 'Job Title'}</div>
       </div>
 
       {/* Body with Left Photo Column & Right Main Body */}

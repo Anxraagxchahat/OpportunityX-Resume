@@ -17,7 +17,7 @@ export const BRECreativeTemplate = ({ resumeData, accentHex, fontFamily }) => {
           <img src={photoSrc} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-white/30 shadow-md" />
         </div>
         <div className="bre-creative-name">{personal.fullName || 'Your Name'}</div>
-        <div className="bre-creative-title">{personal.jobTitle || 'Job Title'}</div>
+        <div className="bre-creative-title">{personal.jobTitle || personal.targetRole || 'Job Title'}</div>
 
         {personal.summary && (
           <div>

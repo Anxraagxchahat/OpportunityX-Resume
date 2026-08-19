@@ -14,7 +14,7 @@ export const BREPurpleTemplate = ({ resumeData, accentHex, fontFamily }) => {
       <div className="bre-purple-header flex items-center justify-between" style={{ borderColor: accentColor }}>
         <div>
           <div className="bre-purple-name">{personal.fullName || 'Your Name'}</div>
-          <div className="bre-purple-title" style={{ color: accentColor }}>{personal.jobTitle || 'Job Title'}</div>
+          <div className="bre-purple-title" style={{ color: accentColor }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</div>
           <div className="mt-1 text-[11px] text-slate-500 font-mono">
             {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' | ')}
           </div>

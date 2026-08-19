@@ -26,7 +26,7 @@ export const ExecutiveATSTemplate = ({ resumeData, accentHex = '#0F172A', fontFa
       {isVisible('header') && (
         <div data-block-id="header" className="text-center pb-3 border-b-2 border-double" style={{ borderColor: accentHex }}>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">{personal.fullName || 'Executive Name'}</h1>
-          {personal.jobTitle && <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: accentHex }}>{personal.jobTitle}</p>}
+          {(personal.jobTitle || personal.targetRole) && <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole}</p>}
           <p className="text-xs text-slate-600 font-medium mt-1">
             {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' • ')}
           </p>

@@ -25,7 +25,7 @@ export const HealthcareCalmTemplate = ({ resumeData, accentHex, fontFamily }) =>
       <div className="flex-1 p-5 space-y-4">
         <div className="pb-3 border-b" style={{ borderColor: `${accentHex}40` }}>
           <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Your Name'}</h1>
-          <p className="text-sm font-bold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || 'Job Title'}</p>
+          <p className="text-sm font-bold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
         </div>
 
         {personal.summary && (

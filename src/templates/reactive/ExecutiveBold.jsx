@@ -23,7 +23,7 @@ export const ExecutiveBoldTemplate = ({ resumeData, accentHex, fontFamily }) => 
       {/* Header */}
       <div className="pb-4 mb-4 border-b border-slate-200">
         <h1 className="text-3xl font-black text-slate-900 uppercase tracking-wide">{personal.fullName || 'Your Name'}</h1>
-        <p className="text-sm font-extrabold uppercase tracking-wider mt-1" style={{ color: accentHex }}>{personal.jobTitle || 'Job Title'}</p>
+        <p className="text-sm font-extrabold uppercase tracking-wider mt-1" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
         <div className="mt-2">
           <ContactInfo personal={personal} variant="inline" />
         </div>

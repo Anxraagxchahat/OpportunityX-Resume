@@ -14,7 +14,7 @@ export const BRECoolTemplate = ({ resumeData, accentHex, fontFamily }) => {
       <div className="bre-cool-banner flex items-center justify-between" style={{ backgroundColor: bannerBg }}>
         <div>
           <div className="bre-cool-fullname">{personal.fullName || 'Your Name'}</div>
-          <div className="bre-cool-position">{personal.jobTitle || 'Job Title'}</div>
+          <div className="bre-cool-position">{personal.jobTitle || personal.targetRole || 'Job Title'}</div>
         </div>
         <img src={photoSrc} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-white/40 shadow-md flex-shrink-0" />
       </div>

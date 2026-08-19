@@ -20,7 +20,7 @@ export const TechnicalGridTemplate = ({ resumeData, accentHex, fontFamily }) => 
       {/* Header */}
       <div className="pb-3 mb-4">
         <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Your Name'}</h1>
-        <p className="text-sm font-bold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || 'Job Title'}</p>
+        <p className="text-sm font-bold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
         <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] text-slate-600">
           {personal.email && <span>{personal.email}</span>}
           {personal.phone && <span>{personal.phone}</span>}

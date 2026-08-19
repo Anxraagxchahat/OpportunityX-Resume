@@ -8,7 +8,7 @@ export const FullStackTemplate = ({ resumeData, accentHex, fontFamily }) => {
     <div className="space-y-4 text-slate-800" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
       <div className="pb-3 border-b-2" style={{ borderColor: accentHex }}>
         <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Full Stack Engineer'}</h1>
-        <p className="text-xs font-mono font-bold" style={{ color: accentHex }}>{personal.jobTitle || 'Full Stack Developer'}</p>
+        <p className="text-xs font-mono font-bold" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole || 'Full Stack Developer'}</p>
         <p className="text-[11px] text-slate-500 font-mono mt-1">
           {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' | ')}
         </p>

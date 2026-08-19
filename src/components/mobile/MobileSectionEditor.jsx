@@ -65,7 +65,12 @@ export const MobileSectionEditor = () => {
 
   // Form Field Change Helper
   const handlePersonalChange = (field, value) => {
-    updatePersonal({ ...personal, [field]: value });
+    const updated = { ...personal, [field]: value };
+    if (field === 'jobTitle' || field === 'targetRole') {
+      updated.jobTitle = value;
+      updated.targetRole = value;
+    }
+    updatePersonal(updated);
   };
 
   // Section Stepper Previous/Next
@@ -339,8 +344,8 @@ export const MobileSectionEditor = () => {
             <input
               type="text"
               placeholder="e.g. Senior Full Stack Engineer"
-              value={personal.targetRole || ''}
-              onChange={(e) => handlePersonalChange('targetRole', e.target.value)}
+              value={personal.jobTitle || personal.targetRole || ''}
+              onChange={(e) => handlePersonalChange('jobTitle', e.target.value)}
               className="w-full bg-[var(--ox-card-bg)] border border-[var(--ox-border)] rounded-2xl px-4 py-3.5 text-sm font-semibold text-[var(--ox-text-primary)] focus:border-orange-500 focus:outline-none min-h-[48px]"
             />
           </div>
@@ -698,17 +703,17 @@ export const MobileSectionEditor = () => {
               setAiModalConfig({
                 isOpen: true,
                 title: 'Improve Summary with AI',
-                initialPrompt: personal.summary || `Professional summary for a ${personal.targetRole || 'Software Engineer'} with strong background and measurable results.`,
+                initialPrompt: personal.summary || `Professional summary for a ${personal.jobTitle || personal.targetRole || 'Software Engineer'} with strong background and measurable results.`,
                 onGenerate: async () => {
                   const res = await executeAIGeneration({
                     feature: 'summary',
                     prompt: personal.summary || undefined,
                     content: {
-                      jobTitle: personal.targetRole || personal.jobTitle || 'Professional',
+                      jobTitle: personal.jobTitle || personal.targetRole || 'Professional',
                       existingSummary: personal.summary || '',
                       skills: activeResume?.skills || {}
                     },
-                    targetRole: personal.targetRole || personal.jobTitle
+                    targetRole: personal.jobTitle || personal.targetRole
                   });
                   return typeof res?.result === 'string' ? res.result : JSON.stringify(res?.result, null, 2);
                 },

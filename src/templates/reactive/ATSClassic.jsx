@@ -20,7 +20,7 @@ export const ATSClassicTemplate = ({ resumeData, accentHex, fontFamily }) => {
       {/* Minimal Header */}
       <div className="pb-2 mb-3 border-b border-slate-300">
         <h1 className="text-xl font-black text-slate-900">{personal.fullName || 'Your Name'}</h1>
-        <p className="text-xs font-medium text-slate-600 mt-0.5">{personal.jobTitle || 'Job Title'}</p>
+        <p className="text-xs font-medium text-slate-600 mt-0.5">{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
         <div className="mt-1.5">
           <ContactInfo personal={personal} variant="inline" />
         </div>

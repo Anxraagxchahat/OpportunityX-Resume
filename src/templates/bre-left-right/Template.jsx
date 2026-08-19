@@ -15,7 +15,7 @@ export const BRELeftRightTemplate = ({ resumeData, accentHex, fontFamily }) => {
         <div className="pb-3 border-b-2 flex items-center justify-between gap-3" style={{ borderColor: accentColor }}>
           <div>
             <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Your Name'}</h1>
-            <p className="text-xs font-bold mt-0.5" style={{ color: accentColor }}>{personal.jobTitle || 'Job Title'}</p>
+            <p className="text-xs font-bold mt-0.5" style={{ color: accentColor }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
           </div>
           <img src={photoSrc} alt="Profile" className="w-14 h-14 rounded-full object-cover border-2 shadow-sm flex-shrink-0" style={{ borderColor: accentColor }} />
         </div>

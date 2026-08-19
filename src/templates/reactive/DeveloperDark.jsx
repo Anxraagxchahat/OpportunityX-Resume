@@ -40,7 +40,7 @@ export const DeveloperDarkTemplate = ({ resumeData, accentHex, fontFamily }) => 
         )}
         <div className="pb-3 border-b border-white/20">
           <h1 className="text-lg font-black text-white">{personal.fullName || 'Your Name'}</h1>
-          <p className="text-[11px] font-semibold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || 'Job Title'}</p>
+          <p className="text-[11px] font-semibold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
         </div>
 
         <div>

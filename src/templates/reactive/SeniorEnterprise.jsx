@@ -19,7 +19,7 @@ export const SeniorEnterpriseTemplate = ({ resumeData, accentHex, fontFamily }) 
       {/* Polished Header */}
       <div className="text-center pb-4 mb-4 border-b-2" style={{ borderColor: accentHex }}>
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">{personal.fullName || 'Your Name'}</h1>
-        <p className="text-sm font-bold mt-1" style={{ color: accentHex }}>{personal.jobTitle || 'Job Title'}</p>
+        <p className="text-sm font-bold mt-1" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
         <div className="mt-2 flex justify-center">
           <ContactInfo personal={personal} variant="inline" />
         </div>

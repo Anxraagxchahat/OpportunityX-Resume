@@ -14,7 +14,7 @@ export const BREMaterialDarkTemplate = ({ resumeData, accentHex, fontFamily }) =
       <div className="bre-material-card flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-white">{personal.fullName || 'Your Name'}</h1>
-          <p className="text-xs font-bold mt-0.5" style={{ color: accentColor }}>{personal.jobTitle || 'Job Title'}</p>
+          <p className="text-xs font-bold mt-0.5" style={{ color: accentColor }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
           <div className="mt-2 text-[11px] text-gray-400 flex flex-wrap gap-x-3 gap-y-0.5">
             {personal.email && <span>{personal.email}</span>}
             {personal.phone && <span>• {personal.phone}</span>}

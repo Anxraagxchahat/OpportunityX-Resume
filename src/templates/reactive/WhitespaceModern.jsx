@@ -20,7 +20,7 @@ export const WhitespaceModernTemplate = ({ resumeData, accentHex, fontFamily }) 
       {/* Airy Header */}
       <div className="pb-5 mb-5">
         <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">{personal.fullName || 'Your Name'}</h1>
-        <p className="text-base font-medium text-slate-500 mt-1">{personal.jobTitle || 'Job Title'}</p>
+        <p className="text-base font-medium text-slate-500 mt-1">{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500">
           {personal.email && <span>{personal.email}</span>}
           {personal.phone && <span>{personal.phone}</span>}

@@ -11,7 +11,7 @@ export const RecruiterATSTemplate = ({ resumeData, accentHex, fontFamily, visibl
       {isVisible('header') && (
         <div data-block-id="header" className="p-3 bg-slate-100 rounded border-l-4" style={{ borderColor: accentHex }}>
           <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Candidate Name'}</h1>
-          <p className="text-xs font-bold text-slate-700">{personal.jobTitle || 'Role'}</p>
+          <p className="text-xs font-bold text-slate-700">{personal.jobTitle || personal.targetRole || 'Role'}</p>
           <p className="text-[11px] text-slate-500 font-mono mt-1">
             {[personal.email, personal.phone, personal.location].filter(Boolean).join(' | ')}
           </p>

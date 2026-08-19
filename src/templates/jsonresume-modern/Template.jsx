@@ -15,7 +15,7 @@ export const JSONResumeModernTemplate = ({ resumeData, accentHex, fontFamily }) 
       <div className="jsonresume-modern-header" style={{ borderColor: accentColor }}>
         <div>
           <div className="jsonresume-modern-name">{personal.fullName || 'Your Name'}</div>
-          <div className="jsonresume-modern-location">{personal.location || personal.jobTitle}</div>
+          <div className="jsonresume-modern-location">{personal.location || personal.jobTitle || personal.targetRole}</div>
         </div>
         <img src={photoSrc} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2" style={{ borderColor: accentColor }} />
       </div>

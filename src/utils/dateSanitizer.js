@@ -184,7 +184,9 @@ export const hydrateAndNormalizeResume = (resume) => {
     },
     personal: {
       ...emptyResumeSchema.personal,
-      ...(resume.personal || {})
+      ...(resume.personal || {}),
+      jobTitle: resume.personal?.jobTitle || resume.personal?.targetRole || '',
+      targetRole: resume.personal?.targetRole || resume.personal?.jobTitle || ''
     },
     socialLinks: {
       ...emptyResumeSchema.socialLinks,

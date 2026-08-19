@@ -40,7 +40,7 @@ export const ModernATSTemplate = ({ resumeData, accentHex = '#F97316', fontFamil
         <div data-block-id="header" className="pb-3 border-b-2 flex justify-between items-start gap-4" style={{ borderColor: accentHex }}>
           <div className="space-y-1">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">{personal.fullName || 'Your Name'}</h1>
-            {personal.jobTitle && <p className="text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: accentHex }}>{personal.jobTitle}</p>}
+            {(personal.jobTitle || personal.targetRole) && <p className="text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole}</p>}
             <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-600 font-medium">
               {headerContactItems.map((item, idx) => (
                 <span key={idx}>{idx > 0 && '• '}{item}</span>

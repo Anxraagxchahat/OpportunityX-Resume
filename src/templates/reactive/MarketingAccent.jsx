@@ -25,7 +25,7 @@ export const MarketingAccentTemplate = ({ resumeData, accentHex, fontFamily }) =
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Your Name'}</h1>
-            <p className="text-sm font-bold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || 'Job Title'}</p>
+            <p className="text-sm font-bold mt-0.5" style={{ color: accentHex }}>{personal.jobTitle || personal.targetRole || 'Job Title'}</p>
             <div className="mt-2">
               <ContactInfo personal={personal} variant="inline" />
             </div>

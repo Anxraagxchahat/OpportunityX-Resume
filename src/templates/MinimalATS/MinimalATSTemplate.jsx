@@ -26,7 +26,7 @@ export const MinimalATSTemplate = ({ resumeData, accentHex = '#000000', fontFami
       {isVisible('header') && (
         <div data-block-id="header" className="text-center pb-2 border-b border-slate-300">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">{personal.fullName || 'Your Name'}</h1>
-          {personal.jobTitle && <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide my-0.5">{personal.jobTitle}</p>}
+          {(personal.jobTitle || personal.targetRole) && <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide my-0.5">{personal.jobTitle || personal.targetRole}</p>}
           <p className="text-[11px] text-slate-600 font-mono flex flex-wrap justify-center gap-2">
             {[personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean).join(' | ')}
           </p>
