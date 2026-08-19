@@ -62,7 +62,8 @@ export const ResumeBuilderPage = () => {
     undo,
     redo,
     duplicateResume,
-    setIsKeyboardHelpOpen
+    setIsKeyboardHelpOpen,
+    setIsDownloadSuccessModalOpen
   } = useResume();
 
   const [activeSection, setActiveSection] = useState('personal');
@@ -147,10 +148,13 @@ export const ResumeBuilderPage = () => {
         return () => clearTimeout(timer);
       }
     },
-    onDownloadPDF: () => {
+    onDownloadPDF: async () => {
       if (activeResume) {
         const candidateName = activeResume.personal?.fullName || activeResume.metadata?.title || 'Resume';
-        downloadDirectPDF('resume-a4-preview', candidateName);
+        await downloadDirectPDF('resume-a4-preview', candidateName);
+        setTimeout(() => {
+          setIsDownloadSuccessModalOpen(true);
+        }, 400);
       }
     },
     onToggleShortcutsModal: () => {

@@ -23,7 +23,8 @@ export const TabletAppShell = () => {
     undo,
     redo,
     duplicateResume,
-    setIsKeyboardHelpOpen
+    setIsKeyboardHelpOpen,
+    setIsDownloadSuccessModalOpen
   } = useResume();
 
   const [activeSection, setActiveSection] = useState('personal');
@@ -35,10 +36,13 @@ export const TabletAppShell = () => {
     onUndo: undo,
     onRedo: redo,
     onDuplicate: () => activeResumeId && duplicateResume(activeResumeId),
-    onDownloadPDF: () => {
+    onDownloadPDF: async () => {
       if (activeResume) {
         const candidateName = activeResume.personal?.fullName || activeResume.metadata?.title || 'Resume';
-        downloadDirectPDF('resume-a4-preview', candidateName);
+        await downloadDirectPDF('resume-a4-preview', candidateName);
+        setTimeout(() => {
+          setIsDownloadSuccessModalOpen(true);
+        }, 400);
       }
     },
     onToggleShortcutsModal: () => setIsKeyboardHelpOpen((prev) => !prev)

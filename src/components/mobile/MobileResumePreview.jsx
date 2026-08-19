@@ -6,7 +6,7 @@ import { A4ResumePreview } from '../A4ResumePreview';
 import { downloadDirectPDF } from '../../utils/pdfDownloader';
 
 export const MobileResumePreview = () => {
-  const { activeResume, addToast } = useResume();
+  const { activeResume, addToast, setIsDownloadSuccessModalOpen } = useResume();
   const { setActiveTab } = useMobileNavigation();
 
   const [scale, setScale] = useState(0.52); // Fit scale default for mobile screen
@@ -19,9 +19,14 @@ export const MobileResumePreview = () => {
   const handleDownloadPDF = async () => {
     setIsDownloading(true);
     try {
-      await downloadDirectPDF('resume-a4-preview', activeResume.personal?.fullName || activeResume.metadata?.title || 'Resume');
+      const candidateName = activeResume?.personal?.fullName || activeResume?.metadata?.title || 'Resume';
+      await downloadDirectPDF('resume-a4-preview', candidateName);
+      setTimeout(() => {
+        setIsDownloadSuccessModalOpen(true);
+      }, 400);
     } catch (err) {
       console.error('PDF download error:', err);
+      addToast('Failed to download PDF. Please try again.', 'error');
     } finally {
       setIsDownloading(false);
     }
