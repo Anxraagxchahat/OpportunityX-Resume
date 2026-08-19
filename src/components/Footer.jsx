@@ -23,7 +23,7 @@ import {
 
 const SOCIAL_LINKS = [
   { name: 'LinkedIn', url: 'https://www.linkedin.com/company/128134073', icon: LinkedInIcon, ariaLabel: 'OpportunityX on LinkedIn', colorHover: 'hover:text-[#0A66C2] hover:border-[#0A66C2]/40' },
-  { name: 'GitHub', url: 'https://github.com/Anxraagxchahat/opportunityx', icon: GitHubIcon, ariaLabel: 'OpportunityX on GitHub', colorHover: 'hover:text-purple-400 hover:border-purple-500/40' },
+  { name: 'GitHub', url: 'https://github.com/Anxraagxchahat', icon: GitHubIcon, ariaLabel: 'OpportunityX on GitHub', colorHover: 'hover:text-purple-400 hover:border-purple-500/40' },
   { name: 'Instagram', url: 'https://www.instagram.com/theopportunityx/', icon: InstagramIcon, ariaLabel: 'OpportunityX on Instagram', colorHover: 'hover:text-[#E4405F] hover:border-[#E4405F]/40' },
   { name: 'YouTube', url: 'https://www.youtube.com/@theopportunityX', icon: YoutubeIcon, ariaLabel: 'OpportunityX on YouTube', colorHover: 'hover:text-[#FF0000] hover:border-[#FF0000]/40' },
   { name: 'X', url: 'https://x.com/TheOpportunityX', icon: XIcon, ariaLabel: 'OpportunityX on X', colorHover: 'hover:text-amber-400 hover:border-amber-400/40' },
