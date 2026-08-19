@@ -1006,14 +1006,26 @@ export const ResumeProvider = ({ children }) => {
   }, [fbLogout]);
 
   const exportActiveResumeJSON = useCallback((clean = true) => {
-    const dataToExport = clean ? stripInternalMetadata(activeResume) : activeResume;
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `${activeResume.metadata.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}_opportunityx.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    try {
+      const dataToExport = clean ? stripInternalMetadata(activeResume) : activeResume;
+      const jsonString = JSON.stringify(dataToExport, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      const safeTitle = (activeResume?.metadata?.title || activeResume?.personal?.fullName || 'resume')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '_');
+      downloadAnchor.href = url;
+      downloadAnchor.download = `${safeTitle}_opportunityx.json`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        downloadAnchor.remove();
+      }, 100);
+    } catch (err) {
+      console.error('Failed to export JSON backup:', err);
+    }
   }, [activeResume]);
 
   const importResumeJSON = useCallback((jsonContent) => {
