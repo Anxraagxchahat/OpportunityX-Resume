@@ -18,22 +18,23 @@ export const ResumeRadarChart = () => {
   ];
 
   return (
-    <div className="cyber-glass-card p-6 space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div>
-          <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-orange-400" /> Resume Completeness Breakdown
+    <div className="cyber-glass-card p-4 sm:p-6 space-y-4 w-full max-w-full min-w-0 box-border">
+      <div className="flex flex-wrap items-start sm:items-center justify-between gap-2 pb-3 border-b border-slate-800 w-full min-w-0">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+            <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 shrink-0" />
+            <span className="break-words">Resume Completeness Breakdown</span>
           </h3>
-          <p className="text-xs text-slate-400">8-axis section completeness evaluation</p>
+          <p className="text-xs text-slate-400 mt-0.5 break-words">8-axis section completeness evaluation</p>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 w-full min-w-0">
         {axes.map((axis) => (
-          <div key={axis.label} className="space-y-1">
-            <div className="flex justify-between text-xs font-semibold text-slate-300">
-              <span>{axis.label}</span>
-              <span className="text-orange-400 font-bold">{axis.score}%</span>
+          <div key={axis.label} className="space-y-1 w-full min-w-0">
+            <div className="flex justify-between items-center text-xs font-semibold text-slate-300">
+              <span className="truncate">{axis.label}</span>
+              <span className="text-orange-400 font-bold ml-2 shrink-0">{axis.score}%</span>
             </div>
             <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
               <div
@@ -47,3 +48,5 @@ export const ResumeRadarChart = () => {
     </div>
   );
 };
+
+export default ResumeRadarChart;
