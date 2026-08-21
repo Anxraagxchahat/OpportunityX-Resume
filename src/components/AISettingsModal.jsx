@@ -85,33 +85,33 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn no-print"
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn no-print"
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-2xl w-full max-w-lg shadow-2xl p-5 sm:p-6 space-y-5 relative text-[var(--ox-text-primary)] transition-colors duration-300 max-h-[92vh] overflow-y-auto custom-scrollbar"
+        className="bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-2xl w-full max-w-lg shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 relative text-[var(--ox-text-primary)] transition-colors duration-300 max-h-[92vh] overflow-y-auto custom-scrollbar min-w-0 box-border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)]">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/30">
+        <div className="flex items-center justify-between pb-3 border-b border-[var(--ox-border)] gap-2 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/30 shrink-0">
               <Sliders className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-[var(--ox-text-primary)]">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm sm:text-lg font-black text-[var(--ox-text-primary)] break-words leading-tight">
                 AI Generation & Key Settings
               </h3>
-              <p className="text-xs text-[var(--ox-text-secondary)]">
+              <p className="text-xs text-[var(--ox-text-secondary)] mt-0.5 break-words">
                 Manage AI execution mode, models, and personal API keys
               </p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] p-1.5 rounded-xl hover:bg-[var(--ox-surface-secondary)] transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center cursor-pointer"
+            className="text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] p-1.5 rounded-xl hover:bg-[var(--ox-surface-secondary)] transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center cursor-pointer shrink-0"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -119,16 +119,16 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Current Execution Mode Card */}
-        <div className="p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3">
-          <div className="flex items-center justify-between">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-3 min-w-0 w-full box-border">
+          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
             <span className="text-xs font-bold text-[var(--ox-text-secondary)]">Active Execution Mode:</span>
             {isUsingCustomKey ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 font-bold border border-purple-500/30 text-xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 font-bold border border-purple-500/30 text-xs shrink-0 whitespace-nowrap">
                 <Key className="w-3.5 h-3.5" />
                 BYOK Mode (Personal Key)
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 text-xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 text-xs shrink-0 whitespace-nowrap">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 OpportunityX AI (Credits)
               </span>
@@ -137,26 +137,26 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
 
           {/* Real-time Credits Accounting Summary */}
           {!isUsingCustomKey && (
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <div className="p-2.5 rounded-lg bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] flex items-center justify-between">
-                <span className="text-xs text-[var(--ox-text-secondary)]">Available Credits</span>
-                <span className="text-sm font-black text-orange-400 font-mono">{remaining}</span>
+            <div className="grid grid-cols-2 gap-2 pt-1 min-w-0 w-full">
+              <div className="p-2.5 rounded-lg bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] flex items-center justify-between gap-2 min-w-0">
+                <span className="text-xs text-[var(--ox-text-secondary)] truncate">Available Credits</span>
+                <span className="text-sm font-black text-orange-400 font-mono shrink-0">{remaining}</span>
               </div>
-              <div className="p-2.5 rounded-lg bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] flex items-center justify-between">
-                <span className="text-xs text-[var(--ox-text-secondary)]">Total Used</span>
-                <span className="text-sm font-black text-emerald-400 font-mono">{totalUsed}</span>
+              <div className="p-2.5 rounded-lg bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] flex items-center justify-between gap-2 min-w-0">
+                <span className="text-xs text-[var(--ox-text-secondary)] truncate">Total Used</span>
+                <span className="text-sm font-black text-emerald-400 font-mono shrink-0">{totalUsed}</span>
               </div>
             </div>
           )}
 
           {isUsingCustomKey && (
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-[var(--ox-text-muted)] font-mono">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 min-w-0">
+              <span className="text-xs text-[var(--ox-text-muted)] font-mono truncate min-w-0 flex-1">
                 Key: {customKey.slice(0, 8)}...{customKey.slice(-4)}
               </span>
               <button
                 onClick={handleClearCustomKey}
-                className="text-xs font-bold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 cursor-pointer"
+                className="text-xs font-bold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Reset to Credits
               </button>
@@ -167,7 +167,7 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
         {/* Test Result / Error Alert */}
         {testResult && (
           <div
-            className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+            className={`p-3 rounded-xl border text-xs flex items-center gap-2 min-w-0 w-full box-border ${
               testResult.success
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
                 : 'bg-red-500/10 border-red-500/30 text-red-300'
@@ -178,17 +178,17 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
             ) : (
               <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
             )}
-            <span className="leading-snug">{testResult.message}</span>
+            <span className="leading-snug break-words flex-1 min-w-0">{testResult.message}</span>
           </div>
         )}
 
         {/* Model Selection */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 min-w-0 w-full">
           <label className="text-xs font-bold text-[var(--ox-text-secondary)]">Preferred AI Model Engine</label>
           <select
             value={selectedAIModel}
             onChange={(e) => setSelectedAIModel(e.target.value)}
-            className="w-full min-h-[42px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-xl px-3 text-xs font-bold focus:outline-none focus:border-orange-500 cursor-pointer"
+            className="w-full min-h-[42px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-xl px-3 text-xs font-bold focus:outline-none focus:border-orange-500 cursor-pointer box-border truncate"
           >
             {Object.values(AI_MODELS).map((m) => (
               <option key={m.id} value={m.id}>
@@ -196,14 +196,14 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
               </option>
             ))}
           </select>
-          <p className="text-[11px] text-[var(--ox-text-muted)]">
-            OpenRouter model ID: <code className="font-mono text-orange-400">{resolveOpenRouterModelId(selectedAIModel)}</code>
+          <p className="text-[11px] text-[var(--ox-text-muted)] break-words">
+            OpenRouter model ID: <code className="font-mono text-orange-400 break-all">{resolveOpenRouterModelId(selectedAIModel)}</code>
           </p>
         </div>
 
         {/* Optional Custom BYOK Key Input */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
+        <div className="space-y-2 min-w-0 w-full">
+          <div className="flex flex-wrap items-center justify-between gap-1 min-w-0">
             <label className="text-xs font-bold text-[var(--ox-text-secondary)]">
               Bring Your Own Key (Optional BYOK)
             </label>
@@ -211,48 +211,48 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
               href="https://openrouter.ai/keys"
               target="_blank"
               rel="noreferrer"
-              className="text-[11px] font-bold text-orange-400 hover:text-orange-300 inline-flex items-center gap-1"
+              className="text-[11px] font-bold text-orange-400 hover:text-orange-300 inline-flex items-center gap-1 shrink-0"
             >
               Get OpenRouter Key <ExternalLink className="w-3 h-3" />
             </a>
           </div>
 
-          <div className="relative">
+          <div className="relative min-w-0 w-full">
             <input
               type={showKey ? 'text' : 'password'}
               value={inputKey}
               onChange={(e) => setInputKey(e.target.value)}
               placeholder="Paste custom key (e.g. sk-or-v1-...)"
-              className="w-full min-h-[42px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3 pr-10 text-xs font-mono text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
+              className="w-full min-h-[42px] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] rounded-xl px-3 pr-10 text-xs font-mono text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500 box-border"
             />
             <button
               type="button"
               onClick={() => setShowKey((prev) => !prev)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] p-1"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--ox-text-muted)] hover:text-[var(--ox-text-primary)] p-1.5 cursor-pointer"
             >
               {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          <p className="text-[11px] text-[var(--ox-text-muted)]">
+          <p className="text-[11px] text-[var(--ox-text-muted)] break-words leading-relaxed">
             Providing your own OpenRouter key allows unlimited personal generations with 0 OpportunityX platform credit deduction.
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+        <div className="flex flex-col sm:flex-row gap-2.5 pt-2 min-w-0 w-full">
           <button
             type="button"
             onClick={handleTestConnection}
             disabled={isTesting}
-            className="flex-1 min-h-[42px] px-4 rounded-xl bg-[var(--ox-surface-secondary)] hover:bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="flex-1 min-h-[42px] px-4 rounded-xl bg-[var(--ox-surface-secondary)] hover:bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95"
           >
             {isTesting ? (
               <>
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Testing Pipeline...
+                <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" /> Testing Pipeline...
               </>
             ) : (
               <>
-                <Sparkles className="w-3.5 h-3.5 text-orange-400" /> Test Connection
+                <Sparkles className="w-3.5 h-3.5 text-orange-400 shrink-0" /> Test Connection
               </>
             )}
           </button>
@@ -262,11 +262,11 @@ export const AISettingsModal = ({ isOpen, onClose }) => {
               type="button"
               onClick={handleSaveKey}
               disabled={!inputKey.trim() || isTesting}
-              className="flex-1 min-h-[42px] px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+              className="flex-1 min-h-[42px] px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50 active:scale-95"
             >
               {saveSuccess ? (
                 <>
-                  <Check className="w-4 h-4 stroke-[3]" /> Saved!
+                  <Check className="w-4 h-4 stroke-[3] shrink-0" /> Saved!
                 </>
               ) : (
                 <>Save Custom Key</>
