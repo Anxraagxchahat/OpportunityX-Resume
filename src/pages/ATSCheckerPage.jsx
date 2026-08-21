@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle2,
@@ -51,8 +51,21 @@ export const ATSCheckerPage = () => {
   const [jobDescription, setJobDescription] = useState('');
   const [isMatching, setIsMatching] = useState(false);
   const [jdMatchResult, setJdMatchResult] = useState(null);
+  const tabsContainerRef = useRef(null);
 
   const industryFit = analyzeIndustryFit(activeResume, selectedIndustry);
+
+  // Auto-scroll active tab into view horizontally without moving the whole page
+  const handleTabClick = (tabId, e) => {
+    setActiveTab(tabId);
+    if (e?.currentTarget) {
+      e.currentTarget.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  };
 
   const handleMatchJD = () => {
     if (!jobDescription.trim()) return;
@@ -76,75 +89,82 @@ export const ATSCheckerPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 transition-colors duration-300">
+    <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 md:px-8 py-4 sm:py-8 space-y-5 sm:space-y-8 transition-colors duration-300 min-w-0 box-border">
       {/* ─── HEADER & UNIFIED ACTION GROUP ─── */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-6 border-b border-[var(--ox-border)]">
-        <div className="space-y-1.5 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/30">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Deterministic Resume Intelligence Engine
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-5 sm:pb-6 border-b border-[var(--ox-border)] w-full min-w-0">
+        <div className="space-y-1.5 w-full lg:max-w-2xl min-w-0">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] sm:text-xs font-bold border border-emerald-500/30 max-w-full">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Deterministic Resume Intelligence Engine</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[var(--ox-text-primary)]">Resume Intelligence Dashboard</h1>
-          <p className="text-xs sm:text-sm text-[var(--ox-text-secondary)]">
+          <h1 className="text-xl sm:text-3xl font-black text-[var(--ox-text-primary)] break-words leading-tight">
+            Resume Intelligence Dashboard
+          </h1>
+          <p className="text-xs sm:text-sm text-[var(--ox-text-secondary)] break-words leading-relaxed">
             Rule-based ATS audit, recruiter glance simulation, and keyword intelligence. 100% Offline.
           </p>
         </div>
 
-        {/* ─── Unified Tablet/Desktop Action Buttons Group (Equal 44px Height & Visual Hierarchy) ─── */}
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full lg:w-auto shrink-0">
+        {/* ─── Unified Action Buttons Group (2x2 Grid on Mobile, Row on Desktop) ─── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center gap-2 sm:gap-2.5 w-full lg:w-auto shrink-0 min-w-0 box-border">
           <button
             type="button"
             onClick={() => setIsScanHistoryOpen(true)}
-            className="flex-1 sm:flex-none min-h-[44px] px-3.5 py-2 text-xs font-bold text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] hover:border-orange-500/40 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="w-full lg:w-auto min-h-[44px] px-3 py-2 text-xs font-bold text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] hover:border-orange-500/40 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all shadow-sm active:scale-95 cursor-pointer min-w-0"
           >
             <History className="w-4 h-4 text-orange-400 shrink-0" />
-            <span>History</span>
+            <span className="truncate">History</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsComparisonOpen(true)}
-            className="flex-1 sm:flex-none min-h-[44px] px-3.5 py-2 text-xs font-bold text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] hover:border-orange-500/40 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="w-full lg:w-auto min-h-[44px] px-3 py-2 text-xs font-bold text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] hover:border-orange-500/40 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all shadow-sm active:scale-95 cursor-pointer min-w-0"
           >
             <Sliders className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>Compare</span>
+            <span className="truncate">Compare</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsCompanyMatchOpen(true)}
-            className="flex-1 sm:flex-none min-h-[44px] px-3.5 py-2 text-xs font-bold text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] hover:border-orange-500/40 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="w-full lg:w-auto min-h-[44px] px-3 py-2 text-xs font-bold text-[var(--ox-text-primary)] bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] hover:border-orange-500/40 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all shadow-sm active:scale-95 cursor-pointer min-w-0"
           >
             <Building2 className="w-4 h-4 text-blue-400 shrink-0" />
-            <span>Company Match</span>
+            <span className="truncate">Company Match</span>
           </button>
 
           <button
             type="button"
             onClick={handleExportAnalysisReport}
-            className="flex-1 sm:flex-none min-h-[44px] px-4 py-2 text-xs font-extrabold text-black bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer shrink-0"
+            className="w-full lg:w-auto min-h-[44px] px-3.5 py-2 text-xs font-extrabold text-black bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-xl shadow-md flex items-center justify-center gap-1.5 sm:gap-2 transition-all active:scale-95 cursor-pointer shrink-0 min-w-0"
           >
             <Download className="w-4 h-4 stroke-[2.5] shrink-0" />
-            <span>Export Report</span>
+            <span className="truncate">Export Report</span>
           </button>
         </div>
       </div>
 
       {/* ─── BALANCED 2-COLUMN TOP BANNER GRID ─── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full min-w-0">
         <ResumeStrengthMeter />
 
         {/* Industry Profile Selector Card */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-4 flex flex-col justify-between shadow-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--ox-text-primary)]">Target Career Industry Profile</span>
-              <p className="text-xs text-[var(--ox-text-secondary)]">Rule-based evaluation against industry standards</p>
+        <div className="p-4 sm:p-6 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-4 flex flex-col justify-between shadow-lg w-full min-w-0 box-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+            <div className="space-y-0.5 min-w-0">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--ox-text-primary)] block truncate">
+                Target Career Industry Profile
+              </span>
+              <p className="text-xs text-[var(--ox-text-secondary)] break-words">
+                Rule-based evaluation against industry standards
+              </p>
             </div>
 
             <select
               value={selectedIndustry}
               onChange={(e) => setSelectedIndustry(e.target.value)}
-              className="bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-orange-500 min-h-[40px] cursor-pointer"
+              className="bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-orange-500 min-h-[44px] sm:min-h-[40px] cursor-pointer w-full sm:w-auto max-w-full"
             >
               {Object.keys(INDUSTRY_PROFILES).map((ind) => (
                 <option key={ind} value={ind}>{ind}</option>
@@ -153,10 +173,11 @@ export const ATSCheckerPage = () => {
           </div>
 
           {industryFit && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[var(--ox-border)]">
-              <div className="space-y-1.5">
-                <div className="text-xs font-bold text-[var(--ox-text-secondary)]">
-                  Industry Readiness: <strong className="text-emerald-400">{industryFit.readinessPct}%</strong>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[var(--ox-border)] w-full min-w-0">
+              <div className="space-y-1.5 min-w-0">
+                <div className="text-xs font-bold text-[var(--ox-text-secondary)] flex items-center justify-between">
+                  <span>Industry Readiness:</span>
+                  <strong className="text-emerald-400">{industryFit.readinessPct}%</strong>
                 </div>
                 <div className="w-full bg-[var(--ox-surface-primary)] h-2.5 rounded-full overflow-hidden border border-[var(--ox-border)]">
                   <div
@@ -166,11 +187,11 @@ export const ATSCheckerPage = () => {
                 </div>
               </div>
 
-              <div className="text-xs space-y-1.5">
+              <div className="text-xs space-y-1.5 min-w-0">
                 <div className="font-bold text-[var(--ox-text-secondary)]">Matched Industry Skills:</div>
                 <div className="flex flex-wrap gap-1 text-[10px]">
                   {industryFit.matchedKeywords.map((kw) => (
-                    <span key={kw} className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
+                    <span key={kw} className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold break-words max-w-full">
                       ✓ {kw}
                     </span>
                   ))}
@@ -182,20 +203,23 @@ export const ATSCheckerPage = () => {
       </div>
 
       {/* ─── FULL-WIDTH TARGET JOB DESCRIPTION MATCHER ─── */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-4 shadow-lg">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div>
-            <h3 className="text-base font-bold text-[var(--ox-text-primary)] flex items-center gap-2">
-              <Search className="w-4 h-4 text-orange-400" /> Target Job Description Matcher
+      <div className="p-4 sm:p-6 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] space-y-4 shadow-lg w-full min-w-0 box-border">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 min-w-0">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm sm:text-base font-bold text-[var(--ox-text-primary)] flex items-center gap-2">
+              <Search className="w-4 h-4 text-orange-400 shrink-0" />
+              <span>Target Job Description Matcher</span>
             </h3>
-            <p className="text-xs text-[var(--ox-text-secondary)]">Paste a target job posting to perform deterministic keyword gap analysis.</p>
+            <p className="text-xs text-[var(--ox-text-secondary)] mt-0.5 break-words">
+              Paste a target job posting to perform deterministic keyword gap analysis.
+            </p>
           </div>
 
           <button
             type="button"
             onClick={handleMatchJD}
             disabled={isMatching}
-            className="min-h-[44px] px-4 py-2 text-xs font-extrabold text-black bg-orange-500 hover:bg-orange-400 disabled:opacity-50 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer shrink-0"
+            className="w-full sm:w-auto min-h-[44px] px-4 py-2 text-xs font-extrabold text-black bg-orange-500 hover:bg-orange-400 disabled:opacity-50 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer shrink-0"
           >
             {isMatching ? 'Analyzing Keywords...' : 'Match Job Keywords'}
           </button>
@@ -206,24 +230,24 @@ export const ATSCheckerPage = () => {
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
           placeholder="Paste Job Description text here..."
-          className="w-full bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-xl p-3 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
+          className="w-full bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-xl p-3 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500 box-border"
         />
 
         {/* Shimmering ATS Analysis Skeleton Loader */}
         {isMatching && (
-          <div className="p-4 rounded-xl bg-[var(--ox-surface-primary)] border border-orange-500/30 space-y-3 pt-3 animate-pulse shadow-[0_0_20px_rgba(249,115,22,0.1)]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
+          <div className="p-4 rounded-xl bg-[var(--ox-surface-primary)] border border-orange-500/30 space-y-3 pt-3 animate-pulse shadow-[0_0_20px_rgba(249,115,22,0.1)] w-full min-w-0 box-border">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="relative flex h-2 w-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500" />
                 </span>
-                <span className="text-xs font-bold text-orange-400">Parsing Job Posting & Calculating ATS Fit...</span>
+                <span className="text-xs font-bold text-orange-400 truncate">Parsing Job Posting & Calculating ATS Fit...</span>
               </div>
-              <div className="h-4 w-20 rounded-md bg-orange-500/20 ox-skeleton" />
+              <div className="h-4 w-20 rounded-md bg-orange-500/20 ox-skeleton shrink-0" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 w-full min-w-0">
+              <div className="space-y-2 min-w-0">
                 <div className="h-3 w-28 rounded ox-skeleton" />
                 <div className="flex flex-wrap gap-1.5">
                   <div className="h-5 w-16 rounded-lg ox-skeleton" />
@@ -231,7 +255,7 @@ export const ATSCheckerPage = () => {
                   <div className="h-5 w-14 rounded-lg ox-skeleton" />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <div className="h-3 w-32 rounded ox-skeleton" />
                 <div className="flex flex-wrap gap-1.5">
                   <div className="h-5 w-18 rounded-lg ox-skeleton" />
@@ -244,29 +268,33 @@ export const ATSCheckerPage = () => {
         )}
 
         {jdMatchResult && !isMatching && (
-          <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 space-y-3 pt-3 animate-fadeIn">
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="text-[var(--ox-text-primary)]">Overall Keyword Match Score: <strong className="text-orange-400">{jdMatchResult.matchScore}%</strong></span>
-              <span className="text-[var(--ox-text-secondary)]">{jdMatchResult.matchedKeywordsCount} / {jdMatchResult.totalKeywordsCount} keywords matched</span>
+          <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 space-y-3 pt-3 animate-fadeIn w-full min-w-0 box-border">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
+              <span className="text-[var(--ox-text-primary)]">
+                Overall Keyword Match Score: <strong className="text-orange-400">{jdMatchResult.matchScore}%</strong>
+              </span>
+              <span className="text-[var(--ox-text-secondary)]">
+                {jdMatchResult.matchedKeywordsCount} / {jdMatchResult.totalKeywordsCount} keywords matched
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="space-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs w-full min-w-0">
+              <div className="space-y-1 min-w-0">
                 <div className="font-bold text-emerald-400">Matched Keywords:</div>
                 <div className="flex flex-wrap gap-1">
                   {jdMatchResult.matchedKeywords.map((kw) => (
-                    <span key={kw} className="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold">
+                    <span key={kw} className="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold break-words max-w-full">
                       ✓ {kw}
                     </span>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <div className="font-bold text-orange-400">Missing Keywords in Resume:</div>
                 <div className="flex flex-wrap gap-1">
                   {jdMatchResult.missingKeywords.map((kw) => (
-                    <span key={kw} className="px-2 py-0.5 rounded-lg bg-orange-500/20 text-orange-300 text-[10px] font-semibold">
+                    <span key={kw} className="px-2 py-0.5 rounded-lg bg-orange-500/20 text-orange-300 text-[10px] font-semibold break-words max-w-full">
                       + {kw}
                     </span>
                   ))}
@@ -277,35 +305,41 @@ export const ATSCheckerPage = () => {
         )}
       </div>
 
-      {/* ─── INTERACTIVE TABS ─── */}
-      <div className="flex items-center gap-2 border-b border-[var(--ox-border)] overflow-x-auto custom-scrollbar pb-2">
-        {[
-          { id: 'overview', label: 'Overview & Readiness' },
-          { id: 'ats', label: 'ATS Audit (10 Categories)' },
-          { id: 'keywords', label: 'Keywords & Density' },
-          { id: 'recruiter', label: 'Recruiter 6s Scan' },
-          { id: 'timeline', label: 'Career Timeline' },
-          { id: 'fixes', label: 'Actionable Fixes' }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer active:scale-95 ${
-              activeTab === tab.id
-                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40 shadow-sm'
-                : 'text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] hover:bg-[var(--ox-surface-secondary)]'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* ─── INTERACTIVE TABS (Horizontally scrollable/swipeable single row on mobile) ─── */}
+      <div className="w-full max-w-full min-w-0 border-b border-[var(--ox-border)] overflow-hidden">
+        <div
+          ref={tabsContainerRef}
+          className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x overscroll-x-contain pb-2.5 pt-0.5 w-full min-w-0"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {[
+            { id: 'overview', label: 'Overview & Readiness' },
+            { id: 'ats', label: 'ATS Audit (10 Categories)' },
+            { id: 'keywords', label: 'Keywords & Density' },
+            { id: 'recruiter', label: 'Recruiter 6s Scan' },
+            { id: 'timeline', label: 'Career Timeline' },
+            { id: 'fixes', label: 'Actionable Fixes' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={(e) => handleTabClick(tab.id, e)}
+              className={`min-h-[44px] px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 active:scale-95 ${
+                activeTab === tab.id
+                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40 shadow-sm'
+                  : 'text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] hover:bg-[var(--ox-surface-secondary)] border border-transparent'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ─── TAB CONTENT PANELS ─── */}
-      <div className="space-y-6">
+      <div className="space-y-6 w-full min-w-0">
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 w-full min-w-0">
             <ResumeRadarChart />
             <ReadinessBadgesCard />
           </div>
@@ -327,3 +361,4 @@ export const ATSCheckerPage = () => {
 };
 
 export default ATSCheckerPage;
+
