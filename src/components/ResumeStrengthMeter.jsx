@@ -19,27 +19,31 @@ export const ResumeStrengthMeter = () => {
   };
 
   return (
-    <div className="p-5 sm:p-6 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] flex flex-col justify-between space-y-4 shadow-lg transition-colors duration-300">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400">
-            <Zap className="w-5 h-5" />
+    <div className="p-4 sm:p-6 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] flex flex-col justify-between space-y-4 shadow-lg transition-colors duration-300 w-full min-w-0 box-border">
+      <div className="flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-2.5 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="p-2 sm:p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 shrink-0">
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <h3 className="text-sm font-extrabold text-[var(--ox-text-primary)]">Overall Resume Strength</h3>
-            <p className="text-[11px] text-[var(--ox-text-secondary)]">Deterministic multi-factor analysis</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xs sm:text-sm font-extrabold text-[var(--ox-text-primary)] truncate">
+              Overall Resume Strength
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-[var(--ox-text-secondary)] break-words">
+              Deterministic multi-factor analysis
+            </p>
           </div>
         </div>
 
-        <span className={`text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${getBadgeStyle(strengthLabel)}`}>
+        <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border shrink-0 whitespace-nowrap ${getBadgeStyle(strengthLabel)}`}>
           {strengthLabel}
         </span>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex justify-between items-baseline">
-          <span className="text-3xl sm:text-4xl font-black text-[var(--ox-text-primary)]">{resumeStrengthScore}%</span>
-          <span className="text-xs text-[var(--ox-text-secondary)] font-semibold">98% Confidence Rating</span>
+      <div className="space-y-2 w-full min-w-0">
+        <div className="flex flex-wrap justify-between items-baseline gap-1">
+          <span className="text-2xl sm:text-4xl font-black text-[var(--ox-text-primary)]">{resumeStrengthScore}%</span>
+          <span className="text-[11px] sm:text-xs text-[var(--ox-text-secondary)] font-semibold whitespace-nowrap">98% Confidence Rating</span>
         </div>
 
         <div className="w-full bg-[var(--ox-surface-primary)] h-2.5 rounded-full overflow-hidden border border-[var(--ox-border)]">
@@ -50,14 +54,14 @@ export const ResumeStrengthMeter = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-[11px] pt-3 border-t border-[var(--ox-border)]">
-        <div className="flex items-center justify-between text-[var(--ox-text-secondary)]">
-          <span>ATS Pass Rate:</span>
-          <strong className="text-emerald-400 font-bold">{atsEngineResult.overallScore}%</strong>
+      <div className="grid grid-cols-2 gap-2 text-[10px] sm:text-[11px] pt-3 border-t border-[var(--ox-border)] w-full min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[var(--ox-text-secondary)] min-w-0">
+          <span className="truncate">ATS Pass Rate:</span>
+          <strong className="text-emerald-400 font-bold sm:ml-1">{atsEngineResult.overallScore}%</strong>
         </div>
-        <div className="flex items-center justify-between text-[var(--ox-text-secondary)]">
-          <span>Structure Health:</span>
-          <strong className="text-orange-400 font-bold">{resumeHealth.percentage}%</strong>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[var(--ox-text-secondary)] min-w-0 text-right sm:text-left">
+          <span className="truncate">Structure Health:</span>
+          <strong className="text-orange-400 font-bold sm:ml-1">{resumeHealth.percentage}%</strong>
         </div>
       </div>
     </div>
