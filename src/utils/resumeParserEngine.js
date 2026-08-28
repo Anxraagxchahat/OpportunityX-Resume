@@ -109,7 +109,7 @@ export async function parseResumeFile(file) {
       promptLength: cleanText.slice(0, 12000).length,
       resumeTextLength: cleanText.length,
       timestamp: new Date().toISOString(),
-      note: 'API key present: ' + (import.meta.env.VITE_OPENROUTER_API_KEY ? 'YES' : 'NO (will use backend fallback)')
+      executionPath: 'OpportunityX Server AI Proxy / BYOK'
     });
 
     const aiResult = await extractResumeWithAI(cleanText);

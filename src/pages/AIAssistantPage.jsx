@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 import { useAIInfrastructure } from '../hooks/useAIInfrastructure';
-import { executeOpenRouterRequest } from '../services/ai/providerManager';
 import { buildMinimalContext } from '../services/ai/contextBuilder';
 import { getPromptTemplate } from '../services/ai/promptLibrary';
 import { getCachedResponse, setCachedResponse } from '../services/ai/responseCache';
