@@ -131,7 +131,7 @@ export const FounderPage = () => {
   ];
 
   return (
-    <div className="founder-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 animate-fadeIn">
+    <div className="founder-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 md:pb-16 animate-fadeIn">
       {/* Background ambient glows */}
       <div className="founder-ambient-glows">
         <div className="glow-orange"></div>

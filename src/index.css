@@ -55,6 +55,7 @@
   --ox-text-primary: #0F172A;
   --ox-text-secondary: #334155;
   --ox-text-muted: #475569;
+  --ox-accent: #F97316;
 
   --bg-dark: #FFFFFF;
   --bg-card: #FAFAFA;
@@ -64,6 +65,39 @@
 
   --border-color: #E2E8F0;
   --gradient-text: linear-gradient(135deg, #0F172A 0%, #334155 100%);
+}
+
+/* Pure Monochromatic Mode - Zero Orange, Crisp Black & White */
+[data-theme='monochromatic'] {
+  --ox-bg: #FFFFFF;
+  --ox-surface-primary: #FAFAFA;
+  --ox-surface-secondary: #F4F4F5;
+  --ox-card-bg: #FFFFFF;
+  --ox-card-hover: #F4F4F5;
+  --ox-border: #E4E4E7;
+  --ox-border-highlight: #000000;
+  --ox-text-primary: #000000;
+  --ox-text-secondary: #52525B;
+  --ox-text-muted: #71717A;
+  --ox-accent: #000000;
+
+  --bg-dark: #FFFFFF;
+  --bg-card: #FAFAFA;
+  --bg-card-hover: #F4F4F5;
+  --text-main: #000000;
+  --text-muted: #52525B;
+
+  --primary: #000000;
+  --primary-hover: #18181B;
+  --secondary: #27272A;
+  --highlight: #000000;
+  --accent-green: #18181B;
+  --accent-red: #000000;
+
+  --border-color: #E4E4E7;
+  --gradient-primary: linear-gradient(135deg, #000000 0%, #27272A 100%);
+  --gradient-glow: none;
+  --gradient-text: linear-gradient(135deg, #000000 0%, #3F3F46 100%);
 }
 
 html, body {
@@ -287,6 +321,139 @@ html, body {
   color: #FFFFFF !important;
   font-weight: 700 !important;
 }
+
+/* ==========================================================================
+   GLOBAL MONOCHROMATIC MODE (PURE ZERO-ORANGE BLACK & WHITE)
+   ========================================================================== */
+[data-theme='monochromatic'] .bg-black,
+[data-theme='monochromatic'] .bg-slate-950,
+[data-theme='monochromatic'] .bg-\[\#05070D\],
+[data-theme='monochromatic'] .bg-\[\#0E111B\] {
+  background-color: #FFFFFF !important;
+}
+
+[data-theme='monochromatic'] .bg-slate-900,
+[data-theme='monochromatic'] .bg-\[\#080B12\],
+[data-theme='monochromatic'] .bg-\[\#070A12\],
+[data-theme='monochromatic'] .bg-\[\#07090F\],
+[data-theme='monochromatic'] .bg-\[\#0B0D14\],
+[data-theme='monochromatic'] .bg-\[\#0B0D14\]\/90,
+[data-theme='monochromatic'] .bg-slate-900\/70,
+[data-theme='monochromatic'] .bg-slate-900\/80,
+[data-theme='monochromatic'] .bg-slate-900\/90 {
+  background-color: #FAFAFA !important;
+}
+
+[data-theme='monochromatic'] .bg-\[\#10131D\],
+[data-theme='monochromatic'] .bg-\[\#141824\],
+[data-theme='monochromatic'] .bg-slate-800,
+[data-theme='monochromatic'] .bg-slate-900\/60 {
+  background-color: #F4F4F5 !important;
+}
+
+[data-theme='monochromatic'] .text-white,
+[data-theme='monochromatic'] .text-slate-100,
+[data-theme='monochromatic'] .text-slate-200,
+[data-theme='monochromatic'] .text-slate-300 {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+[data-theme='monochromatic'] .text-slate-400,
+[data-theme='monochromatic'] .text-slate-500 {
+  color: #52525B !important;
+  font-weight: 500 !important;
+}
+
+[data-theme='monochromatic'] .border-slate-800,
+[data-theme='monochromatic'] .border-slate-700,
+[data-theme='monochromatic'] .border-slate-800\/80 {
+  border-color: #E4E4E7 !important;
+}
+
+[data-theme='monochromatic'] .bg-black\/80,
+[data-theme='monochromatic'] .bg-black\/85,
+[data-theme='monochromatic'] .bg-black\/90,
+[data-theme='monochromatic'] .bg-black\/75 {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+[data-theme='monochromatic'] input,
+[data-theme='monochromatic'] textarea,
+[data-theme='monochromatic'] select {
+  background-color: #FFFFFF !important;
+  border-color: #D4D4D8 !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+[data-theme='monochromatic'] input::placeholder,
+[data-theme='monochromatic'] textarea::placeholder {
+  color: #71717A !important;
+  font-weight: 500 !important;
+}
+
+/* ZERO ORANGE / STRICT BLACK & WHITE ACCENTS */
+[data-theme='monochromatic'] .text-orange-400,
+[data-theme='monochromatic'] .text-orange-500,
+[data-theme='monochromatic'] .text-amber-400,
+[data-theme='monochromatic'] .text-amber-500,
+[data-theme='monochromatic'] .text-\[\#F97316\],
+[data-theme='monochromatic'] .text-emerald-400,
+[data-theme='monochromatic'] .text-emerald-500,
+[data-theme='monochromatic'] .text-purple-400 {
+  color: #000000 !important;
+}
+
+[data-theme='monochromatic'] .bg-orange-500,
+[data-theme='monochromatic'] .bg-amber-500,
+[data-theme='monochromatic'] .bg-\[\#F97316\] {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme='monochromatic'] .bg-orange-500\/10,
+[data-theme='monochromatic'] .bg-orange-500\/20,
+[data-theme='monochromatic'] .bg-amber-500\/10,
+[data-theme='monochromatic'] .bg-amber-500\/20,
+[data-theme='monochromatic'] .bg-\[\#F97316\]\/10,
+[data-theme='monochromatic'] .bg-\[\#F97316\]\/15 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #000000 !important;
+}
+
+[data-theme='monochromatic'] .border-orange-500\/30,
+[data-theme='monochromatic'] .border-orange-500\/20,
+[data-theme='monochromatic'] .border-orange-500\/50,
+[data-theme='monochromatic'] .border-orange-500,
+[data-theme='monochromatic'] .border-\[\#F97316\]\/30 {
+  border-color: rgba(0, 0, 0, 0.20) !important;
+}
+
+[data-theme='monochromatic'] .from-orange-500,
+[data-theme='monochromatic'] .to-amber-500,
+[data-theme='monochromatic'] .from-orange-600,
+[data-theme='monochromatic'] .to-orange-400,
+[data-theme='monochromatic'] .from-amber-500 {
+  --tw-gradient-from: #000000 !important;
+  --tw-gradient-to: #27272A !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+[data-theme='monochromatic'] button.bg-orange-500,
+[data-theme='monochromatic'] a.bg-orange-500,
+[data-theme='monochromatic'] .bg-gradient-to-r.from-orange-500 {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme='monochromatic'] .ox-skeleton {
+  background: linear-gradient(90deg, #F4F4F5 25%, #E4E4E7 50%, #F4F4F5 75%);
+  background-size: 200% 100%;
+}
+
 
 /* ==========================================================================
    PRODUCTION PDF PAGINATION & FRAGMENTATION ENGINE
