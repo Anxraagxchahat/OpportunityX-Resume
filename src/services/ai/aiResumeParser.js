@@ -78,12 +78,12 @@ export async function extractResumeWithAI(cleanedText, apiKey = null) {
     return { success: false, error: 'Resume text is empty or unreadable.' };
   }
 
-  const activeApiKey = apiKey || import.meta.env.VITE_OPENROUTER_API_KEY;
+  const userByokKey = (apiKey && typeof apiKey === 'string' && apiKey.trim().length > 10) ? apiKey.trim() : null;
 
   if (IS_DEV) {
     console.log('[AI Parser] Starting extraction', {
       textLength: cleanedText.length,
-      hasApiKey: !!activeApiKey,
+      hasUserBYOK: !!userByokKey,
       textPreview: cleanedText.slice(0, 200)
     });
   }
@@ -94,15 +94,15 @@ export async function extractResumeWithAI(cleanedText, apiKey = null) {
       let rawJsonText = '';
       let responseStatus = '';
 
-      // Direct OpenRouter REST Call
-      if (activeApiKey) {
-        if (IS_DEV) console.log(`[AI Parser] Attempt ${attempt}: Calling OpenRouter (google/gemini-2.5-flash)...`);
+      // Direct client call ONLY if user supplied their own personal BYOK key
+      if (userByokKey) {
+        if (IS_DEV) console.log(`[AI Parser] Attempt ${attempt}: Calling OpenRouter with user BYOK key...`);
 
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${activeApiKey}`,
+            'Authorization': `Bearer ${userByokKey}`,
             'HTTP-Referer': 'https://resume.opportunityx.co.in',
             'X-Title': 'OpportunityX Resume Parser'
           },
@@ -124,7 +124,7 @@ export async function extractResumeWithAI(cleanedText, apiKey = null) {
           rawJsonText = resData.choices?.[0]?.message?.content || '';
 
           if (IS_DEV) {
-            console.log(`[AI Parser] Response received`, {
+            console.log(`[AI Parser] Response received via BYOK`, {
               status: responseStatus,
               rawLength: rawJsonText.length,
               rawPreview: rawJsonText.slice(0, 300),
@@ -133,18 +133,20 @@ export async function extractResumeWithAI(cleanedText, apiKey = null) {
           }
         } else {
           const errBody = await response.text();
-          if (IS_DEV) console.warn(`[AI Parser] OpenRouter error:`, responseStatus, errBody.slice(0, 500));
+          if (IS_DEV) console.warn(`[AI Parser] BYOK OpenRouter error:`, responseStatus, errBody.slice(0, 500));
         }
-      }
-
-      // Fallback to Backend AI Service if direct call not active
-      if (!rawJsonText) {
-        if (IS_DEV) console.log(`[AI Parser] Attempt ${attempt}: Trying backend API fallback...`);
+      } else {
+        // Standard Execution: Secure OpportunityX Server-Side AI Gateway
+        if (IS_DEV) console.log(`[AI Parser] Attempt ${attempt}: Routing via secure OpportunityX Backend Proxy...`);
         try {
-          const apiRes = await apiService.generateAI('resume_parse', RESUME_EXTRACTION_SYSTEM_PROMPT, cleanedText.slice(0, 12000));
+          const apiRes = await apiService.generateAI({
+            feature: 'resume_parse',
+            prompt: RESUME_EXTRACTION_SYSTEM_PROMPT,
+            content: { text: cleanedText.slice(0, 12000) }
+          });
           rawJsonText = apiRes.result || apiRes.content || '';
         } catch (backendErr) {
-          if (IS_DEV) console.warn(`[AI Parser] Backend fallback also failed:`, backendErr.message);
+          if (IS_DEV) console.warn(`[AI Parser] Backend AI execution error:`, backendErr.message);
         }
       }
 

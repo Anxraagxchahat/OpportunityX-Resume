@@ -398,23 +398,21 @@ export const ResumeProvider = ({ children }) => {
     };
   });
 
-  // BYOK Keys loaded securely from environment (.env) or localStorage
-  const ENV_OPENROUTER_KEY = (import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENROUTER_KEY || '').trim();
+  // User BYOK Keys (stored locally in browser localStorage if explicitly provided by user)
   const [byokKeys, setByokKeys] = useState(() => {
     try {
       const saved = localStorage.getItem(BYOK_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        const savedOpenRouter = parsed?.openrouter?.trim();
         return {
           openai: parsed?.openai || '',
           gemini: parsed?.gemini || '',
-          openrouter: (savedOpenRouter && savedOpenRouter.length > 8) ? savedOpenRouter : ENV_OPENROUTER_KEY,
+          openrouter: parsed?.openrouter || '',
           anthropic: parsed?.anthropic || ''
         };
       }
     } catch (e) {}
-    return { openai: '', gemini: '', openrouter: ENV_OPENROUTER_KEY, anthropic: '' };
+    return { openai: '', gemini: '', openrouter: '', anthropic: '' };
   });
 
   // Modals visibility states
@@ -842,12 +840,9 @@ export const ResumeProvider = ({ children }) => {
 
       throw new Error(response?.detail || response?.message || 'AI generation failed.');
     } catch (serverErr) {
-      console.warn('[ResumeContext] Server AI generation failed, checking client fallback:', serverErr);
-
-      // Fallback: If backend is missing key or fails on Render, fallback to client-side OpenRouter
-      const fallbackKey = customByokKey || import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
-      if (fallbackKey && typeof fallbackKey === 'string' && fallbackKey.trim().length > 10) {
-        console.info('[ResumeContext] Executing resilient client OpenRouter generation...');
+      // If user supplied their own personal BYOK key, execute direct client BYOK fallback
+      if (customByokKey && typeof customByokKey === 'string' && customByokKey.trim().length > 10) {
+        console.info('[ResumeContext] Executing client-side AI with user BYOK key...');
         let userPrompt = prompt;
         if (!userPrompt || !userPrompt.trim()) {
           if (feature === 'summary') {
@@ -863,24 +858,16 @@ export const ResumeProvider = ({ children }) => {
           modelId: model || selectedAIModel || 'google/gemini-2.5-flash',
           systemPrompt: 'You are an expert executive resume writer and ATS optimization specialist. Return only the polished final text without markdown headings, introductions, or conversational preambles.',
           userPrompt,
-          apiKey: fallbackKey
+          apiKey: customByokKey
         });
-
-        if (!isUsingBYOK) {
-          setAiCredits((prev) => ({
-            ...prev,
-            remaining: Math.max(0, (prev.remaining || 10) - 1),
-            totalUsed: (prev.totalUsed || 0) + 1
-          }));
-        }
 
         return {
           success: true,
           result: fallbackRes.generatedContent,
           feature,
           model_used: fallbackRes.modelId,
-          credits_deducted: isUsingBYOK ? 0 : 1,
-          remaining_credits: Math.max(0, (aiCredits.remaining || 10) - 1)
+          credits_deducted: 0,
+          remaining_credits: aiCredits.remaining || 0
         };
       }
 

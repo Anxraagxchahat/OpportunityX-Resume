@@ -43,13 +43,13 @@ export const PROVIDERS = {
  */
 export function getProviderHealth(providerId, byokKeys = {}) {
   const provider = PROVIDERS[providerId] || PROVIDERS.openrouter;
-  const key = byokKeys[providerId]?.trim() || byokKeys.openrouter?.trim() || import.meta.env.VITE_OPENROUTER_API_KEY;
+  const userKey = byokKeys[providerId]?.trim() || byokKeys.openrouter?.trim();
 
-  if (key && typeof key === 'string' && key.trim().length > 10) {
+  if (userKey && typeof userKey === 'string' && userKey.length > 10) {
     return {
       providerId,
       status: 'Ready',
-      badgeLabel: 'Active & Connected',
+      badgeLabel: 'Custom BYOK Key Active',
       color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
       isConfigured: true,
       canExecute: true
@@ -58,11 +58,11 @@ export function getProviderHealth(providerId, byokKeys = {}) {
 
   return {
     providerId,
-    status: 'Not Configured',
-    badgeLabel: 'API Key Missing',
-    color: 'bg-[#10131D] text-slate-500 border-slate-800',
-    isConfigured: false,
-    canExecute: false
+    status: 'Ready',
+    badgeLabel: 'OpportunityX Cloud AI Active',
+    color: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
+    isConfigured: true,
+    canExecute: true
   };
 }
 
@@ -82,15 +82,15 @@ function parseOpenRouterError(status, errBodyText, modelUsed) {
   const serverMsg = errorJson?.error?.message || errorJson?.message || '';
 
   if (status === 401) {
-    return 'Authentication failed: The OpenRouter API key is invalid or unauthorized. Please verify your API key in AI Settings or .env.';
+    return 'Authentication failed: The personal OpenRouter API key is invalid. Please verify your custom key in AI Settings.';
   }
 
   if (status === 402) {
-    return 'Insufficient OpenRouter credits: Your OpenRouter account has run out of credits. Please top up your balance at openrouter.ai/credits.';
+    return 'Insufficient OpenRouter credits: Your personal OpenRouter balance is exhausted. Please top up at openrouter.ai/credits.';
   }
 
   if (status === 403) {
-    return `Access forbidden: Your OpenRouter key does not have permission to access model '${modelUsed}'.`;
+    return `Access forbidden: Your personal OpenRouter key does not have permission to access model '${modelUsed}'.`;
   }
 
   if (status === 404 || (status === 400 && serverMsg.toLowerCase().includes('model'))) {
@@ -109,7 +109,7 @@ function parseOpenRouterError(status, errBodyText, modelUsed) {
 }
 
 /**
- * Real OpenRouter Execution Engine (with 1-time Automatic Retry for Reliability)
+ * Client-Side OpenRouter Execution Engine (Used exclusively for user-provided BYOK keys)
  */
 export async function executeOpenRouterRequest({
   modelId = 'google/gemini-2.5-flash',
@@ -120,10 +120,10 @@ export async function executeOpenRouterRequest({
   maxTokens = 2500
 }) {
   const startTime = Date.now();
-  const effectiveApiKey = apiKey?.trim() || import.meta.env.VITE_OPENROUTER_API_KEY;
+  const effectiveApiKey = apiKey?.trim();
 
-  if (!effectiveApiKey || typeof effectiveApiKey !== 'string' || !effectiveApiKey.trim()) {
-    throw new Error('OpenRouter API key is missing. Please configure key in .env or AI Settings.');
+  if (!effectiveApiKey || typeof effectiveApiKey !== 'string' || effectiveApiKey.length < 10) {
+    throw new Error('Custom API key is missing. Please configure your personal key in AI Settings or use OpportunityX Cloud AI.');
   }
 
   const resolvedModel = resolveOpenRouterModelId(modelId);
