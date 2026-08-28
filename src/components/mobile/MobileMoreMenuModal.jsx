@@ -8,6 +8,8 @@ import {
 import { GithubIcon as Github } from '../GithubIcon';
 import { useResume } from '../../context/ResumeContext';
 import { useMobileNavigation } from '../../context/MobileNavigationContext';
+import { BrandLogo } from '../common/BrandLogo';
+import { ThemeTogglePill } from '../ThemeTogglePill';
 
 export const MobileMoreMenuModal = () => {
   const navigate = useNavigate();
@@ -33,9 +35,7 @@ export const MobileMoreMenuModal = () => {
         {/* Drawer Header */}
         <div className="p-4 border-b border-[var(--ox-border)] flex items-center justify-between bg-[var(--ox-surface-secondary)]/60">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 font-bold">
-              OX
-            </div>
+            <BrandLogo variant="icon" size="lg" className="shrink-0" />
             <div>
               <h3 className="text-base font-black text-[var(--ox-text-primary)]">OpportunityX Menu</h3>
               <p className="text-xs text-[var(--ox-text-secondary)]">
@@ -124,6 +124,17 @@ export const MobileMoreMenuModal = () => {
                 <Activity className="w-4 h-4 text-emerald-400" />
                 <span>Quality Inspector</span>
               </button>
+            </div>
+          </div>
+
+          {/* Theme & Visual Mode Selector */}
+          <div className="space-y-2">
+            <h4 className="text-[10px] uppercase font-black text-[var(--ox-text-muted)] tracking-wider">
+              Visual Theme Mode
+            </h4>
+            <div className="p-2 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] flex items-center justify-between">
+              <span className="text-xs font-semibold text-[var(--ox-text-primary)] pl-1">Display Mode</span>
+              <ThemeTogglePill segmented={true} />
             </div>
           </div>
 

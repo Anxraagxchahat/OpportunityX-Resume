@@ -5,6 +5,7 @@ import { X, Sparkles, CheckCircle2, CreditCard, ArrowRight, ShieldCheck, Refresh
 import { useResume } from '../context/ResumeContext';
 import { apiService } from '../services/api';
 import { pingBackendWarmup, preloadCashfreeSDK } from '../utils/paymentPreloader';
+import { BrandLogo } from './common/BrandLogo';
 
 const CREDIT_PACKS = [
   { id: 'pack-starter', price: 29, credits: 15, perCredit: '₹1.93/cr', tag: 'Starter Pack', icon: '⚡' },
@@ -241,18 +242,10 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
             {/* Header */}
             <div className="flex items-center gap-3">
               <div className="relative p-1 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shrink-0">
-                <img
-                  src="/favicon.png"
-                  alt="OpportunityX Logo"
-                  className="w-10 h-10 rounded-full object-cover shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-                  }}
+                <BrandLogo
+                  variant="icon"
+                  size="w-10 h-10"
                 />
-                <div className="hidden w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 items-center justify-center text-white font-black text-sm shadow-md">
-                  OX
-                </div>
                 <span className="absolute -bottom-1 -right-1 p-1 rounded-full bg-orange-500 text-black border border-[#0B0D14] shadow-md">
                   <Sparkles className="w-3 h-3 animate-pulse" />
                 </span>

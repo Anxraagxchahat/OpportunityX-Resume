@@ -18,10 +18,13 @@ import { UserAvatar } from './UserAvatar';
 import { MobileTopBar } from './mobile/MobileTopBar';
 import { TabletTopBar } from './tablet/TabletTopBar';
 import { useDeviceType } from '../hooks/useDeviceType';
+import { BrandLogo } from './common/BrandLogo';
+import { useTheme } from '../context/ThemeProvider';
 
 export const Navbar = () => {
   const location = useLocation();
   const { isMobile, isTablet, isDesktop } = useDeviceType();
+  const { isMono } = useTheme();
 
   const {
     session,
@@ -43,11 +46,11 @@ export const Navbar = () => {
 
   // 1. MOBILE PRESENTATION LAYER (< 768px)
   if (isMobile) {
-    return (
-      <div className="sticky top-0 z-50 w-full no-print">
-        <MobileTopBar />
-      </div>
-    );
+    const isMobileShellPage = ['/builder', '/dashboard', '/templates', '/import'].includes(location.pathname);
+    if (isMobileShellPage) {
+      return null;
+    }
+    return <MobileTopBar />;
   }
 
   // 2. TABLET PRESENTATION LAYER (768px – 1023px)
@@ -67,15 +70,15 @@ export const Navbar = () => {
 
         {/* Brand Area */}
         <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
-          <img
-            src="/favicon.png"
-            alt="OpportunityX Logo"
-            className="w-9 h-9 rounded-full object-cover flex-shrink-0 shadow-[0_0_12px_rgba(249,115,22,0.25)] group-hover:scale-105 transition-transform"
+          <BrandLogo
+            variant="icon"
+            size="w-9 h-9"
+            className="group-hover:scale-105 transition-transform"
           />
 
           <div className="flex flex-col justify-center text-left">
             <span className="text-lg font-black tracking-tight text-[var(--ox-text-primary)] font-sans leading-none">
-              Opportunity<span className="text-[#F97316]">X</span>
+              Opportunity<span className={isMono ? "text-black" : "text-[#F97316]"}>X</span>
             </span>
             <span className="text-[9px] uppercase tracking-widest font-extrabold px-1.5 py-0.5 rounded-full bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30 w-max mt-1 leading-none shadow-[0_0_8px_rgba(249,115,22,0.12)]">
               RESUME

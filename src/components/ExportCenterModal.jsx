@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Download, FileText, Printer, Copy, ShieldCheck, FileCheck, Sparkles, Layers } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 import { downloadDirectPDF } from '../utils/pdfDownloader';
+import { BrandLogo } from './common/BrandLogo';
 
 export const exportPresetsList = [
   { id: 'Corporate', label: 'Corporate & Tech', desc: 'Standard A4 PDF with normal margins & clean JSON export' },
@@ -19,24 +20,35 @@ export const ExportCenterModal = () => {
     duplicateResume,
     activeResumeId,
     updateUserPreferences,
-    setIsDownloadSuccessModalOpen
+    setIsDownloadSuccessModalOpen,
+    resumeHealth = { percentage: 0 }
   } = useResume();
 
   const [selectedPreset, setSelectedPreset] = useState('Corporate');
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
 
   if (!isExportCenterOpen) return null;
 
   const handleDownloadPDF = async () => {
-    setIsExportCenterOpen(false);
-    const candidateName = activeResume?.personal?.fullName || 'OpportunityX';
-
-    // Direct Client PDF Download (No print window)
-    await downloadDirectPDF('resume-a4-preview', candidateName);
-
-    // Trigger Post-Download Success Confirmation Pop-up
-    setTimeout(() => {
-      setIsDownloadSuccessModalOpen(true);
-    }, 400);
+    setIsExportingPDF(true);
+    try {
+      const fileName = activeResume?.personal?.fullName
+        ? `${activeResume.personal.fullName.replace(/\s+/g, '_')}_Resume.pdf`
+        : 'Resume.pdf';
+      await downloadDirectPDF('resume-a4-preview', fileName);
+      setExportSuccess(true);
+      setTimeout(() => {
+        setExportSuccess(false);
+        setIsExportCenterOpen(false);
+        setIsDownloadSuccessModalOpen(true);
+      }, 400);
+    } catch (e) {
+      console.error('PDF export failed:', e);
+      window.print();
+    } finally {
+      setIsExportingPDF(false);
+    }
   };
 
   const handleExportCleanJSON = () => {
@@ -62,18 +74,10 @@ export const ExportCenterModal = () => {
 
         <div className="flex items-center gap-3">
           <div className="relative p-1 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shrink-0">
-            <img
-              src="/favicon.png"
-              alt="OpportunityX Logo"
-              className="w-10 h-10 rounded-full object-cover shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-              }}
+            <BrandLogo
+              variant="icon"
+              size="w-10 h-10"
             />
-            <div className="hidden w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 items-center justify-center text-white font-black text-sm shadow-md">
-              OX
-            </div>
             <span className="absolute -bottom-1 -right-1 p-1 rounded-full bg-orange-500 text-black border border-[#0B0D14] shadow-md">
               <Download className="w-3 h-3" />
             </span>

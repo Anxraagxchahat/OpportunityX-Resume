@@ -11,6 +11,8 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
+import { useTheme } from '../context/ThemeProvider';
+import { BrandLogo } from './common/BrandLogo';
 
 import {
   LinkedInIcon,
@@ -32,6 +34,7 @@ const SOCIAL_LINKS = [
 ];
 
 export const Footer = () => {
+  const { isMono } = useTheme();
   const { setIsSupportModalOpen } = useResume();
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [openSection, setOpenSection] = useState(null);
@@ -57,16 +60,16 @@ export const Footer = () => {
         className="flex items-center gap-2.5 group w-max focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-xl p-1 -m-1"
         aria-label="OpportunityX Resume Home"
       >
-        <img
-          src="/favicon.png"
-          alt="OpportunityX Logo"
-          className="w-7 h-7 rounded-full object-cover shrink-0 shadow-[0_0_10px_rgba(249,115,22,0.3)] group-hover:scale-105 transition-transform"
+        <BrandLogo
+          variant="icon"
+          size="w-7 h-7"
+          className="group-hover:scale-105 transition-transform"
         />
         <div className="flex items-baseline gap-1.5 text-left">
           <span className="text-sm font-black tracking-tight text-[var(--ox-text-primary)] font-sans leading-none">
-            Opportunity<span className="text-[#F97316]">X</span> Resume
+            Opportunity<span className={isMono ? "text-black" : "text-[#F97316]"}>X</span> Resume
           </span>
-          <span className="text-[8px] uppercase tracking-widest font-extrabold px-1.5 py-0.5 rounded-full bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30 leading-none">
+          <span className={`text-[8px] uppercase tracking-widest font-extrabold px-1.5 py-0.5 rounded-full ${isMono ? "bg-black/10 text-black border-black/30" : "bg-[#F97316]/10 text-[#F97316] border border-[#F97316]/30"} leading-none`}>
             ECOSYSTEM
           </span>
         </div>

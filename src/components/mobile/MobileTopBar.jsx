@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Sparkles, User, Edit3, Check, ShieldCheck, Sun, Moon } from 'lucide-react';
+import { Menu, Sparkles, User, Edit3, Check, ShieldCheck, Sun, Moon, CircleDot } from 'lucide-react';
 import { useResume } from '../../context/ResumeContext';
 import { useMobileNavigation } from '../../context/MobileNavigationContext';
 import { useTheme } from '../../context/ThemeProvider';
 import { UserAvatar } from '../UserAvatar';
+import { BrandLogo } from '../common/BrandLogo';
 
 export const MobileTopBar = () => {
   const {
@@ -19,7 +20,7 @@ export const MobileTopBar = () => {
     setIsAuthOpen
   } = useResume();
 
-  const { isDark, toggleTheme } = useTheme();
+  const { theme, isDark, isMono, cycleTheme } = useTheme();
   const { setIsMoreMenuOpen } = useMobileNavigation();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(activeResume?.metadata?.title || 'My Resume');
@@ -32,7 +33,7 @@ export const MobileTopBar = () => {
 
   const handleTitleSubmit = (e) => {
     e.preventDefault();
-    if (titleInput.trim()) {
+    if (titleInput.trim() && renameResume && activeResumeId) {
       renameResume(activeResumeId, titleInput.trim());
     }
     setIsEditingTitle(false);
@@ -41,7 +42,7 @@ export const MobileTopBar = () => {
   const docTitle = activeResume?.metadata?.title || 'My Resume';
 
   return (
-    <header className="w-full max-w-full bg-[var(--ox-surface-primary)] border-b border-[var(--ox-border)] transition-colors duration-200 no-print select-none box-border">
+    <header className="sticky top-0 z-40 w-full bg-[var(--ox-surface-primary)] border-b border-[var(--ox-border)] transition-colors duration-200 no-print select-none box-border">
 
       {/* ═══ Row 1: Primary Navigation Bar ═══ */}
       <div className="px-2 h-14 flex items-center justify-between gap-1 sm:gap-2 w-full max-w-full box-border">
@@ -60,17 +61,17 @@ export const MobileTopBar = () => {
 
           {/* Brand: Logo + Text — Navigates Home */}
           <Link to="/" className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden" style={{ minHeight: 44 }}>
-            <img
-              src="/favicon.png"
-              alt="OpportunityX Logo"
-              className="w-8 h-8 rounded-full object-cover shrink-0 shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+            <BrandLogo
+              variant="icon"
+              size="w-8 h-8"
+              className="shrink-0"
             />
             <div className="flex flex-col min-w-0 leading-none">
               <span className="font-black tracking-tight text-[var(--ox-text-primary)] truncate text-base">
-                <span className="mobile-brand-full">Opportunity<span className="text-[#F97316]">X</span></span>
+                <span className="mobile-brand-full">Opportunity<span className={isMono ? "text-black" : "text-[#F97316]"}>X</span></span>
                 <span className="mobile-brand-short">OX</span>
               </span>
-              <span className="text-[9px] uppercase tracking-widest font-extrabold text-[#F97316] leading-none mt-0.5">
+              <span className={`text-[9px] uppercase tracking-widest font-extrabold ${isMono ? "text-black" : "text-[#F97316]"} leading-none mt-0.5`}>
                 RESUME
               </span>
             </div>
@@ -80,16 +81,18 @@ export const MobileTopBar = () => {
         {/* RIGHT: Theme + Credits + Account — Never wraps, never shrinks */}
         <div className="flex items-center gap-1 shrink-0">
 
-          {/* Theme Toggle — icon only */}
+          {/* Theme Toggle — Tri-mode icon only */}
           <button
-            onClick={toggleTheme}
+            onClick={cycleTheme}
             type="button"
             className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-primary)] flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0"
-            title={`Toggle Theme (${isDark ? 'Dark' : 'Light'})`}
+            title={`Current Theme: ${theme}. Click to cycle (Dark / Light / Monochrome)`}
             aria-label="Toggle theme"
             style={{ minWidth: 32, minHeight: 32 }}
           >
-            {isDark ? (
+            {isMono ? (
+              <CircleDot className="w-4 h-4 text-black" />
+            ) : isDark ? (
               <Moon className="w-4 h-4 text-amber-400 fill-amber-400/20" />
             ) : (
               <Sun className="w-4 h-4 text-orange-500 fill-orange-500/20" />

@@ -15,8 +15,12 @@ import { useResume } from '../../context/ResumeContext';
 import { ThemeTogglePill } from '../ThemeTogglePill';
 import { UserAvatar } from '../UserAvatar';
 
+import { BrandLogo } from '../common/BrandLogo';
+import { useTheme } from '../../context/ThemeProvider';
+
 export const TabletTopBar = () => {
   const location = useLocation();
+  const { isMono } = useTheme();
   const {
     session,
     aiCredits,
@@ -28,10 +32,10 @@ export const TabletTopBar = () => {
   const isGuest = !session?.isAuthenticated || session?.isGuest;
 
   const navItems = [
-    { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
-    { label: 'Builder', to: '/builder', icon: FileText },
-    { label: 'Templates', to: '/templates', icon: Grid },
-    { label: 'ATS Intelligence', shortLabel: 'ATS', to: '/ats-checker', icon: CheckCircle2 },
+    { label: 'Dashboard', shortLabel: 'Dash', to: '/dashboard', icon: LayoutDashboard },
+    { label: 'Builder', shortLabel: 'Build', to: '/builder', icon: FileText },
+    { label: 'Templates', shortLabel: 'Templates', to: '/templates', icon: Grid },
+    { label: 'ATS Intel', shortLabel: 'ATS', to: '/ats-checker', icon: CheckCircle2 },
     { label: 'AI Suite', shortLabel: 'AI Suite', to: '/ai-assistant', icon: Wand2 }
   ];
 
@@ -39,16 +43,16 @@ export const TabletTopBar = () => {
     <header className="sticky top-0 z-40 w-full h-16 bg-[var(--ox-surface-primary)] border-b border-[var(--ox-border)] backdrop-blur-md px-3 sm:px-4 md:px-5 flex items-center justify-between gap-2 sm:gap-3 select-none transition-colors duration-300 no-print">
       {/* ─── LEFT: OpportunityX Branding ─── */}
       <Link to="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none">
-        <img
-          src="/favicon.png"
-          alt="OpportunityX Logo"
-          className="w-8 h-8 rounded-full object-cover shadow-[0_0_10px_rgba(249,115,22,0.25)] group-hover:scale-105 transition-transform"
+        <BrandLogo
+          variant="icon"
+          size="w-8 h-8"
+          className="group-hover:scale-105 transition-transform"
         />
         <div className="flex flex-col text-left">
           <span className="text-sm sm:text-base font-black tracking-tight text-[var(--ox-text-primary)] leading-none">
-            Opportunity<span className="text-[#F97316]">X</span>
+            Opportunity<span className={isMono ? "text-black" : "text-[#F97316]"}>X</span>
           </span>
-          <span className="text-[8px] uppercase tracking-widest font-extrabold text-[#F97316] mt-0.5 leading-none">
+          <span className={`text-[8px] uppercase tracking-widest font-extrabold ${isMono ? "text-black" : "text-[#F97316]"} mt-0.5 leading-none`}>
             RESUME
           </span>
         </div>

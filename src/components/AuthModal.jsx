@@ -25,6 +25,7 @@ import {
 import { auth, googleProvider, githubProvider } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { useResume } from '../context/ResumeContext';
+import { BrandLogo } from './common/BrandLogo';
 import { normalizeProvider, getProviderLabel } from '../utils/authProviders';
 import { trackAuthEvent, getAuthEventName } from '../utils/authAnalytics';
 import { UserAvatar } from './UserAvatar';
@@ -249,18 +250,10 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         <div className="sticky top-0 z-20 flex items-center justify-between p-4 pb-3 bg-[var(--ox-card-bg,#0B0D14)] border-b border-[var(--ox-border,#1F1F1F)] shrink-0">
           <div className="flex items-center gap-3 min-w-0 pr-2">
             <div className="relative p-1 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shrink-0">
-              <img
-                src="/favicon.png"
-                alt="OpportunityX Logo"
-                className="w-9 h-9 rounded-full object-cover shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-                }}
+              <BrandLogo
+                variant="icon"
+                size="w-9 h-9"
               />
-              <div className="hidden w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 items-center justify-center text-white font-black text-sm shadow-md">
-                OX
-              </div>
             </div>
             <div className="truncate">
               <h3 className="text-base font-black text-[var(--ox-text-primary)] flex items-center gap-1 truncate">
