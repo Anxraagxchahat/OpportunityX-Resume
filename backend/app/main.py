@@ -58,7 +58,7 @@ app.add_middleware(
     allow_origins=cors_origins,
     allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.opportunityx\.co\.in|http://localhost:\d+",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -107,9 +107,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(api_router, prefix="/api")
 
-@app.get("/health")
-async def health_check_root():
-    """Ultra-lightweight root health endpoint for instant Render backend warm-up without DB overhead"""
+from fastapi import Response
+
+@app.api_route("/health", methods=["GET", "HEAD"], include_in_schema=True)
+async def health_check_root(request: Request):
+    """Universal lightweight health check endpoint supporting GET and HEAD for monitoring"""
+    if request.method == "HEAD":
+        return Response(status_code=status.HTTP_200_OK)
     return {"status": "ok"}
 
 @app.get("/")

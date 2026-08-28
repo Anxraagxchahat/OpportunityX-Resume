@@ -10,28 +10,14 @@ from app.db.models.models import User, UserSession, Resume
 router = APIRouter(tags=["Health & Monitoring"])
 START_TIME = time.time()
 
-from fastapi.responses import JSONResponse
+from fastapi import Response, Request
 
-@router.get("/health", response_model=HealthStatusResponse)
-async def health_check(db: Session = Depends(get_db)):
-    db_status = "connected"
-    try:
-        db.execute(text("SELECT 1"))
-    except Exception:
-        db_status = "disconnected"
-
-    payload = {
-        "status": "ok" if db_status == "connected" else "degraded",
-        "database": db_status,
-        "service": settings.APP_NAME,
-        "version": "1.0.0",
-        "environment": settings.APP_ENV
-    }
-
-    if db_status != "connected":
-        return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=payload)
-
-    return HealthStatusResponse(**payload)
+@router.api_route("/health", methods=["GET", "HEAD"])
+async def health_check(request: Request):
+    """Universal lightweight health check endpoint supporting GET and HEAD for monitoring"""
+    if request.method == "HEAD":
+        return Response(status_code=status.HTTP_200_OK)
+    return {"status": "ok"}
 
 @router.get("/health/warmup")
 async def health_warmup():
