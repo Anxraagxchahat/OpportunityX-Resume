@@ -203,6 +203,11 @@ function prepareCloneForExport(rootEl) {
         child.style.flexShrink = '0';
         child.style.display = 'inline-flex';
         child.style.alignItems = 'center';
+        child.style.justifyContent = 'center';
+        child.style.textAlign = 'center';
+        child.style.lineHeight = '1';
+        child.style.paddingTop = '3.5px';
+        child.style.paddingBottom = '3.5px';
         child.style.maxWidth = '100%';
         child.style.marginRight = child.style.marginRight || '4px';
         child.style.marginBottom = child.style.marginBottom || '4px';
@@ -212,7 +217,7 @@ function prepareCloneForExport(rootEl) {
 
   // Also query any tags explicitly by selector
   const allTags = rootEl.querySelectorAll(
-    '[class*="tag"], [class*="chip"], [class*="badge"], .pdf-skills-group span'
+    '[class*="tag"], [class*="chip"], [class*="badge"], .bre-creative-tag, .bre-cool-tag, .pdf-skills-group span'
   );
   allTags.forEach((tag) => {
     tag.style.boxSizing = 'border-box';
@@ -220,6 +225,13 @@ function prepareCloneForExport(rootEl) {
     tag.style.wordBreak = 'keep-all';
     tag.style.overflowWrap = 'normal';
     tag.style.flexShrink = '0';
+    tag.style.display = 'inline-flex';
+    tag.style.alignItems = 'center';
+    tag.style.justifyContent = 'center';
+    tag.style.textAlign = 'center';
+    tag.style.lineHeight = '1';
+    tag.style.paddingTop = '3.5px';
+    tag.style.paddingBottom = '3.5px';
     tag.style.maxWidth = '100%';
   });
 

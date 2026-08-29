@@ -58,8 +58,8 @@ export const BREMaterialDarkTemplate = ({ resumeData, accentHex, fontFamily }) =
             {[...(skills.languages || []), ...(skills.frameworks || []), ...(skills.tools || []), ...(skills.softSkills || [])].map((s, i) => (
               <span
                 key={i}
-                className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-800 text-gray-200 border border-gray-700 whitespace-nowrap box-border max-w-full"
-                style={{ breakInside: 'avoid', wordBreak: 'keep-all' }}
+                className="inline-flex items-center justify-center px-2 py-1 text-[10px] leading-none font-semibold rounded bg-gray-800 text-gray-200 border border-gray-700 whitespace-nowrap box-border max-w-full"
+                style={{ breakInside: 'avoid', wordBreak: 'keep-all', lineHeight: 1 }}
               >
                 {s}
               </span>
