@@ -17,7 +17,7 @@ export const SkillsBlock = ({ skills, accentHex, variant = 'default' }) => {
         {allSkills.map((s, i) => (
           <span
             key={i}
-            className="inline-block h-[18px] leading-[18px] px-2 text-[9px] font-semibold rounded bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap box-border max-w-full text-center align-middle"
+            className="inline-block px-2 py-0.5 text-[9px] font-semibold leading-tight rounded bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap box-border max-w-full text-center"
             style={{ breakInside: 'avoid', wordBreak: 'keep-all' }}
           >
             {s}
@@ -39,7 +39,7 @@ export const SkillsBlock = ({ skills, accentHex, variant = 'default' }) => {
         {allSkills.map((s, i) => (
           <span
             key={i}
-            className="inline-block h-[18px] leading-[18px] px-2 text-[9px] font-semibold rounded bg-white/15 text-white/90 border border-white/20 whitespace-nowrap box-border max-w-full text-center align-middle"
+            className="inline-block px-2 py-0.5 text-[9px] font-semibold leading-tight rounded bg-white/15 text-white/90 border border-white/20 whitespace-nowrap box-border max-w-full text-center"
             style={{ breakInside: 'avoid', wordBreak: 'keep-all' }}
           >
             {s}

@@ -195,9 +195,9 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
 function prepareCloneForExport(rootEl) {
   if (!rootEl) return;
 
-  // A. ENSURE BOX SIZING AND PREVENT TEXT CLIPPING ON ALL TAGS / CHIPS / BADGES
+  // A. ENSURE BOX SIZING, EXACT CENTERING, AND PREVENT BASELINE DISPLACEMENT ON ALL TAGS / CHIPS
   const allTags = rootEl.querySelectorAll(
-    '[class*="tag"], [class*="chip"], [class*="badge"], .bre-creative-tag, .bre-cool-tag, .pdf-skills-group span'
+    '.flex-wrap span, [class*="tag"], [class*="chip"], [class*="badge"], .bre-creative-tag, .bre-cool-tag, .pdf-skills-group span'
   );
   allTags.forEach((tag) => {
     tag.style.boxSizing = 'border-box';
@@ -206,6 +206,11 @@ function prepareCloneForExport(rootEl) {
     tag.style.overflowWrap = 'normal';
     tag.style.flexShrink = '0';
     tag.style.maxWidth = '100%';
+    // Guarantee no line-height or vertical-align offsets in html2canvas
+    if (tag.classList.contains('rounded') || tag.className.includes('bg-')) {
+      tag.style.lineHeight = '1.1';
+      tag.style.verticalAlign = 'baseline';
+    }
   });
 
   // B. HARDEN PROFILE PHOTOS (Pre-render 1:1 aspect ratio with object-fit: cover onto canvas)
