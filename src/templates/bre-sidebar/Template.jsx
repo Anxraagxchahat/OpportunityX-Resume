@@ -42,8 +42,8 @@ export const BRESidebarTemplate = ({ resumeData, accentHex, fontFamily }) => {
                 {[...(skills.languages || []), ...(skills.frameworks || []), ...(skills.tools || []), ...(skills.softSkills || [])].map((s, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center justify-center px-2 py-1 text-[10px] leading-none font-medium rounded bg-slate-200 text-slate-800 whitespace-nowrap box-border max-w-full"
-                    style={{ breakInside: 'avoid', wordBreak: 'keep-all', lineHeight: 1 }}
+                    className="inline-block h-[18px] leading-[18px] px-2 text-[9px] font-medium rounded bg-slate-200 text-slate-800 whitespace-nowrap box-border max-w-full text-center align-middle"
+                    style={{ breakInside: 'avoid', wordBreak: 'keep-all' }}
                   >
                     {s}
                   </span>

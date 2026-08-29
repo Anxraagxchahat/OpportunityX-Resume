@@ -177,7 +177,7 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
 
 /**
  * Pre-processes cloned DOM before html2canvas capture:
- * 1. Hardens flex-wrap / chips / tags / badges so they wrap naturally and never clip or split long words.
+ * 1. Preserves exact layout, whitespace, wrapping, and typography from the preview.
  * 2. Pre-renders profile photos on an offscreen canvas to overcome html2canvas object-fit: cover limitations.
  * 3. Enforces box-sizing and explicit bounding bounds on all sections.
  *
@@ -186,46 +186,7 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
 function prepareCloneForExport(rootEl) {
   if (!rootEl) return;
 
-  // A. HARDEN ALL FLEX-WRAP CONTAINERS & SKILL CHIPS
-  const flexWrapContainers = rootEl.querySelectorAll(
-    '.flex-wrap, [class*="flex-wrap"], [class*="gap-"], .bre-sidebar-left, .bre-creative-left, .bre-cool-left'
-  );
-
-  flexWrapContainers.forEach((container) => {
-    container.style.boxSizing = 'border-box';
-
-    // Get child chips/tags/badges
-    const children = Array.from(container.children);
-    children.forEach((child) => {
-      // If it looks like a tag / chip / badge or span in flex-wrap
-      const isTag = child.tagName === 'SPAN' ||
-        child.classList.contains('rounded') ||
-        child.classList.contains('border') ||
-        child.className.includes('tag') ||
-        child.className.includes('chip') ||
-        child.className.includes('badge');
-
-      if (isTag) {
-        child.style.boxSizing = 'border-box';
-        child.style.whiteSpace = 'nowrap';
-        child.style.wordBreak = 'keep-all';
-        child.style.overflowWrap = 'normal';
-        child.style.flexShrink = '0';
-        child.style.display = 'inline-flex';
-        child.style.alignItems = 'center';
-        child.style.justifyContent = 'center';
-        child.style.textAlign = 'center';
-        child.style.lineHeight = '1';
-        child.style.paddingTop = '3.5px';
-        child.style.paddingBottom = '3.5px';
-        child.style.maxWidth = '100%';
-        child.style.marginRight = child.style.marginRight || '4px';
-        child.style.marginBottom = child.style.marginBottom || '4px';
-      }
-    });
-  });
-
-  // Also query any tags explicitly by selector
+  // A. ENSURE BOX SIZING AND PREVENT TEXT CLIPPING ON ALL TAGS / CHIPS / BADGES
   const allTags = rootEl.querySelectorAll(
     '[class*="tag"], [class*="chip"], [class*="badge"], .bre-creative-tag, .bre-cool-tag, .pdf-skills-group span'
   );
@@ -235,13 +196,6 @@ function prepareCloneForExport(rootEl) {
     tag.style.wordBreak = 'keep-all';
     tag.style.overflowWrap = 'normal';
     tag.style.flexShrink = '0';
-    tag.style.display = 'inline-flex';
-    tag.style.alignItems = 'center';
-    tag.style.justifyContent = 'center';
-    tag.style.textAlign = 'center';
-    tag.style.lineHeight = '1';
-    tag.style.paddingTop = '3.5px';
-    tag.style.paddingBottom = '3.5px';
     tag.style.maxWidth = '100%';
   });
 
@@ -249,6 +203,7 @@ function prepareCloneForExport(rootEl) {
   const images = rootEl.querySelectorAll('img');
   images.forEach((img) => {
     try {
+      img.crossOrigin = 'anonymous';
       if (!img.src || img.src.startsWith('data:image/svg')) return;
 
       const isProfile = img.alt?.toLowerCase().includes('profile') ||
@@ -286,15 +241,19 @@ function prepareCloneForExport(rootEl) {
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, sX, sY, sW, sH, 0, 0, canvas.width, canvas.height);
 
-            img.src = canvas.toDataURL('image/png');
-            img.style.objectFit = 'fill';
-            img.style.width = `${targetW}px`;
-            img.style.height = `${targetH}px`;
+            try {
+              img.src = canvas.toDataURL('image/png');
+              img.style.objectFit = 'fill';
+              img.style.width = `${targetW}px`;
+              img.style.height = `${targetH}px`;
+            } catch (canvasErr) {
+              // Ignore cross-origin canvas taint error and let html2canvas use original img
+            }
           }
         }
       }
     } catch (e) {
-      console.warn('Image pre-render error in export preparation:', e);
+      // Non-fatal error in photo pre-render
     }
   });
 }

@@ -86,11 +86,12 @@
 }
 
 .bre-cool-tag {
-  display: inline-flex;
-  align-items: center;
-  font-size: 10px;
+  display: inline-block;
+  height: 18px;
+  line-height: 18px;
+  font-size: 9px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 0 6px;
   margin: 2px;
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 4px;
@@ -99,4 +100,6 @@
   word-break: keep-all;
   box-sizing: border-box;
   max-width: 100%;
+  text-align: center;
+  vertical-align: middle;
 }
