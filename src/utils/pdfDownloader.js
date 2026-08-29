@@ -206,9 +206,11 @@ function prepareCloneForExport(rootEl) {
     tag.style.overflowWrap = 'normal';
     tag.style.flexShrink = '0';
     tag.style.maxWidth = '100%';
-    // Guarantee no line-height or vertical-align offsets in html2canvas
-    if (tag.classList.contains('rounded') || tag.className.includes('bg-')) {
+    // Guarantee optical vertical centering and no baseline clipping in html2canvas
+    if (tag.classList.contains('rounded') || tag.className.includes('bg-') || tag.className.includes('tag')) {
       tag.style.lineHeight = '1.1';
+      tag.style.paddingTop = '0px';
+      tag.style.paddingBottom = '3.5px';
       tag.style.verticalAlign = 'baseline';
     }
   });

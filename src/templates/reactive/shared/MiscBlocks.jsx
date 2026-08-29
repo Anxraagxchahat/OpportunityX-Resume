@@ -56,7 +56,7 @@ export const LanguagesBlock = ({ languages, variant = 'default' }) => {
         {formatted.map((l, idx) => (
           <span
             key={idx}
-            className="inline-block px-2 py-0.5 text-[9px] font-semibold leading-tight rounded bg-white/15 text-white/90 border border-white/20 whitespace-nowrap box-border max-w-full text-center"
+            className="inline-block pt-0 pb-[3.5px] px-2 text-[9px] font-semibold leading-tight rounded bg-white/15 text-white/90 border border-white/20 whitespace-nowrap box-border max-w-full text-center"
             style={{ breakInside: 'avoid', wordBreak: 'keep-all' }}
           >
             {l.name}{l.proficiency ? ` (${l.proficiency})` : ''}
