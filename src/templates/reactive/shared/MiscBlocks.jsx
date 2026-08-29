@@ -6,14 +6,14 @@ export const CertificatesBlock = ({ certificates, accentHex, variant = 'default'
   if (variant === 'sidebar') {
     return certificates.map((c) => (
       <div key={c.id} className="mb-1.5 last:mb-0">
-        <div className="text-[10px] font-bold text-white">{c.name}</div>
+        <div className="text-[10px] font-bold text-white leading-tight">{c.name}</div>
         <div className="text-[9px] text-white/60">{c.issuer}{c.date ? ` · ${c.date}` : ''}</div>
       </div>
     ));
   }
 
   return certificates.map((c) => (
-    <div key={c.id} className="mb-1.5 last:mb-0 text-[10px]">
+    <div key={c.id} className="mb-1.5 last:mb-0 text-[10px] leading-relaxed">
       <span className="font-bold text-slate-900">{c.name}</span>
       <span className="text-slate-500 ml-1">— {c.issuer}{c.date ? `, ${c.date}` : ''}</span>
     </div>
@@ -25,12 +25,12 @@ export const AchievementsBlock = ({ achievements, accentHex, variant = 'default'
 
   if (variant === 'sidebar') {
     return achievements.map((a) => (
-      <div key={a.id} className="mb-1 last:mb-0 text-[10px] text-white/80">• {a.title}</div>
+      <div key={a.id} className="mb-1 last:mb-0 text-[10px] text-white/80 leading-relaxed">• {a.title}</div>
     ));
   }
 
   return achievements.map((a) => (
-    <div key={a.id} className="mb-1 last:mb-0 text-[10px] text-slate-700">
+    <div key={a.id} className="mb-1 last:mb-0 text-[10px] text-slate-700 leading-relaxed">
       <span className="font-bold text-slate-900">{a.title}</span>
       {a.description && <span className="ml-1 text-slate-600">— {a.description}</span>}
     </div>
@@ -52,9 +52,13 @@ export const LanguagesBlock = ({ languages, variant = 'default' }) => {
 
   if (variant === 'sidebar') {
     return (
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1.5 items-center">
         {formatted.map((l, idx) => (
-          <span key={idx} className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-white/15 text-white/90 border border-white/20">
+          <span
+            key={idx}
+            className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-semibold rounded bg-white/15 text-white/90 border border-white/20 whitespace-nowrap box-border max-w-full"
+            style={{ breakInside: 'avoid', wordBreak: 'keep-all' }}
+          >
             {l.name}{l.proficiency ? ` (${l.proficiency})` : ''}
           </span>
         ))}
@@ -65,7 +69,7 @@ export const LanguagesBlock = ({ languages, variant = 'default' }) => {
   return (
     <div className="flex flex-wrap gap-1.5 text-[10px]">
       {formatted.map((l, idx) => (
-        <span key={idx} className="text-slate-700">
+        <span key={idx} className="text-slate-700 leading-relaxed mr-2">
           <strong>{l.name}</strong>{l.proficiency ? ` (${l.proficiency})` : ''}
         </span>
       ))}

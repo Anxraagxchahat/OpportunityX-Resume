@@ -25,7 +25,7 @@ export const TemplateSkills = ({ skills, accentHex = '#F97316' }) => {
       return null;
     }).filter(Boolean);
   } else if (typeof skills === 'object') {
-    const { languages = [], frameworks = [], tools = [], programming = [], database = [], cloud = [], backend = [] } = skills;
+    const { languages = [], frameworks = [], tools = [], programming = [], database = [], cloud = [], backend = [], softSkills = [] } = skills;
     if (programming.length > 0) categories.push({ name: 'Programming Languages', items: programming });
     if (languages.length > 0) categories.push({ name: 'Languages & Core', items: languages });
     if (frameworks.length > 0) categories.push({ name: 'Frameworks & Libraries', items: frameworks });
@@ -33,6 +33,7 @@ export const TemplateSkills = ({ skills, accentHex = '#F97316' }) => {
     if (database.length > 0) categories.push({ name: 'Databases', items: database });
     if (tools.length > 0) categories.push({ name: 'Tools & Technologies', items: tools });
     if (cloud.length > 0) categories.push({ name: 'Cloud & Infrastructure', items: cloud });
+    if (softSkills.length > 0) categories.push({ name: 'Soft Skills', items: softSkills });
 
     // Fallback if generic keys
     if (categories.length === 0 && Array.isArray(skills.items)) {
@@ -49,9 +50,9 @@ export const TemplateSkills = ({ skills, accentHex = '#F97316' }) => {
       {categories.map((cat, idx) => {
         if (!cat.items || cat.items.length === 0) return null;
         return (
-          <div key={idx} className="flex flex-wrap items-baseline gap-1 pdf-block pdf-skills-group pdf-keep-together">
-            <span className="font-bold text-slate-900 min-w-[130px]">{cat.name}:</span>
-            <span className="text-slate-700 font-medium">
+          <div key={idx} className="pdf-block pdf-skills-group pdf-keep-together text-xs leading-normal">
+            <span className="font-bold text-slate-900 mr-2">{cat.name}:</span>
+            <span className="text-slate-700 font-medium leading-relaxed">
               {cat.items.join(' • ')}
             </span>
           </div>

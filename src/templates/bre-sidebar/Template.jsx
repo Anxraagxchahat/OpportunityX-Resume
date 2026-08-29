@@ -38,9 +38,13 @@ export const BRESidebarTemplate = ({ resumeData, accentHex, fontFamily }) => {
           {skills && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
             <div className="mb-4">
               <div className="bre-sidebar-heading" style={{ borderColor: accentHex }}>Skills</div>
-              <div className="flex flex-wrap gap-1">
-                {[...(skills.languages || []), ...(skills.frameworks || []), ...(skills.tools || [])].map((s, i) => (
-                  <span key={i} className="px-2 py-0.5 text-[10px] font-medium rounded bg-slate-200 text-slate-800">
+              <div className="flex flex-wrap gap-1.5 items-center">
+                {[...(skills.languages || []), ...(skills.frameworks || []), ...(skills.tools || []), ...(skills.softSkills || [])].map((s, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded bg-slate-200 text-slate-800 whitespace-nowrap box-border max-w-full"
+                    style={{ breakInside: 'avoid', wordBreak: 'keep-all' }}
+                  >
                     {s}
                   </span>
                 ))}

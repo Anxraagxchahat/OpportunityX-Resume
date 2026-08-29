@@ -54,9 +54,13 @@ export const BREMaterialDarkTemplate = ({ resumeData, accentHex, fontFamily }) =
       {skills && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
         <div className="bre-material-card">
           <div className="bre-material-heading" style={{ color: accentColor }}>Technical Skills</div>
-          <div className="flex flex-wrap gap-1.5">
-            {[...(skills.languages || []), ...(skills.frameworks || []), ...(skills.tools || [])].map((s, i) => (
-              <span key={i} className="px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-800 text-gray-200 border border-gray-700">
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {[...(skills.languages || []), ...(skills.frameworks || []), ...(skills.tools || []), ...(skills.softSkills || [])].map((s, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded bg-gray-800 text-gray-200 border border-gray-700 whitespace-nowrap box-border max-w-full"
+                style={{ breakInside: 'avoid', wordBreak: 'keep-all' }}
+              >
                 {s}
               </span>
             ))}
