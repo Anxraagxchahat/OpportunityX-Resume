@@ -104,8 +104,17 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   tempWrapper.appendChild(clonedContent);
   document.body.appendChild(tempWrapper);
 
+  // Ensure all web fonts and layout computations are fully ready
+  if (document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch (fontErr) {
+      // Non-fatal if font API is unavailable
+    }
+  }
+
   // Allow layout computation in temporary wrapper
-  await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 30)));
+  await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 50)));
 
   try {
     // Find discrete A4 page elements to render page-by-page
