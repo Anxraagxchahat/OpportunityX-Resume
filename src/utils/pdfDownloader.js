@@ -57,6 +57,13 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   // Allow browser a tick to complete pending paints/layouts
   await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 50)));
 
+  // Detect dark template theme to avoid white edge clipping
+  const isDarkTemplate = sourceEl.querySelector('.bre-material-dark-container') ||
+    sourceEl.querySelector('.bre-material-dark') ||
+    sourceEl.style.backgroundColor === 'rgb(18, 18, 18)' ||
+    sourceEl.style.backgroundColor === '#121212';
+  const targetBg = isDarkTemplate ? '#121212' : (sourceEl.style.backgroundColor || '#ffffff');
+
   // 2. Create isolated, top-level export container directly attached to document.body
   const tempWrapper = document.createElement('div');
   tempWrapper.id = 'ox-pdf-export-standalone-wrapper';
@@ -65,8 +72,8 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   tempWrapper.style.top = '0';
   tempWrapper.style.width = '794px'; // Exact 210mm @ 96 DPI
   tempWrapper.style.zIndex = '-99999';
-  tempWrapper.style.backgroundColor = '#ffffff';
-  tempWrapper.style.color = '#0f172a';
+  tempWrapper.style.backgroundColor = targetBg;
+  tempWrapper.style.color = isDarkTemplate ? '#f8fafc' : '#0f172a';
   tempWrapper.style.opacity = '1';
   tempWrapper.style.visibility = 'visible';
   tempWrapper.style.pointerEvents = 'none';
@@ -89,7 +96,7 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   clonedContent.style.transform = 'none';
   clonedContent.style.width = '794px';
   clonedContent.style.boxSizing = 'border-box';
-  clonedContent.style.backgroundColor = '#ffffff';
+  clonedContent.style.backgroundColor = targetBg;
 
   // 4. Preprocess cloned DOM tree for bulletproof html2canvas rendering
   prepareCloneForExport(clonedContent);
@@ -121,7 +128,7 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
       useCORS: true,
       allowTaint: true,
       logging: false,
-      backgroundColor: '#ffffff',
+      backgroundColor: targetBg,
       windowWidth: 794,  // 210mm @ 96 DPI
       windowHeight: 1123, // 297mm @ 96 DPI
       width: 794,
@@ -145,6 +152,9 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
       pageEl.style.boxSizing = 'border-box';
       pageEl.style.overflow = 'hidden';
       pageEl.style.position = 'relative';
+      if (!pageEl.style.backgroundColor || pageEl.style.backgroundColor === 'transparent') {
+        pageEl.style.backgroundColor = targetBg;
+      }
 
       const canvas = await html2canvas(pageEl, canvasOptions);
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
@@ -203,6 +213,11 @@ function prepareCloneForExport(rootEl) {
         child.style.flexShrink = '0';
         child.style.display = 'inline-flex';
         child.style.alignItems = 'center';
+        child.style.justifyContent = 'center';
+        child.style.textAlign = 'center';
+        child.style.lineHeight = '1';
+        child.style.paddingTop = '3.5px';
+        child.style.paddingBottom = '3.5px';
         child.style.maxWidth = '100%';
         child.style.marginRight = child.style.marginRight || '4px';
         child.style.marginBottom = child.style.marginBottom || '4px';
@@ -212,7 +227,7 @@ function prepareCloneForExport(rootEl) {
 
   // Also query any tags explicitly by selector
   const allTags = rootEl.querySelectorAll(
-    '[class*="tag"], [class*="chip"], [class*="badge"], .pdf-skills-group span'
+    '[class*="tag"], [class*="chip"], [class*="badge"], .bre-creative-tag, .bre-cool-tag, .pdf-skills-group span'
   );
   allTags.forEach((tag) => {
     tag.style.boxSizing = 'border-box';
@@ -220,6 +235,13 @@ function prepareCloneForExport(rootEl) {
     tag.style.wordBreak = 'keep-all';
     tag.style.overflowWrap = 'normal';
     tag.style.flexShrink = '0';
+    tag.style.display = 'inline-flex';
+    tag.style.alignItems = 'center';
+    tag.style.justifyContent = 'center';
+    tag.style.textAlign = 'center';
+    tag.style.lineHeight = '1';
+    tag.style.paddingTop = '3.5px';
+    tag.style.paddingBottom = '3.5px';
     tag.style.maxWidth = '100%';
   });
 

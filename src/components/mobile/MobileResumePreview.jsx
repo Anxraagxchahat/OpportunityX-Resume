@@ -49,6 +49,11 @@ export const MobileResumePreview = () => {
   const topPadMm = pageMargin === 'compact' ? 6 : pageMargin === 'spacious' ? 14 : 10;
   const sidePadMm = pageMargin === 'compact' ? 8 : pageMargin === 'spacious' ? 16 : 12;
 
+  const isFullBleedTemplate = ['bre-material-dark', 'bre-sidebar', 'bre-cool', 'bre-creative', 'bre-left-right', 'bre-oblique', 'creative-sidebar', 'developer-dark', 'accent-column'].includes(template);
+  const effectivePaperBg = template === 'bre-material-dark' ? '#121212' : paperBgColor;
+  const effectiveTopPadMm = isFullBleedTemplate ? 0 : topPadMm;
+  const effectiveSidePadMm = isFullBleedTemplate ? 0 : sidePadMm;
+
   const SelectedTemplateComponent = TEMPLATE_REGISTRY[template] || TEMPLATE_REGISTRY.modern;
 
   // ─── Pagination Engine ───────────────────────────────────────
@@ -160,7 +165,8 @@ export const MobileResumePreview = () => {
         className="absolute left-[-9999px] top-0 pointer-events-none opacity-0 overflow-visible"
         style={{
           width: '210mm',
-          padding: `${topPadMm}mm ${sidePadMm}mm`,
+          padding: `${effectiveTopPadMm}mm ${effectiveSidePadMm}mm`,
+          backgroundColor: effectivePaperBg || '#ffffff',
           fontFamily: `'${fontFamily}', sans-serif`,
           boxSizing: 'border-box'
         }}
@@ -188,14 +194,14 @@ export const MobileResumePreview = () => {
         className="absolute left-0 top-0 pointer-events-none z-[-9999] bg-white text-slate-900 opacity-100"
         style={{
           width: '210mm',
-          backgroundColor: paperBgColor || '#ffffff',
+          backgroundColor: effectivePaperBg || '#ffffff',
           fontFamily: `'${fontFamily}', sans-serif`,
           boxSizing: 'border-box'
         }}
       >
         {Array.from({ length: totalPages }).map((_, pageIdx) => {
           const page2TextStartYMm = pageIdx > 0
-            ? (showPage2Header ? topPadMm + 14 + Math.max(0, page2TopMargin - 10) : topPadMm + Math.max(0, page2TopMargin - 10))
+            ? (showPage2Header ? effectiveTopPadMm + 14 + Math.max(0, page2TopMargin - 10) : effectiveTopPadMm + Math.max(0, page2TopMargin - 10))
             : 0;
           const assignedBlocks = pageAssignments[pageIdx] || null;
 
@@ -206,7 +212,7 @@ export const MobileResumePreview = () => {
               style={{
                 width: '210mm',
                 height: '297mm',
-                backgroundColor: paperBgColor || '#ffffff',
+                backgroundColor: effectivePaperBg || '#ffffff',
                 fontFamily: `'${fontFamily}', sans-serif`,
                 boxSizing: 'border-box'
               }}
@@ -215,9 +221,9 @@ export const MobileResumePreview = () => {
                 <div
                   style={{
                     position: 'absolute',
-                    top: `${topPadMm}mm`,
-                    left: `${sidePadMm}mm`,
-                    right: `${sidePadMm}mm`,
+                    top: `${effectiveTopPadMm}mm`,
+                    left: `${effectiveSidePadMm}mm`,
+                    right: `${effectiveSidePadMm}mm`,
                     zIndex: 20
                   }}
                   className="border-b border-slate-300/80 pb-1.5 flex items-center justify-between text-[11px] font-bold text-slate-700 select-none bg-inherit"
@@ -240,10 +246,10 @@ export const MobileResumePreview = () => {
                   width: '210mm',
                   height: pageIdx === 0 ? '297mm' : `${297 - page2TextStartYMm}mm`,
                   overflow: 'hidden',
-                  paddingTop: pageIdx === 0 ? `${topPadMm}mm` : 0,
-                  paddingLeft: `${sidePadMm}mm`,
-                  paddingRight: `${sidePadMm}mm`,
-                  paddingBottom: `${topPadMm}mm`,
+                  paddingTop: pageIdx === 0 ? `${effectiveTopPadMm}mm` : 0,
+                  paddingLeft: `${effectiveSidePadMm}mm`,
+                  paddingRight: `${effectiveSidePadMm}mm`,
+                  paddingBottom: `${effectiveTopPadMm}mm`,
                   boxSizing: 'border-box'
                 }}
               >
@@ -316,7 +322,7 @@ export const MobileResumePreview = () => {
                   style={{
                     width: '210mm',
                     height: '297mm',
-                    backgroundColor: paperBgColor,
+                    backgroundColor: effectivePaperBg,
                     fontFamily: `'${fontFamily}', sans-serif`
                   }}
                 >
@@ -325,9 +331,9 @@ export const MobileResumePreview = () => {
                     <div
                       style={{
                         position: 'absolute',
-                        top: `${topPadMm}mm`,
-                        left: `${sidePadMm}mm`,
-                        right: `${sidePadMm}mm`,
+                        top: `${effectiveTopPadMm}mm`,
+                        left: `${effectiveSidePadMm}mm`,
+                        right: `${effectiveSidePadMm}mm`,
                         zIndex: 20
                       }}
                       className="border-b border-slate-300/80 pb-1.5 flex items-center justify-between text-[11px] font-bold text-slate-700 select-none bg-inherit"
@@ -348,10 +354,10 @@ export const MobileResumePreview = () => {
                       width: '210mm',
                       height: pageIdx === 0 ? '297mm' : `${297 - page2TextStartYMm}mm`,
                       overflow: 'hidden',
-                      paddingTop: pageIdx === 0 ? `${topPadMm}mm` : 0,
-                      paddingLeft: `${sidePadMm}mm`,
-                      paddingRight: `${sidePadMm}mm`,
-                      paddingBottom: `${topPadMm}mm`,
+                      paddingTop: pageIdx === 0 ? `${effectiveTopPadMm}mm` : 0,
+                      paddingLeft: `${effectiveSidePadMm}mm`,
+                      paddingRight: `${effectiveSidePadMm}mm`,
+                      paddingBottom: `${effectiveTopPadMm}mm`,
                       boxSizing: 'border-box'
                     }}
                   >
