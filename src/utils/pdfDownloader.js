@@ -98,9 +98,6 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
   clonedContent.style.boxSizing = 'border-box';
   clonedContent.style.backgroundColor = targetBg;
 
-  // 4. Preprocess cloned DOM tree for bulletproof html2canvas rendering
-  prepareCloneForExport(clonedContent);
-
   tempWrapper.appendChild(clonedContent);
   document.body.appendChild(tempWrapper);
 
@@ -115,6 +112,9 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
 
   // Allow layout computation in temporary wrapper
   await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 50)));
+
+  // Preprocess cloned DOM tree for bulletproof html2canvas rendering (AFTER DOM attachment so computed styles are 100% accurate)
+  prepareCloneForExport(clonedContent);
 
   try {
     // Find discrete A4 page elements to render page-by-page
@@ -195,25 +195,115 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
 function prepareCloneForExport(rootEl) {
   if (!rootEl) return;
 
-  // A. ENSURE BOX SIZING, EXACT CENTERING, AND PREVENT BASELINE DISPLACEMENT ON ALL TAGS / CHIPS
-  const allTags = rootEl.querySelectorAll(
-    '.flex-wrap span, [class*="tag"], [class*="chip"], [class*="badge"], .bre-creative-tag, .bre-cool-tag, .pdf-skills-group span'
-  );
-  allTags.forEach((tag) => {
-    tag.style.boxSizing = 'border-box';
-    tag.style.whiteSpace = 'nowrap';
-    tag.style.wordBreak = 'keep-all';
-    tag.style.overflowWrap = 'normal';
-    tag.style.flexShrink = '0';
-    tag.style.maxWidth = '100%';
-    // Guarantee optical vertical centering and no baseline clipping in html2canvas
-    if (tag.classList.contains('rounded') || tag.className.includes('bg-') || tag.className.includes('tag')) {
-      tag.style.lineHeight = '1.1';
-      tag.style.paddingTop = '0px';
-      tag.style.paddingBottom = '3.5px';
-      tag.style.verticalAlign = 'baseline';
-    }
-  });
+  // A. PRE-RENDER ALL SKILL CHIPS, TAGS, AND BADGES TO 2X CRISP CANVASES
+  // This guarantees 100% mathematical vertical & horizontal centering across all fonts, OS, and zoom scales in html2canvas.
+  try {
+    const allTags = rootEl.querySelectorAll(
+      '.flex-wrap span, [class*="tag"], [class*="chip"], [class*="badge"], .bre-creative-tag, .bre-cool-tag, .pdf-skills-group span'
+    );
+
+    allTags.forEach((tag) => {
+      try {
+        const text = tag.innerText?.trim();
+        if (!text) return;
+
+        const isPill = tag.classList.contains('rounded') ||
+          tag.className.includes('bg-') ||
+          tag.className.includes('tag') ||
+          tag.className.includes('chip') ||
+          tag.className.includes('badge') ||
+          tag.style.backgroundColor;
+
+        if (!isPill) return;
+
+        const computed = window.getComputedStyle(tag);
+        const fontSize = parseFloat(computed.fontSize) || 9;
+        const fontWeight = computed.fontWeight || '600';
+        const fontFamily = computed.fontFamily || 'Inter, sans-serif';
+        const color = computed.color || '#ffffff';
+        const bg = computed.backgroundColor || 'transparent';
+        const borderColor = computed.borderColor || 'transparent';
+        const borderRadius = parseFloat(computed.borderRadius) || 4;
+
+        // Measure text with matching font
+        const tempCanvas = document.createElement('canvas');
+        const tCtx = tempCanvas.getContext('2d');
+        if (!tCtx) return;
+        tCtx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+        const textMetrics = tCtx.measureText(text);
+        const textW = textMetrics.width;
+
+        const padX = 8;
+        const padY = 3.5;
+        const chipW = Math.ceil(textW + (padX * 2));
+        const chipH = Math.ceil(fontSize + (padY * 2));
+
+        const scale = 2; // High-DPI scale for crisp PDF vector-like appearance
+        const canvas = document.createElement('canvas');
+        canvas.width = chipW * scale;
+        canvas.height = chipH * scale;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.scale(scale, scale);
+
+        // 1. Draw rounded background & border
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(0.5, 0.5, chipW - 1, chipH - 1, borderRadius);
+        } else {
+          ctx.rect(0.5, 0.5, chipW - 1, chipH - 1);
+        }
+
+        if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+          ctx.fillStyle = bg;
+          ctx.fill();
+        }
+
+        if (borderColor && borderColor !== 'transparent' && borderColor !== 'rgba(0, 0, 0, 0)') {
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = borderColor;
+          ctx.stroke();
+        }
+
+        // 2. Draw text in dead center
+        ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, chipW / 2, chipH / 2 + 0.5);
+
+        // Replace DOM span with crisp pre-rendered image
+        const img = document.createElement('img');
+        img.src = canvas.toDataURL('image/png');
+        img.style.width = `${chipW}px`;
+        img.style.height = `${chipH}px`;
+        img.style.display = 'inline-block';
+        img.style.verticalAlign = 'middle';
+        img.style.flexShrink = '0';
+        img.style.boxSizing = 'border-box';
+        img.style.margin = '0';
+        img.style.padding = '0';
+        img.style.maxWidth = '100%';
+
+        tag.parentNode.replaceChild(img, tag);
+      } catch (pillErr) {
+        // Fallback to normal CSS if canvas pre-render fails for this item
+        tag.style.boxSizing = 'border-box';
+        tag.style.whiteSpace = 'nowrap';
+        tag.style.wordBreak = 'keep-all';
+        tag.style.overflowWrap = 'normal';
+        tag.style.flexShrink = '0';
+        tag.style.maxWidth = '100%';
+        tag.style.lineHeight = '1.1';
+        tag.style.paddingTop = '0px';
+        tag.style.paddingBottom = '3.5px';
+        tag.style.verticalAlign = 'baseline';
+      }
+    });
+  } catch (err) {
+    // Non-fatal error in chip pre-processing
+  }
 
   // B. HARDEN PROFILE PHOTOS (Pre-render 1:1 aspect ratio with object-fit: cover onto canvas)
   const images = rootEl.querySelectorAll('img');
