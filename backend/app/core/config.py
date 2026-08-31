@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     CASHFREE_APP_ID: str = ""
     CASHFREE_SECRET_KEY: str = ""  # Loaded from env variable CASHFREE_SECRET_KEY
     CASHFREE_ENV: str = "PRODUCTION"  # SANDBOX or PRODUCTION
-    CASHFREE_API_VERSION: str = "2023-08-01"
+    CASHFREE_API_VERSION: str = "2025-01-01"
 
     # AI Infrastructure Config (OpenRouter Multi-Model Priority Waterfall)
     OPENROUTER_API_KEY: str = ""

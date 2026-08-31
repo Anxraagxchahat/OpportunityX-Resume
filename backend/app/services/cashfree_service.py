@@ -7,14 +7,24 @@ from typing import Dict, Any, Optional
 from app.core.config import settings
 from app.core.logging import logger
 
+import os
 import re
 
 class CashfreeService:
     def __init__(self):
-        self.app_id = settings.CASHFREE_APP_ID or ""
-        self.secret_key = settings.CASHFREE_SECRET_KEY or ""
-        self.api_version = settings.CASHFREE_API_VERSION or "2023-08-01"
         self._client: Optional[httpx.AsyncClient] = None
+
+    @property
+    def app_id(self) -> str:
+        return settings.CASHFREE_APP_ID or os.getenv("CASHFREE_APP_ID", "")
+
+    @property
+    def secret_key(self) -> str:
+        return settings.CASHFREE_SECRET_KEY or os.getenv("CASHFREE_SECRET_KEY", "")
+
+    @property
+    def api_version(self) -> str:
+        return settings.CASHFREE_API_VERSION or os.getenv("CASHFREE_API_VERSION", "2023-08-01")
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -24,7 +34,8 @@ class CashfreeService:
 
     @property
     def is_sandbox(self) -> bool:
-        if self.app_id.startswith("TEST") or self.app_id.startswith("TEST_") or settings.CASHFREE_ENV.upper() == "SANDBOX":
+        env_val = (settings.CASHFREE_ENV or os.getenv("CASHFREE_ENV", "")).upper()
+        if self.app_id.startswith("TEST") or self.app_id.startswith("TEST_") or env_val == "SANDBOX":
             return True
         return False
 
@@ -51,7 +62,7 @@ class CashfreeService:
         customer_email: str,
         customer_phone: str = "9999999999"
     ) -> Dict[str, Any]:
-        if not self.app_id or not self.secret_key or "your_" in self.app_id:
+        if not self.app_id or not self.secret_key or "your_" in self.app_id or "your_" in self.secret_key:
             logger.error("Cashfree API credentials missing or unconfigured.")
             raise ValueError("Cashfree Payment Gateway is not configured on the backend server. CASHFREE_APP_ID and CASHFREE_SECRET_KEY environment variables are required.")
 
