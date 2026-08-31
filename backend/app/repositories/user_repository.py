@@ -12,24 +12,42 @@ class UserRepository(BaseRepository[User]):
         return self.db.query(User).filter(User.id == uid).first()
 
     def sync_user(self, uid: str, email: str, display_name: str = None, photo_url: str = None, provider: str = "google") -> User:
-        user = self.get_by_uid(uid)
-        if not user:
-            user = User(
-                id=uid,
-                email=email,
-                display_name=display_name,
-                photo_url=photo_url,
-                provider=provider
-            )
-            self.db.add(user)
-        else:
-            if display_name:
-                user.display_name = display_name
-            if photo_url:
-                user.photo_url = photo_url
-        self.db.commit()
-        self.db.refresh(user)
-        return user
+        clean_email = (email or f"{uid}@opportunityx.co.in").strip().lower()
+        try:
+            user = self.get_by_uid(uid)
+            if not user and clean_email:
+                user = self.db.query(User).filter(User.email == clean_email).first()
+                if user and user.id != uid:
+                    user.id = uid
+
+            if not user:
+                user = User(
+                    id=uid,
+                    email=clean_email,
+                    display_name=display_name,
+                    photo_url=photo_url,
+                    provider=provider
+                )
+                self.db.add(user)
+            else:
+                if display_name:
+                    user.display_name = display_name
+                if photo_url:
+                    user.photo_url = photo_url
+                if clean_email and user.email != clean_email:
+                    user.email = clean_email
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except Exception:
+            self.db.rollback()
+            # If commit failed (e.g. race condition), fallback to fetching existing user
+            existing = self.get_by_uid(uid)
+            if not existing and clean_email:
+                existing = self.db.query(User).filter(User.email == clean_email).first()
+            if existing:
+                return existing
+            raise
 
 class SessionRepository(BaseRepository[UserSession]):
     def __init__(self, db: Session):
