@@ -67,6 +67,13 @@ class Settings(BaseSettings):
     CASHFREE_ENV: str = "PRODUCTION"  # SANDBOX or PRODUCTION
     CASHFREE_API_VERSION: str = "2025-01-01"
 
+    @field_validator("CASHFREE_APP_ID", "CASHFREE_SECRET_KEY", "CASHFREE_ENV", "CASHFREE_API_VERSION", mode="before")
+    @classmethod
+    def clean_cashfree_fields(cls, v: Union[str, None]) -> str:
+        if v:
+            return str(v).strip().strip('"').strip("'").replace("\n", "").replace("\r", "")
+        return ""
+
     # AI Infrastructure Config (OpenRouter Multi-Model Priority Waterfall)
     OPENROUTER_API_KEY: str = ""
     FREE_AI_MODEL: str = "google/gemini-2.5-flash-lite"

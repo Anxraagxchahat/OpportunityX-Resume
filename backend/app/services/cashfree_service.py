@@ -16,15 +16,19 @@ class CashfreeService:
 
     @property
     def app_id(self) -> str:
-        return settings.CASHFREE_APP_ID or os.getenv("CASHFREE_APP_ID", "")
+        val = settings.CASHFREE_APP_ID or os.getenv("CASHFREE_APP_ID", "")
+        return str(val).strip().strip('"').strip("'").replace("\n", "").replace("\r", "")
 
     @property
     def secret_key(self) -> str:
-        return settings.CASHFREE_SECRET_KEY or os.getenv("CASHFREE_SECRET_KEY", "")
+        val = settings.CASHFREE_SECRET_KEY or os.getenv("CASHFREE_SECRET_KEY", "")
+        return str(val).strip().strip('"').strip("'").replace("\n", "").replace("\r", "")
 
     @property
     def api_version(self) -> str:
-        return settings.CASHFREE_API_VERSION or os.getenv("CASHFREE_API_VERSION", "2023-08-01")
+        val = settings.CASHFREE_API_VERSION or os.getenv("CASHFREE_API_VERSION", "2025-01-01")
+        clean = str(val).strip().strip('"').strip("'").replace("\n", "").replace("\r", "")
+        return clean or "2025-01-01"
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
