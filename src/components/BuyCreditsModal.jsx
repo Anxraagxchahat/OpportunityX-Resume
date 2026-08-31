@@ -193,11 +193,20 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
       cashfree.checkout({
         paymentSessionId: orderData.payment_session_id,
         redirectTarget: '_modal'
-      }).then(async () => {
+      }).then(async (result) => {
+        if (result && result.error) {
+          setIsProcessing(false);
+          setProcessingStage('idle');
+          if (result.error.message) {
+            setErrorMsg(result.error.message);
+          }
+          return;
+        }
+
         setProcessingStage('verifying');
         const verifyRes = await apiService.verifyCashfreeOrder(orderData.order_id);
 
-        if (verifyRes.ok && verifyRes.status === 'PAID') {
+        if (verifyRes && verifyRes.ok && verifyRes.status === 'PAID') {
           // Instant authoritative credit balance update from database response
           if (typeof verifyRes.new_balance === 'number') {
             setAiCredits((prev) => ({
@@ -208,14 +217,14 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
           }
           setPaymentStep('success');
         } else {
-          setErrorMsg(verifyRes.message || "Payment verification returned pending/failed status. No credits were added.");
+          setErrorMsg(verifyRes?.message || "Payment verification returned pending/failed status. No credits were added.");
         }
         setIsProcessing(false);
         setProcessingStage('idle');
-      }).catch(() => {
+      }).catch((err) => {
         setIsProcessing(false);
         setProcessingStage('idle');
-        setErrorMsg("Payment was cancelled or closed. No charges were made to your account.");
+        setErrorMsg(err?.message || "Payment was cancelled or closed. No charges were made to your account.");
       });
 
     } catch (err) {
