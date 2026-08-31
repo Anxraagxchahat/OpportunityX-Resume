@@ -231,6 +231,28 @@ export const apiService = {
     return request('/credits/transactions');
   },
 
+  // ──────────────────────────────────────────
+  // Payments & Cashfree Gateway Integration
+  // ──────────────────────────────────────────
+  async createCashfreeOrder(packId, customerPhone) {
+    return request('/payments/create-order', {
+      method: 'POST',
+      body: JSON.stringify({
+        pack_id: packId,
+        customer_phone: customerPhone
+      })
+    });
+  },
+
+  async verifyCashfreeOrder(orderId) {
+    return request('/payments/verify-order', {
+      method: 'POST',
+      body: JSON.stringify({
+        order_id: orderId
+      })
+    });
+  },
+
   // AI Generation Infrastructure (Secure Server-Side Execution Proxy)
   async generateAI(firstArg = 'summary', secondArg = '', thirdArg = {}) {
     let payload = {};
