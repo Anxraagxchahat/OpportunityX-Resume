@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user, AuthenticatedUser
+from app.core.logging import logger
 from app.repositories.user_repository import UserRepository
 from app.repositories.payment_repository import PaymentRepository
 from app.repositories.credit_repository import CreditRepository
@@ -36,13 +37,16 @@ async def create_payment_order(
         raise HTTPException(status_code=400, detail=f"Invalid credit pack identifier: {req.pack_id}")
 
     # Ensure user identity exists in users table before referencing foreign key
-    user_repo = UserRepository(db)
-    user_repo.sync_user(
-        uid=user.uid,
-        email=user.email or f"{user.uid}@opportunityx.co.in",
-        display_name=user.name,
-        photo_url=user.photo_url
-    )
+    try:
+        user_repo = UserRepository(db)
+        user_repo.sync_user(
+            uid=user.uid,
+            email=user.email or f"{user.uid}@opportunityx.co.in",
+            display_name=user.name,
+            photo_url=user.photo_url
+        )
+    except Exception as e:
+        logger.warning(f"User sync warning during order creation: {e}")
 
     pack = CREDIT_PACK_PRICING[req.pack_id]
     order_id = f"OX_RESUME_{int(time.time())}_{str(uuid.uuid4())[:6]}"
@@ -57,19 +61,26 @@ async def create_payment_order(
             customer_phone=req.customer_phone or "9999999999"
         )
     except ValueError as e:
+        logger.error(f"Cashfree validation error on create_order: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Cashfree order creation unexpected exception: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail=f"Payment Gateway Error: {str(e)}")
 
     # Save PENDING Payment in DB via Repository
-    payment_repo = PaymentRepository(db)
-    payment_repo.create_order(
-        order_id=order_id,
-        user_id=user.uid,
-        pack_id=req.pack_id,
-        amount=pack["price"],
-        credits=pack["credits"],
-        cf_order_id=cf_res.get("cf_order_id"),
-        payment_session_id=cf_res.get("payment_session_id")
-    )
+    try:
+        payment_repo = PaymentRepository(db)
+        payment_repo.create_order(
+            order_id=order_id,
+            user_id=user.uid,
+            pack_id=req.pack_id,
+            amount=pack["price"],
+            credits=pack["credits"],
+            cf_order_id=cf_res.get("cf_order_id"),
+            payment_session_id=cf_res.get("payment_session_id")
+        )
+    except Exception as e:
+        logger.error(f"Database error creating pending payment order: {e}", exc_info=True)
 
     return CashfreeOrderResponse(
         order_id=order_id,
