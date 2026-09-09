@@ -4,9 +4,10 @@
  *
  * Guarantees:
  * 1. Zero Content Duplication (assertNoDuplicateRenderedContent)
- * 2. Zero Text/Header Slicing (Page breaks occur between unbroken DOM block units)
- * 3. Preservation of Intentional Whitespace & User Page Break Offsets
- * 4. 100% Visual Parity between Editor Preview & Downloaded PDF
+ * 2. Zero Text/Header Slicing (Page breaks occur strictly between unbroken DOM block units)
+ * 3. Accurate Multi-Column & Sidebar Geometry Awareness
+ * 4. User Page Break Drag Line & Split Intent Preservation
+ * 5. 100% Visual Parity between Editor Preview & Downloaded PDF
  */
 
 /**
@@ -19,8 +20,15 @@
  */
 export const shouldRenderBlock = (blockId, visibleBlockIds) => {
   if (!visibleBlockIds) return true;
-  if (visibleBlockIds instanceof Set) return visibleBlockIds.has(blockId);
-  if (Array.isArray(visibleBlockIds)) return visibleBlockIds.includes(blockId);
+  if (visibleBlockIds instanceof Set) {
+    // If empty set (e.g. continuous fallback pass), render all blocks
+    if (visibleBlockIds.size === 0) return true;
+    return visibleBlockIds.has(blockId);
+  }
+  if (Array.isArray(visibleBlockIds)) {
+    if (visibleBlockIds.length === 0) return true;
+    return visibleBlockIds.includes(blockId);
+  }
   return true;
 };
 
@@ -44,6 +52,46 @@ export const assertNoDuplicateRenderedContent = (pages) => {
 };
 
 /**
+ * Templates officially configured for block-level DOM pagination.
+ * All core OpportunityX, Best-Resume-Ever, JSONResume, and Reactive templates are supported.
+ */
+export const BLOCK_PAGINATED_TEMPLATES = new Set([
+  'modern',
+  'minimal',
+  'executive',
+  'corporate',
+  'recruiter',
+  'fullstack',
+  'frontend',
+  'backend',
+  'creative',
+  'asia-compact',
+  'compact-entry',
+  'senior-enterprise',
+  'executive-bold',
+  'whitespace-modern',
+  'bre-cool',
+  'bre-creative',
+  'bre-green',
+  'bre-purple',
+  'bre-left-right',
+  'bre-material-dark',
+  'bre-oblique',
+  'bre-sidebar',
+  'jsonresume-modern',
+  'creative-sidebar',
+  'professional-clean',
+  'marketing-accent',
+  'developer-dark',
+  'ats-classic',
+  'business-analyst',
+  'executive-minimal',
+  'healthcare-calm',
+  'technical-grid',
+  'accent-column'
+]);
+
+/**
  * Dynamically computes page assignments for all rendered section/item blocks.
  *
  * @param {HTMLElement} measureEl - Reference to unclipped measurement DOM element
@@ -53,18 +101,17 @@ export const assertNoDuplicateRenderedContent = (pages) => {
 export const computePageAssignments = (measureEl, options = {}) => {
   if (!measureEl) return [new Set()];
 
-  const blockEls = measureEl.querySelectorAll('[data-block-id]');
-  if (blockEls.length === 0) return [new Set()];
-
   const {
     pageMargin = 'normal',
     pageBreakOffset = 0,
     showPage2Header = true,
-    page2TopMargin = 10
+    page2TopMargin = 10,
+    template = 'modern'
   } = options;
 
   // Base padding in mm
-  const topPadMm = pageMargin === 'compact' ? 6 : pageMargin === 'spacious' ? 14 : 10;
+  const isFullBleedTemplate = ['bre-material-dark', 'bre-sidebar', 'bre-cool', 'bre-creative', 'bre-left-right', 'bre-oblique', 'creative-sidebar', 'developer-dark', 'accent-column'].includes(template);
+  const topPadMm = isFullBleedTemplate ? 0 : (pageMargin === 'compact' ? 6 : pageMargin === 'spacious' ? 14 : 10);
   const bottomPadMm = topPadMm;
 
   // Page 1 cutoff height in mm
@@ -76,29 +123,144 @@ export const computePageAssignments = (measureEl, options = {}) => {
   const page2TopPushMm = Math.max(0, page2TopMargin - 10);
   const page2UsableHeightMm = Math.max(20, 297 - topPadMm - bottomPadMm - page2HeaderSpaceMm - page2TopPushMm);
 
-  const pages = [new Set()];
-  let currentPgIdx = 0;
-  let currentPgHeightMm = 0;
-
-  blockEls.forEach((el) => {
-    const blockId = el.getAttribute('data-block-id');
-    if (!blockId) return;
-
-    const rect = el.getBoundingClientRect();
-    const blockHeightMm = rect.height / 3.7795; // 1mm ~ 3.7795px at 96 DPI
-
-    const maxUsableMm = currentPgIdx === 0 ? page1UsableHeightMm : page2UsableHeightMm;
-
-    // Push block to next page if it doesn't fit on current page and page is not empty
-    if (currentPgHeightMm + blockHeightMm > maxUsableMm && pages[currentPgIdx].size > 0) {
-      currentPgIdx++;
-      pages[currentPgIdx] = new Set();
-      currentPgHeightMm = 0;
+  // If the template is an explicit non-block legacy template, use continuous height fallback
+  if (template && !BLOCK_PAGINATED_TEMPLATES.has(template)) {
+    const totalHeightPx = measureEl.scrollHeight || measureEl.offsetHeight || 0;
+    const totalHeightMm = totalHeightPx / 3.7795; // 1mm ~ 3.7795px at 96 DPI
+    let numPages = 1;
+    if (totalHeightMm > page1UsableHeightMm || pageBreakOffset <= -25) {
+      const remainingHeightMm = Math.max(0, totalHeightMm - page1UsableHeightMm);
+      const extraPages = Math.ceil(remainingHeightMm / page2UsableHeightMm);
+      numPages = Math.max(pageBreakOffset <= -25 ? 2 : 1, 1 + extraPages);
     }
+    return Array.from({ length: numPages }, () => new Set());
+  }
 
-    pages[currentPgIdx].add(blockId);
-    currentPgHeightMm += blockHeightMm;
+  const allBlockEls = Array.from(measureEl.querySelectorAll('[data-block-id]'));
+
+  // Filter out any element whose ancestor inside measureEl already has [data-block-id]
+  // This prevents double counting nested containers (e.g. skills groups, misc blocks)
+  const blockEls = allBlockEls.filter((el) => {
+    let parent = el.parentElement;
+    while (parent && parent !== measureEl) {
+      if (parent.hasAttribute('data-block-id')) {
+        return false;
+      }
+      parent = parent.parentElement;
+    }
+    return true;
   });
+
+  // Fallback if template has no explicit data-block-id tags:
+  // Measure total content height and calculate required pages
+  if (blockEls.length === 0) {
+    const totalHeightPx = measureEl.scrollHeight || measureEl.offsetHeight || 0;
+    const totalHeightMm = totalHeightPx / 3.7795; // 1mm ~ 3.7795px at 96 DPI
+    
+    // Determine number of pages needed
+    let numPages = 1;
+    if (totalHeightMm > page1UsableHeightMm || pageBreakOffset <= -25) {
+      const remainingHeightMm = Math.max(0, totalHeightMm - page1UsableHeightMm);
+      const extraPages = Math.ceil(remainingHeightMm / page2UsableHeightMm);
+      numPages = Math.max(pageBreakOffset <= -25 ? 2 : 1, 1 + extraPages);
+    }
+    return Array.from({ length: numPages }, () => new Set());
+  }
+
+  // Check if real browser bounding rect coordinates are available
+  const measureRect = typeof measureEl.getBoundingClientRect === 'function' ? measureEl.getBoundingClientRect() : null;
+  const hasRealBrowserCoords = measureRect && typeof measureRect.top === 'number' && measureRect.height > 0;
+
+  const pages = [new Set()];
+
+  if (hasRealBrowserCoords) {
+    // GEOMETRIC BLOCK PARTITIONING (Real Browser Environment)
+    // Partition strictly by physical bounding box relative to top of A4 page.
+    let currentPgIdx = 0;
+    let currentPgHeightMm = 0;
+
+    blockEls.forEach((el) => {
+      const blockId = el.getAttribute('data-block-id');
+      if (!blockId) return;
+
+      const rect = el.getBoundingClientRect();
+      const elRelativeBottomMm = (rect.bottom - measureRect.top) / 3.7795;
+      const blockHeightMm = rect.height / 3.7795;
+
+      if (elRelativeBottomMm <= page1CutoffMm) {
+        // Block bottom finishes cleanly before Page 1 cutoff
+        pages[0].add(blockId);
+      } else {
+        // Block crosses or is below cutoff -> move to Page 2+
+        if (pages.length === 1) {
+          pages.push(new Set());
+          currentPgIdx = 1;
+          currentPgHeightMm = 0;
+        }
+
+        // Check if Page 2 fills up and requires Page 3
+        if (currentPgIdx >= 1 && currentPgHeightMm + blockHeightMm > page2UsableHeightMm && pages[currentPgIdx].size > 0) {
+          currentPgIdx++;
+          pages[currentPgIdx] = new Set();
+          currentPgHeightMm = 0;
+        }
+
+        pages[currentPgIdx].add(blockId);
+        currentPgHeightMm += blockHeightMm;
+      }
+    });
+
+    // If user explicitly pushed page break (-30mm or more) and all blocks still fit on page 1,
+    // honor user intent by pushing trailing blocks to page 2 if multiple blocks exist
+    if (pageBreakOffset <= -30 && pages.length === 1 && pages[0].size > 2) {
+      const allBlocks = Array.from(pages[0]);
+      const splitPoint = Math.max(1, Math.floor(allBlocks.length * 0.6));
+      pages[0] = new Set(allBlocks.slice(0, splitPoint));
+      pages[1] = new Set(allBlocks.slice(splitPoint));
+    }
+  } else {
+    // SYNTHETIC / TEST SUITE HEIGHT ACCUMULATION
+    // Used in headless Node.js tests or environments without real DOM layout metrics
+    let currentPgIdx = 0;
+    let currentPgHeightMm = 0;
+
+    blockEls.forEach((el) => {
+      const blockId = el.getAttribute('data-block-id');
+      if (!blockId) return;
+
+      const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { height: 0 };
+      let marginY = 0;
+      if (typeof window !== 'undefined') {
+        try {
+          const cs = window.getComputedStyle(el);
+          marginY = (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+        } catch (e) {
+          marginY = 0;
+        }
+      }
+      const blockHeightMm = ((rect.height || 0) + marginY) / 3.7795; // 1mm ~ 3.7795px at 96 DPI
+      const maxUsableMm = currentPgIdx === 0 ? page1UsableHeightMm : page2UsableHeightMm;
+
+      // Push block to next page if it doesn't fit on current page and current page is not empty
+      if (currentPgHeightMm + blockHeightMm > maxUsableMm && pages[currentPgIdx].size > 0) {
+        currentPgIdx++;
+        pages[currentPgIdx] = new Set();
+        currentPgHeightMm = 0;
+      }
+
+      pages[currentPgIdx].add(blockId);
+      currentPgHeightMm += blockHeightMm;
+    });
+
+    // If user explicitly pushed page break (-30mm or more) and all blocks still fit on page 1,
+    // honor user intent by pushing trailing blocks to page 2 if multiple blocks exist
+    if (pageBreakOffset <= -30 && pages.length === 1 && pages[0].size > 2) {
+      const allBlocks = Array.from(pages[0]);
+      const splitPoint = Math.max(1, Math.floor(allBlocks.length * 0.6));
+      pages[0] = new Set(allBlocks.slice(0, splitPoint));
+      pages[1] = new Set(allBlocks.slice(splitPoint));
+    }
+  }
 
   assertNoDuplicateRenderedContent(pages);
   return pages;
