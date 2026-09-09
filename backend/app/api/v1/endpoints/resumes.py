@@ -1,6 +1,7 @@
 import uuid
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user, AuthenticatedUser
@@ -9,6 +10,8 @@ from app.repositories.user_repository import UserRepository
 from app.repositories.activity_repository import ActivityRepository
 from app.db.schemas.schemas import ResumeCreateRequest, ResumeUpdateRequest, ResumeResponse
 from app.db.models.models import Resume
+from app.services.pdf_export_service import pdf_export_service
+from app.core.logging import logger
 
 router = APIRouter(prefix="/resumes", tags=["Resumes Management"])
 
@@ -176,3 +179,31 @@ async def get_public_resume(slug: str, db: Session = Depends(get_db)):
         "accent_color": resume.accent_color,
         "view_count": link.view_count
     }
+
+class PDFExportPayload(BaseModel):
+    html: str
+    filename: Optional[str] = "Resume.pdf"
+
+@router.post("/export-pdf")
+async def export_resume_pdf(payload: PDFExportPayload):
+    """
+    Canonical Chromium-based PDF Export endpoint for OpportunityX Resume platform.
+    Receives styled HTML DOM and generates an ATS-compliant, selectable-text A4 PDF.
+    """
+    if not payload.html or not payload.html.strip():
+        raise HTTPException(status_code=400, detail="HTML content cannot be empty.")
+    try:
+        pdf_bytes = await pdf_export_service.render_pdf(payload.html, payload.filename)
+        safe_filename = payload.filename or "Resume.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{safe_filename}"',
+                "Content-Type": "application/pdf"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Canonical PDF export failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"PDF export failed: {str(e)}")
+
