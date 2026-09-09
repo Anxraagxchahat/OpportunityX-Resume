@@ -1,9 +1,12 @@
 import React from 'react';
+import { shouldRenderBlock } from '../../../utils/paginationEngine';
 
-export const SkillsBlock = ({ skills, accentHex, variant = 'default' }) => {
+export const SkillsBlock = ({ skills, accentHex, variant = 'default', visibleBlockIds = null }) => {
   if (!skills) return null;
   const hasSkills = skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0 || skills.softSkills?.length > 0;
   if (!hasSkills) return null;
+
+  if (visibleBlockIds && !shouldRenderBlock('skills', visibleBlockIds)) return null;
 
   if (variant === 'tags') {
     const allSkills = [
@@ -13,7 +16,7 @@ export const SkillsBlock = ({ skills, accentHex, variant = 'default' }) => {
       ...(skills.softSkills || [])
     ];
     return (
-      <div className="flex flex-wrap gap-1.5 items-center">
+      <div data-block-id="skills" className="flex flex-wrap gap-1.5 items-center pdf-block pdf-skills-group">
         {allSkills.map((s, i) => (
           <span
             key={i}
@@ -35,7 +38,7 @@ export const SkillsBlock = ({ skills, accentHex, variant = 'default' }) => {
       ...(skills.softSkills || [])
     ];
     return (
-      <div className="flex flex-wrap gap-1.5 items-center">
+      <div data-block-id="skills" className="flex flex-wrap gap-1.5 items-center pdf-block pdf-skills-group">
         {allSkills.map((s, i) => (
           <span
             key={i}
@@ -51,7 +54,7 @@ export const SkillsBlock = ({ skills, accentHex, variant = 'default' }) => {
 
   if (variant === 'sidebar') {
     return (
-      <div className="space-y-1 text-[10px] text-white/80">
+      <div data-block-id="skills" className="space-y-1 text-[10px] text-white/80 pdf-block pdf-skills-group">
         {skills.languages?.length > 0 && <div className="leading-relaxed"><strong className="text-white">Languages:</strong> {skills.languages.join(', ')}</div>}
         {skills.frameworks?.length > 0 && <div className="leading-relaxed"><strong className="text-white">Frameworks:</strong> {skills.frameworks.join(', ')}</div>}
         {skills.tools?.length > 0 && <div className="leading-relaxed"><strong className="text-white">Tools:</strong> {skills.tools.join(', ')}</div>}
@@ -62,7 +65,7 @@ export const SkillsBlock = ({ skills, accentHex, variant = 'default' }) => {
 
   if (variant === 'inline') {
     return (
-      <div className="text-[10px] text-slate-700 space-y-0.5">
+      <div data-block-id="skills" className="text-[10px] text-slate-700 space-y-0.5 pdf-block pdf-skills-group">
         {skills.languages?.length > 0 && <div className="leading-relaxed"><strong className="text-slate-900 font-bold">Languages:</strong> {skills.languages.join(' · ')}</div>}
         {skills.frameworks?.length > 0 && <div className="leading-relaxed"><strong className="text-slate-900 font-bold">Frameworks:</strong> {skills.frameworks.join(' · ')}</div>}
         {skills.tools?.length > 0 && <div className="leading-relaxed"><strong className="text-slate-900 font-bold">Tools:</strong> {skills.tools.join(' · ')}</div>}
@@ -73,7 +76,7 @@ export const SkillsBlock = ({ skills, accentHex, variant = 'default' }) => {
 
   // default — grouped rows
   return (
-    <div className="text-xs space-y-1">
+    <div data-block-id="skills" className="text-xs space-y-1 pdf-block pdf-skills-group">
       {skills.languages?.length > 0 && <div className="leading-relaxed"><strong className="text-slate-900 font-bold">Languages:</strong> {skills.languages.join(', ')}</div>}
       {skills.frameworks?.length > 0 && <div className="leading-relaxed"><strong className="text-slate-900 font-bold">Frameworks:</strong> {skills.frameworks.join(', ')}</div>}
       {skills.tools?.length > 0 && <div className="leading-relaxed"><strong className="text-slate-900 font-bold">Tools & Technologies:</strong> {skills.tools.join(', ')}</div>}

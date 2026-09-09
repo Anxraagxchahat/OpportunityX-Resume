@@ -1,13 +1,18 @@
 import React from 'react';
+import { shouldRenderBlock } from '../../../utils/paginationEngine';
 
-export const ProjectBlock = ({ projects, accentHex, variant = 'default' }) => {
+export const ProjectBlock = ({ projects, accentHex, variant = 'default', visibleBlockIds = null }) => {
   if (!projects || projects.length === 0) return null;
 
+  const isVisible = (id) => shouldRenderBlock(id, visibleBlockIds);
+
   if (variant === 'compact') {
-    return projects.map((p) => {
+    return projects.map((p, i) => {
+      const blockId = `proj-${i}`;
+      if (!isVisible(blockId)) return null;
       const techStr = p.techStack || (Array.isArray(p.technologies) ? p.technologies.join(', ') : p.technologies) || '';
       return (
-        <div key={p.id} className="mb-2 last:mb-0">
+        <div key={p.id || i} data-block-id={blockId} className="mb-2 last:mb-0 pdf-block pdf-item">
           <div className="flex justify-between items-baseline text-xs font-bold text-slate-900">
             <span>{p.name || p.title}</span>
             {(p.link || p.url) && <span className="font-mono text-slate-500 text-[10px] font-normal">{p.link || p.url}</span>}
@@ -20,10 +25,12 @@ export const ProjectBlock = ({ projects, accentHex, variant = 'default' }) => {
   }
 
   if (variant === 'sidebar') {
-    return projects.map((p) => {
+    return projects.map((p, i) => {
+      const blockId = `proj-${i}`;
+      if (!isVisible(blockId)) return null;
       const techStr = p.techStack || (Array.isArray(p.technologies) ? p.technologies.join(', ') : p.technologies) || '';
       return (
-        <div key={p.id} className="mb-2 last:mb-0">
+        <div key={p.id || i} data-block-id={blockId} className="mb-2 last:mb-0 pdf-block pdf-item">
           <div className="text-[10px] font-bold text-white">{p.name || p.title}</div>
           {(p.link || p.url) && <div className="text-[9px] text-white/70 font-mono truncate">{p.link || p.url}</div>}
           {techStr && <div className="text-[9px] text-white/60 italic">{techStr}</div>}
@@ -33,10 +40,12 @@ export const ProjectBlock = ({ projects, accentHex, variant = 'default' }) => {
   }
 
   // default
-  return projects.map((p) => {
+  return projects.map((p, i) => {
+    const blockId = `proj-${i}`;
+    if (!isVisible(blockId)) return null;
     const techStr = p.techStack || (Array.isArray(p.technologies) ? p.technologies.join(', ') : p.technologies) || '';
     return (
-      <div key={p.id} className="mb-2.5 last:mb-0">
+      <div key={p.id || i} data-block-id={blockId} className="mb-2.5 last:mb-0 pdf-block pdf-item">
         <div className="flex justify-between items-baseline text-xs font-bold text-slate-900">
           <span>
             {p.name || p.title}
@@ -47,7 +56,7 @@ export const ProjectBlock = ({ projects, accentHex, variant = 'default' }) => {
         {p.description && <p className="text-[10px] text-slate-700 mt-0.5">{p.description}</p>}
         {p.bullets && (
           <ul className="list-disc pl-4 text-[10px] text-slate-700 mt-0.5 space-y-0.5">
-            {p.bullets.map((b, i) => b ? <li key={i}>{b}</li> : null)}
+            {p.bullets.map((b, idx) => b ? <li key={idx}>{b}</li> : null)}
           </ul>
         )}
       </div>
