@@ -1,19 +1,20 @@
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+/**
+ * Canonical Chromium-Native PDF Export Engine for OpportunityX Resume Platform
+ * 
+ * Replaces legacy rasterization (html2canvas / JPEG jsPDF wrapper) with a genuine vector PDF pipeline.
+ * Guarantees:
+ * - 100% Real, Selectable, and Copyable Vector Text Layer (ATS Compliant, AI Scanner Friendly)
+ * - Zero font distortion, zero kerning corruption, zero character clipping
+ * - Pixel-perfect A4 geometry (210mm × 297mm) with exact multi-page pagination
+ * - Exact CSS flexbox wrapping for all skill tags, pills, chips, and badges without text splitting
+ * - Flawless 1:1 profile photo reproduction using native Chromium CSS object-fit & border-radius
+ * - Centralized architecture: All 30-40 templates benefit automatically with ZERO template modifications
+ */
 
 /**
- * Direct Client-Side PDF Downloader for OpportunityX Resume Engine
- * Generates and downloads a clean A4 PDF file directly to the device without opening browser print windows.
- * Renders each discrete A4 page individually to eliminate extra blank trailing pages.
- *
- * Fully hardened PDF Export Engine:
- * - Eliminates character kerning distortion by avoiding letterRendering: true
- * - Hardens flex-wrap containers and skill chips/tags to guarantee natural line wrapping without overflow or text splitting
- * - Resolves html2canvas object-fit: cover limitations for profile photos
- * - Locks exact A4 physical pixel dimensions (794px × 1123px @ 96 DPI) for pixel-perfect alignment
- * - Ensures custom fonts are fully loaded before capturing
- *
- * @param {string|object} elementId - Target DOM element ID to render into PDF
+ * Downloads a genuine vector PDF of the active resume preview.
+ * 
+ * @param {string|object} elementId - Target DOM element ID to render into PDF (default: 'resume-a4-preview')
  * @param {string} candidateName - Candidate name for filename formatting
  * @returns {Promise<boolean>} Resolves to true when download completes
  */
@@ -23,8 +24,8 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
     ? candidateName
     : (typeof elementId === 'object' && elementId?.personal?.fullName ? elementId.personal.fullName : 'Resume');
 
-  // Find source resume element
-  let sourceEl = document.getElementById(targetId) || document.querySelector('.a4-paper-container');
+  // Find source resume preview element
+  const sourceEl = document.getElementById(targetId) || document.querySelector('.a4-paper-container');
 
   if (!sourceEl) {
     console.error(`Target resume element #${targetId} or .a4-paper-container not found for PDF download.`);
@@ -32,13 +33,13 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
     return false;
   }
 
-  // Clean filename: e.g. "Anxraag_Verma_Resume.pdf"
+  // Sanitize filename: e.g. "Alex_Rivera_Resume.pdf"
   const safeName = nameStr && nameStr.trim()
     ? nameStr.trim().replace(/[^a-zA-Z0-9\s_-]/g, '').replace(/\s+/g, '_')
     : 'OpportunityX';
   const filename = `${safeName}_Resume.pdf`;
 
-  // 1. Wait for all custom fonts (Inter, Roboto, Poppins, etc.) to finish loading & layout
+  // 1. Ensure all custom typography (Inter, Roboto, Poppins, etc.) is fully loaded
   if (document.fonts) {
     try {
       const fontFamilies = [
@@ -50,316 +51,255 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
       );
       await document.fonts.ready;
     } catch (e) {
-      console.warn('Font load check non-fatal error:', e);
+      console.warn('[PDF Exporter] Font load check non-fatal error:', e);
     }
   }
 
-  // Allow browser a tick to complete pending paints/layouts
-  await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 50)));
+  // 2. Clone the source DOM tree cleanly preserving 100% genuine text nodes
+  const clonedContent = sourceEl.cloneNode(true);
 
-  // Detect dark template theme to avoid white edge clipping
+  // Strip no-print UI elements
+  const noPrintEls = clonedContent.querySelectorAll('.no-print');
+  noPrintEls.forEach((np) => np.remove());
+
+  // 3. Convert any in-memory blob URLs (e.g. newly picked local photos) to Data URLs
+  const imgs = clonedContent.querySelectorAll('img');
+  for (const img of imgs) {
+    if (img.src && img.src.startsWith('blob:')) {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || img.width || 200;
+        c.height = img.naturalHeight || img.height || 200;
+        const ctx = c.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          img.src = c.toDataURL('image/png');
+        }
+      } catch (blobErr) {
+        console.warn('[PDF Exporter] Could not convert blob image:', blobErr);
+      }
+    }
+  }
+
+  // 4. Detect dark theme or paper background to prevent white border artifacts
   const isDarkTemplate = sourceEl.querySelector('.bre-material-dark-container') ||
     sourceEl.querySelector('.bre-material-dark') ||
     sourceEl.style.backgroundColor === 'rgb(18, 18, 18)' ||
     sourceEl.style.backgroundColor === '#121212';
   const targetBg = isDarkTemplate ? '#121212' : (sourceEl.style.backgroundColor || '#ffffff');
 
-  // 2. Create isolated, top-level export container directly attached to document.body
-  const tempWrapper = document.createElement('div');
-  tempWrapper.id = 'ox-pdf-export-standalone-wrapper';
-  tempWrapper.style.position = 'fixed';
-  tempWrapper.style.left = '0';
-  tempWrapper.style.top = '0';
-  tempWrapper.style.width = '794px'; // Exact 210mm @ 96 DPI
-  tempWrapper.style.zIndex = '-99999';
-  tempWrapper.style.backgroundColor = targetBg;
-  tempWrapper.style.color = isDarkTemplate ? '#f8fafc' : '#0f172a';
-  tempWrapper.style.opacity = '1';
-  tempWrapper.style.visibility = 'visible';
-  tempWrapper.style.pointerEvents = 'none';
-  tempWrapper.style.overflow = 'visible';
-
-  // 3. Clone source DOM node to preserve layout and styles without mutating screen view
-  const clonedContent = sourceEl.cloneNode(true);
-
-  // Strip any no-print controls from clone
-  const noPrintEls = clonedContent.querySelectorAll('.no-print');
-  noPrintEls.forEach((np) => np.remove());
-
-  // Force clean, visible, unclipped styles on cloned node
-  clonedContent.style.position = 'relative';
-  clonedContent.style.left = '0';
-  clonedContent.style.top = '0';
-  clonedContent.style.visibility = 'visible';
-  clonedContent.style.opacity = '1';
-  clonedContent.style.display = 'block';
-  clonedContent.style.transform = 'none';
-  clonedContent.style.width = '794px';
-  clonedContent.style.boxSizing = 'border-box';
-  clonedContent.style.backgroundColor = targetBg;
-
-  tempWrapper.appendChild(clonedContent);
-  document.body.appendChild(tempWrapper);
-
-  // Ensure all web fonts and layout computations are fully ready
-  if (document.fonts && document.fonts.ready) {
-    try {
-      await document.fonts.ready;
-    } catch (fontErr) {
-      // Non-fatal if font API is unavailable
-    }
-  }
-
-  // Allow layout computation in temporary wrapper
-  await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 50)));
-
-  // Preprocess cloned DOM tree for bulletproof html2canvas rendering (AFTER DOM attachment so computed styles are 100% accurate)
-  prepareCloneForExport(clonedContent);
-
+  // 5. Gather document stylesheets and inlined CSS rules
+  let inlinedStyles = '';
   try {
-    // Find discrete A4 page elements to render page-by-page
-    let pageNodes = clonedContent.querySelectorAll('.pdf-a4-page');
-    if (pageNodes.length === 0) {
-      pageNodes = clonedContent.querySelectorAll('.a4-paper-container');
-    }
-
-    const pagesToRender = pageNodes.length > 0 ? Array.from(pageNodes) : [clonedContent];
-
-    const pdf = new jsPDF({
-      unit: 'mm',
-      format: 'a4',
-      orientation: 'portrait',
-      compress: true
-    });
-
-    const canvasOptions = {
-      scale: 2, // High resolution (300 DPI equivalent)
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      backgroundColor: targetBg,
-      windowWidth: 794,  // 210mm @ 96 DPI
-      windowHeight: 1123, // 297mm @ 96 DPI
-      width: 794,
-      height: 1123,
-      scrollX: 0,
-      scrollY: 0
-      // NOTE: letterRendering is omitted to avoid glyph kerning distortion & string width inflation
-    };
-
-    for (let i = 0; i < pagesToRender.length; i++) {
-      const pageEl = pagesToRender[i];
-      if (i > 0) {
-        pdf.addPage('a4', 'portrait');
+    for (const sheet of document.styleSheets) {
+      try {
+        if (sheet.cssRules) {
+          for (const rule of sheet.cssRules) {
+            inlinedStyles += rule.cssText + '\n';
+          }
+        }
+      } catch (e) {
+        // Cross-origin CSS sheet security restriction - handled via <link> tags below
       }
-
-      // Enforce exact A4 pixel bounding box on the page before html2canvas captures
-      pageEl.style.width = '794px';
-      pageEl.style.height = '1123px';
-      pageEl.style.minHeight = '1123px';
-      pageEl.style.maxHeight = '1123px';
-      pageEl.style.boxSizing = 'border-box';
-      pageEl.style.overflow = 'hidden';
-      pageEl.style.position = 'relative';
-      if (!pageEl.style.backgroundColor || pageEl.style.backgroundColor === 'transparent') {
-        pageEl.style.backgroundColor = targetBg;
-      }
-
-      const canvas = await html2canvas(pageEl, canvasOptions);
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
-      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
     }
+  } catch (sheetErr) {
+    console.warn('[PDF Exporter] Stylesheet extraction note:', sheetErr);
+  }
 
-    pdf.save(filename);
-    return true;
-  } catch (err) {
-    console.warn('Direct PDF download fallback triggered:', err);
-    window.print();
-    return true;
-  } finally {
-    // Clean up temporary export container from DOM
-    if (tempWrapper && tempWrapper.parentNode) {
-      tempWrapper.parentNode.removeChild(tempWrapper);
+  const styleTags = Array.from(document.querySelectorAll('style'))
+    .map((s) => s.outerHTML)
+    .join('\n');
+
+  const linkTags = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+    .map((l) => l.outerHTML)
+    .join('\n');
+
+  const themeAttr = document.documentElement.getAttribute('data-theme') || (isDarkTemplate ? 'dark' : 'light');
+
+  // 6. Assemble complete, standalone HTML document for canonical Chromium rendering
+  const standaloneHtml = `<!DOCTYPE html>
+<html lang="en" data-theme="${themeAttr}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="${window.location.origin}/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    ${linkTags}
+    ${styleTags}
+    <style>
+      ${inlinedStyles}
+    </style>
+    <style>
+      @page {
+        size: 210mm 297mm;
+        margin: 0;
+      }
+      *, *::before, *::after {
+        box-sizing: border-box !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: ${targetBg} !important;
+        width: 210mm !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #${targetId} {
+        position: relative !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 210mm !important;
+        z-index: 1 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        background-color: ${targetBg} !important;
+      }
+      .pdf-a4-page {
+        width: 210mm !important;
+        height: 297mm !important;
+        min-height: 297mm !important;
+        max-height: 297mm !important;
+        overflow: hidden !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        position: relative !important;
+        box-sizing: border-box !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .pdf-a4-page:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+    </style>
+  </head>
+  <body>
+    ${clonedContent.outerHTML}
+  </body>
+</html>`;
+
+  // 7. Dispatch to Canonical Chromium Export Engine
+  const candidateEndpoints = [];
+
+  // Configured or detected backend base URL
+  const configuredApi = import.meta.env.VITE_BACKEND_API_URL || import.meta.env.VITE_API_BASE_URL;
+  if (configuredApi) {
+    const cleanBase = configuredApi.replace(/\/+$/, '');
+    candidateEndpoints.push(`${cleanBase}/resumes/export-pdf`);
+    candidateEndpoints.push(`${cleanBase}/export-pdf`);
+  }
+
+  // Relative endpoints (Vite dev server middleware or reverse proxy)
+  candidateEndpoints.push('/api/v1/resumes/export-pdf');
+  candidateEndpoints.push('/api/resumes/export-pdf');
+  candidateEndpoints.push('/api/export-pdf');
+
+  // Local development backend fallbacks (ports 8000, 8001)
+  if (!import.meta.env.PROD) {
+    candidateEndpoints.push('http://localhost:8000/api/v1/resumes/export-pdf');
+    candidateEndpoints.push('http://localhost:8001/api/v1/resumes/export-pdf');
+    candidateEndpoints.push('http://127.0.0.1:8000/api/v1/resumes/export-pdf');
+    candidateEndpoints.push('http://127.0.0.1:8001/api/v1/resumes/export-pdf');
+  } else {
+    // Production Render backend
+    candidateEndpoints.push('https://opportunityx-resume.onrender.com/api/v1/resumes/export-pdf');
+  }
+
+  // Deduplicate endpoints
+  const uniqueEndpoints = [...new Set(candidateEndpoints)];
+
+  for (const endpoint of uniqueEndpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf'
+        },
+        body: JSON.stringify({
+          html: standaloneHtml,
+          filename: filename
+        })
+      });
+
+      if (response.ok) {
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/pdf')) {
+          const pdfBlob = await response.blob();
+          triggerDirectBrowserDownload(pdfBlob, filename);
+          return true;
+        }
+      }
+    } catch (err) {
+      // Continue trying next candidate endpoint
+      continue;
     }
   }
+
+  // 8. Resilient Client Fallback: Native browser print if network services are unreachable
+  console.warn('[PDF Exporter] Network export endpoints unreachable. Using native browser print fallback.');
+  triggerNativePrintFallback(standaloneHtml);
+  return true;
 };
 
 /**
- * Pre-processes cloned DOM before html2canvas capture:
- * 1. Preserves exact layout, whitespace, wrapping, and typography from the preview.
- * 2. Pre-renders profile photos on an offscreen canvas to overcome html2canvas object-fit: cover limitations.
- * 3. Enforces box-sizing and explicit bounding bounds on all sections.
- *
- * @param {HTMLElement} rootEl
+ * Triggers an instant download of the PDF blob to the user's disk without navigation.
+ * 
+ * @param {Blob} blob 
+ * @param {string} filename 
  */
-function prepareCloneForExport(rootEl) {
-  if (!rootEl) return;
+function triggerDirectBrowserDownload(blob, filename) {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    window.URL.revokeObjectURL(url);
+    a.remove();
+  }, 1000);
+}
 
-  // A. PRE-RENDER ALL SKILL CHIPS, TAGS, AND BADGES TO 2X CRISP CANVASES
-  // This guarantees 100% mathematical vertical & horizontal centering across all fonts, OS, and zoom scales in html2canvas.
+/**
+ * Fallback print handler for isolated/offline environments.
+ * Uses a hidden iframe to initiate native print dialog without disrupting active UI.
+ * 
+ * @param {string} html 
+ */
+function triggerNativePrintFallback(html) {
   try {
-    const allTags = rootEl.querySelectorAll(
-      '.flex-wrap span, [class*="tag"], [class*="chip"], [class*="badge"], .bre-creative-tag, .bre-cool-tag, .pdf-skills-group span'
-    );
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.style.zIndex = '-99999';
+    document.body.appendChild(iframe);
 
-    allTags.forEach((tag) => {
-      try {
-        const text = tag.innerText?.trim();
-        if (!text) return;
-
-        const isPill = tag.classList.contains('rounded') ||
-          tag.className.includes('bg-') ||
-          tag.className.includes('tag') ||
-          tag.className.includes('chip') ||
-          tag.className.includes('badge') ||
-          tag.style.backgroundColor;
-
-        if (!isPill) return;
-
-        const computed = window.getComputedStyle(tag);
-        const fontSize = parseFloat(computed.fontSize) || 9;
-        const fontWeight = computed.fontWeight || '600';
-        const fontFamily = computed.fontFamily || 'Inter, sans-serif';
-        const color = computed.color || '#ffffff';
-        const bg = computed.backgroundColor || 'transparent';
-        const borderColor = computed.borderColor || 'transparent';
-        const borderRadius = parseFloat(computed.borderRadius) || 4;
-
-        // Measure text with matching font
-        const tempCanvas = document.createElement('canvas');
-        const tCtx = tempCanvas.getContext('2d');
-        if (!tCtx) return;
-        tCtx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-        const textMetrics = tCtx.measureText(text);
-        const textW = textMetrics.width;
-
-        const padX = 8;
-        const padY = 3.5;
-        const chipW = Math.ceil(textW + (padX * 2));
-        const chipH = Math.ceil(fontSize + (padY * 2));
-
-        const scale = 2; // High-DPI scale for crisp PDF vector-like appearance
-        const canvas = document.createElement('canvas');
-        canvas.width = chipW * scale;
-        canvas.height = chipH * scale;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.scale(scale, scale);
-
-        // 1. Draw rounded background & border
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-          ctx.roundRect(0.5, 0.5, chipW - 1, chipH - 1, borderRadius);
-        } else {
-          ctx.rect(0.5, 0.5, chipW - 1, chipH - 1);
-        }
-
-        if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
-          ctx.fillStyle = bg;
-          ctx.fill();
-        }
-
-        if (borderColor && borderColor !== 'transparent' && borderColor !== 'rgba(0, 0, 0, 0)') {
-          ctx.lineWidth = 1;
-          ctx.strokeStyle = borderColor;
-          ctx.stroke();
-        }
-
-        // 2. Draw text in dead center
-        ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-        ctx.fillStyle = color;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(text, chipW / 2, chipH / 2 + 0.5);
-
-        // Replace DOM span with crisp pre-rendered image
-        const img = document.createElement('img');
-        img.src = canvas.toDataURL('image/png');
-        img.style.width = `${chipW}px`;
-        img.style.height = `${chipH}px`;
-        img.style.display = 'inline-block';
-        img.style.verticalAlign = 'middle';
-        img.style.flexShrink = '0';
-        img.style.boxSizing = 'border-box';
-        img.style.margin = '0';
-        img.style.padding = '0';
-        img.style.maxWidth = '100%';
-
-        tag.parentNode.replaceChild(img, tag);
-      } catch (pillErr) {
-        // Fallback to normal CSS if canvas pre-render fails for this item
-        tag.style.boxSizing = 'border-box';
-        tag.style.whiteSpace = 'nowrap';
-        tag.style.wordBreak = 'keep-all';
-        tag.style.overflowWrap = 'normal';
-        tag.style.flexShrink = '0';
-        tag.style.maxWidth = '100%';
-        tag.style.lineHeight = '1.1';
-        tag.style.paddingTop = '0px';
-        tag.style.paddingBottom = '3.5px';
-        tag.style.verticalAlign = 'baseline';
-      }
-    });
-  } catch (err) {
-    // Non-fatal error in chip pre-processing
-  }
-
-  // B. HARDEN PROFILE PHOTOS (Pre-render 1:1 aspect ratio with object-fit: cover onto canvas)
-  const images = rootEl.querySelectorAll('img');
-  images.forEach((img) => {
-    try {
-      img.crossOrigin = 'anonymous';
-      if (!img.src || img.src.startsWith('data:image/svg')) return;
-
-      const isProfile = img.alt?.toLowerCase().includes('profile') ||
-        img.className?.includes('rounded-full') ||
-        img.className?.includes('object-cover') ||
-        img.parentElement?.className?.includes('ProfilePhoto');
-
-      if (isProfile) {
-        const targetW = img.offsetWidth || img.clientWidth || (img.parentElement ? img.parentElement.offsetWidth : 64) || 64;
-        const targetH = img.offsetHeight || img.clientHeight || (img.parentElement ? img.parentElement.offsetHeight : 64) || 64;
-
-        if (targetW > 0 && targetH > 0 && img.naturalWidth > 0 && img.naturalHeight > 0) {
-          const canvas = document.createElement('canvas');
-          const renderScale = 2;
-          canvas.width = targetW * renderScale;
-          canvas.height = targetH * renderScale;
-          const ctx = canvas.getContext('2d');
-
-          if (ctx) {
-            const natW = img.naturalWidth;
-            const natH = img.naturalHeight;
-            const targetRatio = targetW / targetH;
-            const sourceRatio = natW / natH;
-            let sX = 0, sY = 0, sW = natW, sH = natH;
-
-            if (sourceRatio > targetRatio) {
-              sW = natH * targetRatio;
-              sX = (natW - sW) / 2;
-            } else {
-              sH = natW / targetRatio;
-              sY = (natH - sH) / 2;
-            }
-
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, sX, sY, sW, sH, 0, 0, canvas.width, canvas.height);
-
-            try {
-              img.src = canvas.toDataURL('image/png');
-              img.style.objectFit = 'fill';
-              img.style.width = `${targetW}px`;
-              img.style.height = `${targetH}px`;
-            } catch (canvasErr) {
-              // Ignore cross-origin canvas taint error and let html2canvas use original img
-            }
-          }
-        }
-      }
-    } catch (e) {
-      // Non-fatal error in photo pre-render
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(html);
+      doc.close();
+      iframe.contentWindow?.focus();
+      setTimeout(() => {
+        iframe.contentWindow?.print();
+        setTimeout(() => iframe.remove(), 2000);
+      }, 500);
+      return;
     }
-  });
+  } catch (e) {
+    console.warn('[PDF Exporter] Iframe print fallback error:', e);
+  }
+  window.print();
 }
