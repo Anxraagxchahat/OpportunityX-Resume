@@ -1,44 +1,66 @@
 import React from 'react';
+import { shouldRenderBlock } from '../../../utils/paginationEngine';
 
-export const CertificatesBlock = ({ certificates, accentHex, variant = 'default' }) => {
+export const CertificatesBlock = ({ certificates, accentHex, variant = 'default', visibleBlockIds = null }) => {
   if (!certificates || certificates.length === 0) return null;
 
+  const isVisible = (id) => shouldRenderBlock(id, visibleBlockIds);
+
   if (variant === 'sidebar') {
-    return certificates.map((c) => (
-      <div key={c.id} className="mb-1.5 last:mb-0">
-        <div className="text-[10px] font-bold text-white leading-tight">{c.name}</div>
-        <div className="text-[9px] text-white/60">{c.issuer}{c.date ? ` · ${c.date}` : ''}</div>
-      </div>
-    ));
+    return certificates.map((c, i) => {
+      const blockId = `cert-${i}`;
+      if (!isVisible(blockId)) return null;
+      return (
+        <div key={c.id || i} data-block-id={blockId} className="mb-1.5 last:mb-0 pdf-block pdf-item">
+          <div className="text-[10px] font-bold text-white leading-tight">{c.name}</div>
+          <div className="text-[9px] text-white/60">{c.issuer}{c.date ? ` · ${c.date}` : ''}</div>
+        </div>
+      );
+    });
   }
 
-  return certificates.map((c) => (
-    <div key={c.id} className="mb-1.5 last:mb-0 text-[10px] leading-relaxed">
-      <span className="font-bold text-slate-900">{c.name}</span>
-      <span className="text-slate-500 ml-1">— {c.issuer}{c.date ? `, ${c.date}` : ''}</span>
-    </div>
-  ));
+  return certificates.map((c, i) => {
+    const blockId = `cert-${i}`;
+    if (!isVisible(blockId)) return null;
+    return (
+      <div key={c.id || i} data-block-id={blockId} className="mb-1.5 last:mb-0 text-[10px] leading-relaxed pdf-block pdf-item">
+        <span className="font-bold text-slate-900">{c.name}</span>
+        <span className="text-slate-500 ml-1">— {c.issuer}{c.date ? `, ${c.date}` : ''}</span>
+      </div>
+    );
+  });
 };
 
-export const AchievementsBlock = ({ achievements, accentHex, variant = 'default' }) => {
+export const AchievementsBlock = ({ achievements, accentHex, variant = 'default', visibleBlockIds = null }) => {
   if (!achievements || achievements.length === 0) return null;
 
+  const isVisible = (id) => shouldRenderBlock(id, visibleBlockIds);
+
   if (variant === 'sidebar') {
-    return achievements.map((a) => (
-      <div key={a.id} className="mb-1 last:mb-0 text-[10px] text-white/80 leading-relaxed">• {a.title}</div>
-    ));
+    return achievements.map((a, i) => {
+      const blockId = `achieve-${i}`;
+      if (!isVisible(blockId)) return null;
+      return (
+        <div key={a.id || i} data-block-id={blockId} className="mb-1 last:mb-0 text-[10px] text-white/80 leading-relaxed pdf-block pdf-item">• {a.title}</div>
+      );
+    });
   }
 
-  return achievements.map((a) => (
-    <div key={a.id} className="mb-1 last:mb-0 text-[10px] text-slate-700 leading-relaxed">
-      <span className="font-bold text-slate-900">{a.title}</span>
-      {a.description && <span className="ml-1 text-slate-600">— {a.description}</span>}
-    </div>
-  ));
+  return achievements.map((a, i) => {
+    const blockId = `achieve-${i}`;
+    if (!isVisible(blockId)) return null;
+    return (
+      <div key={a.id || i} data-block-id={blockId} className="mb-1 last:mb-0 text-[10px] text-slate-700 leading-relaxed pdf-block pdf-item">
+        <span className="font-bold text-slate-900">{a.title}</span>
+        {a.description && <span className="ml-1 text-slate-600">— {a.description}</span>}
+      </div>
+    );
+  });
 };
 
-export const LanguagesBlock = ({ languages, variant = 'default' }) => {
+export const LanguagesBlock = ({ languages, variant = 'default', visibleBlockIds = null }) => {
   if (!languages || languages.length === 0) return null;
+  if (visibleBlockIds && !shouldRenderBlock('languages', visibleBlockIds)) return null;
 
   const formatted = languages.map((l) => {
     if (typeof l === 'string') return { name: l, proficiency: '' };
@@ -52,7 +74,7 @@ export const LanguagesBlock = ({ languages, variant = 'default' }) => {
 
   if (variant === 'sidebar') {
     return (
-      <div className="flex flex-wrap gap-1.5 items-center">
+      <div data-block-id="languages" className="flex flex-wrap gap-1.5 items-center pdf-block">
         {formatted.map((l, idx) => (
           <span
             key={idx}
@@ -67,7 +89,7 @@ export const LanguagesBlock = ({ languages, variant = 'default' }) => {
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5 text-[10px]">
+    <div data-block-id="languages" className="flex flex-wrap gap-1.5 text-[10px] pdf-block">
       {formatted.map((l, idx) => (
         <span key={idx} className="text-slate-700 leading-relaxed mr-2">
           <strong>{l.name}</strong>{l.proficiency ? ` (${l.proficiency})` : ''}
