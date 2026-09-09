@@ -1,8 +1,10 @@
 import React from 'react';
 import { Globe, GitBranch, Share2, ExternalLink } from 'lucide-react';
+import { shouldRenderBlock } from '../../../utils/paginationEngine';
 
-export const SocialLinksBlock = ({ personal, accentHex, variant = 'default' }) => {
+export const SocialLinksBlock = ({ personal, accentHex, variant = 'default', visibleBlockIds = null }) => {
   if (!personal) return null;
+  if (visibleBlockIds && !shouldRenderBlock('profiles', visibleBlockIds)) return null;
 
   const websiteLink = personal?.website || personal?.portfolio;
   const githubLink = personal?.github;
@@ -23,7 +25,7 @@ export const SocialLinksBlock = ({ personal, accentHex, variant = 'default' }) =
 
   if (variant === 'compact') {
     return (
-      <div className="space-y-1 text-xs">
+      <div data-block-id="profiles" className="space-y-1 text-xs pdf-block pdf-item pdf-keep-together break-inside-avoid">
         <h2 className="font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5" style={{ borderColor: accentHex }}>
           Social & Portfolio Links
         </h2>
@@ -41,7 +43,7 @@ export const SocialLinksBlock = ({ personal, accentHex, variant = 'default' }) =
 
   // default / inline
   return (
-    <div className="space-y-1.5 text-xs pdf-block pdf-item pdf-keep-together break-inside-avoid">
+    <div data-block-id="profiles" className="space-y-1.5 text-xs pdf-block pdf-item pdf-keep-together break-inside-avoid">
       <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 pb-0.5 border-b pdf-section-header" style={{ borderColor: accentHex }}>
         Profiles & Portfolio Links
       </h2>
