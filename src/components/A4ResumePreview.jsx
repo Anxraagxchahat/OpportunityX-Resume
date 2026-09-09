@@ -22,7 +22,7 @@ import { useResume } from '../context/ResumeContext';
 import { trackEvent, AnalyticsEvents } from '../utils/analytics';
 import { TEMPLATE_REGISTRY, TEMPLATE_CATEGORIES } from '../templates';
 import { downloadDirectPDF } from '../utils/pdfDownloader';
-import { computePageAssignments } from '../utils/paginationEngine';
+import { computePageAssignments, BLOCK_PAGINATED_TEMPLATES } from '../utils/paginationEngine';
 
 export const fontOptions = [
   { id: 'Inter', name: 'Inter' },
@@ -138,8 +138,8 @@ export const A4ResumePreview = () => {
 
   const handlePushToPageTwo = () => {
     const currentOffset = Number(style?.pageBreakOffset) || 0;
-    // Jump by -45mm on first click to immediately push sections to Page 2, then step by -30mm
-    const nextOffset = currentOffset === 0 ? -45 : Math.max(-140, currentOffset - 30);
+    // Jump by -60mm on first click to immediately push lower sections to Page 2, then step by -30mm
+    const nextOffset = currentOffset === 0 ? -60 : Math.max(-140, currentOffset - 30);
     updateStyle('pageBreakOffset', nextOffset);
     if (!style?.page2TopMargin) {
       updateStyle('page2TopMargin', 10);
@@ -181,7 +181,8 @@ export const A4ResumePreview = () => {
           pageMargin,
           pageBreakOffset,
           showPage2Header,
-          page2TopMargin
+          page2TopMargin,
+          template
         });
         setPageAssignments(computedPages);
         setTotalPages(Math.max(1, computedPages.length));
@@ -485,10 +486,20 @@ export const A4ResumePreview = () => {
         }}
       >
         {Array.from({ length: totalPages }).map((_, pageIdx) => {
+          // Page 1 cutoff Y on physical sheet
+          const page1CutoffMm = 297 + Math.min(0, pageBreakOffset);
+          const page1ContentHeightMm = Math.max(10, page1CutoffMm - effectiveTopPadMm);
+
           const page2TextStartYMm = pageIdx > 0
             ? (showPage2Header ? effectiveTopPadMm + 14 + Math.max(0, page2TopMargin - 10) : effectiveTopPadMm + Math.max(0, page2TopMargin - 10))
             : 0;
+
+          const effectiveTopOffsetMm = pageIdx === 0
+            ? 0
+            : -(page1ContentHeightMm * pageIdx);
+
           const assignedBlocks = pageAssignments[pageIdx] || null;
+          const hasBlockFiltering = Boolean(assignedBlocks && assignedBlocks.size > 0);
 
           return (
             <div
@@ -529,40 +540,49 @@ export const A4ResumePreview = () => {
                   top: pageIdx === 0 ? 0 : `${page2TextStartYMm}mm`,
                   left: 0,
                   width: '210mm',
-                  height: pageIdx === 0 ? '297mm' : `${297 - page2TextStartYMm}mm`,
-                  overflow: 'hidden',
-                  paddingTop: pageIdx === 0 ? `${effectiveTopPadMm}mm` : 0,
-                  paddingLeft: `${effectiveSidePadMm}mm`,
-                  paddingRight: `${effectiveSidePadMm}mm`,
-                  paddingBottom: `${effectiveTopPadMm}mm`,
-                  boxSizing: 'border-box'
+                  height: pageIdx === 0 ? (totalPages > 1 && !hasBlockFiltering ? `${page1CutoffMm}mm` : '297mm') : `${297 - page2TextStartYMm}mm`,
+                  overflow: 'hidden'
                 }}
               >
-                <Suspense fallback={null}>
-                  <SelectedTemplateComponent
-                    resumeData={activeResume}
-                    accentHex={accentHex}
-                    fontFamily={fontFamily}
-                    visibleBlockIds={assignedBlocks}
-                  />
-                </Suspense>
+                <div
+                  style={{
+                    position: 'relative',
+                    top: hasBlockFiltering ? 0 : `${effectiveTopOffsetMm}mm`,
+                    left: 0,
+                    width: '210mm',
+                    paddingTop: pageIdx === 0 ? `${effectiveTopPadMm}mm` : 0,
+                    paddingLeft: `${effectiveSidePadMm}mm`,
+                    paddingRight: `${effectiveSidePadMm}mm`,
+                    paddingBottom: `${effectiveTopPadMm}mm`,
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <Suspense fallback={null}>
+                    <SelectedTemplateComponent
+                      resumeData={activeResume}
+                      accentHex={accentHex}
+                      fontFamily={fontFamily}
+                      visibleBlockIds={hasBlockFiltering ? assignedBlocks : null}
+                    />
+                  </Suspense>
 
-                {pageIdx === totalPages - 1 && (
-                  <>
-                    {assets?.digitalSignature && (
-                      <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
-                        <div className="text-center">
-                          <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
-                          <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                  {pageIdx === totalPages - 1 && (
+                    <>
+                      {assets?.digitalSignature && (
+                        <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
+                          <div className="text-center">
+                            <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
+                            <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                          </div>
                         </div>
+                      )}
+                      <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+                        <span>OpportunityX Resume Engine</span>
+                        <span>resume.opportunityx.co.in</span>
                       </div>
-                    )}
-                    <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
-                      <span>OpportunityX Resume Engine</span>
-                      <span>resume.opportunityx.co.in</span>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -658,41 +678,57 @@ export const A4ResumePreview = () => {
                         top: pageIdx === 0 ? 0 : `${page2TextStartYMm}mm`,
                         left: 0,
                         width: '210mm',
-                        height: pageIdx === 0 ? '297mm' : `${297 - page2TextStartYMm}mm`,
-                        overflow: 'hidden',
-                        paddingTop: pageIdx === 0 ? `${effectiveTopPadMm}mm` : 0,
-                        paddingLeft: `${effectiveSidePadMm}mm`,
-                        paddingRight: `${effectiveSidePadMm}mm`,
-                        paddingBottom: `${effectiveTopPadMm}mm`,
-                        boxSizing: 'border-box'
+                        height: pageIdx === 0 ? (totalPages > 1 && !(pageAssignments[0] && pageAssignments[0].size > 0) ? `${page1CutoffMm}mm` : '297mm') : `${297 - page2TextStartYMm}mm`,
+                        overflow: 'hidden'
                       }}
                     >
-                      <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400 animate-pulse">Loading Template Engine...</div>}>
-                        <SelectedTemplateComponent
-                          resumeData={activeResume}
-                          accentHex={accentHex}
-                          fontFamily={fontFamily}
-                          visibleBlockIds={pageAssignments[pageIdx] || null}
-                        />
-                      </Suspense>
+                      {(() => {
+                        const currentAssignedBlocks = pageAssignments[pageIdx] || null;
+                        const hasBlockFiltering = Boolean(currentAssignedBlocks && currentAssignedBlocks.size > 0);
 
-                      {/* Signature & Watermark on Last Page */}
-                      {pageIdx === totalPages - 1 && (
-                        <>
-                          {assets?.digitalSignature && (
-                            <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
-                              <div className="text-center">
-                                <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
-                                <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
-                              </div>
-                            </div>
-                          )}
-                          <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
-                            <span>OpportunityX Resume Engine</span>
-                            <span>resume.opportunityx.co.in</span>
+                        return (
+                          <div
+                            style={{
+                              position: 'relative',
+                              top: hasBlockFiltering ? 0 : `${effectiveTopOffsetMm}mm`,
+                              left: 0,
+                              width: '210mm',
+                              paddingTop: pageIdx === 0 ? `${effectiveTopPadMm}mm` : 0,
+                              paddingLeft: `${effectiveSidePadMm}mm`,
+                              paddingRight: `${effectiveSidePadMm}mm`,
+                              paddingBottom: `${effectiveTopPadMm}mm`,
+                              boxSizing: 'border-box'
+                            }}
+                          >
+                            <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400 animate-pulse">Loading Template Engine...</div>}>
+                              <SelectedTemplateComponent
+                                resumeData={activeResume}
+                                accentHex={accentHex}
+                                fontFamily={fontFamily}
+                                visibleBlockIds={hasBlockFiltering ? currentAssignedBlocks : null}
+                              />
+                            </Suspense>
+
+                            {/* Signature & Watermark on Last Page */}
+                            {pageIdx === totalPages - 1 && (
+                              <>
+                                {assets?.digitalSignature && (
+                                  <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end">
+                                    <div className="text-center">
+                                      <img src={assets.digitalSignature} alt="Digital Signature" className="h-10 object-contain mx-auto" />
+                                      <div className="text-[10px] text-slate-500 font-semibold pt-1">Signed via OpportunityX Engine</div>
+                                    </div>
+                                  </div>
+                                )}
+                                <div className="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+                                  <span>OpportunityX Resume Engine</span>
+                                  <span>resume.opportunityx.co.in</span>
+                                </div>
+                              </>
+                            )}
                           </div>
-                        </>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
 
