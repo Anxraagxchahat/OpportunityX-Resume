@@ -30,8 +30,9 @@ import {
   UnauthorizedPage,
   ForbiddenPage,
   ServerErrorPage,
-  MaintenancePage
 } from './pages/ErrorPages';
+import { MaintenancePage as GlobalMaintenancePage } from './pages/MaintenancePage';
+import { MAINTENANCE_MODE } from './config/maintenance';
 
 // Route-level Code Splitting for Performance
 const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
@@ -129,6 +130,10 @@ function AuthModalWrapper() {
 }
 
 export function App() {
+  if (MAINTENANCE_MODE) {
+    return <GlobalMaintenancePage />;
+  }
+
   return (
     <ThemeProvider>
       <AuthProvider>
