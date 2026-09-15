@@ -1,19 +1,21 @@
 import { auth } from '../firebase';
 
-// Smart multi-port detection for local development (supports 8001, 8000, 8002, or Render in prod)
+// Smart multi-port detection for local development with seamless live production backend fallback
+const PRODUCTION_API_URL = 'https://api-resume.opportunityx.co.in/api/v1';
 const DEFAULT_LOCAL_URL = 'http://localhost:8000/api/v1';
-const FALLBACK_LOCAL_URLS = [
+const FALLBACK_URLS = [
   'http://localhost:8000/api/v1',
   'http://localhost:8001/api/v1',
   'http://127.0.0.1:8000/api/v1',
-  'http://127.0.0.1:8001/api/v1'
+  'http://127.0.0.1:8001/api/v1',
+  PRODUCTION_API_URL
 ];
 
 let cachedBaseUrl =
   import.meta.env.VITE_BACKEND_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD
-    ? 'https://api-resume.opportunityx.co.in/api/v1'
+    ? PRODUCTION_API_URL
     : DEFAULT_LOCAL_URL);
 
 async function getAuthToken() {
@@ -51,22 +53,20 @@ async function request(endpoint, options = {}) {
   } catch (netErr) {
     lastNetErr = netErr;
 
-    // In development: auto-probe fallback ports if primary port fails
-    if (!import.meta.env.PROD) {
-      for (const fallbackUrl of FALLBACK_LOCAL_URLS) {
-        if (fallbackUrl === cachedBaseUrl) continue;
-        try {
-          const fallbackRes = await fetch(`${fallbackUrl}${endpoint}`, {
-            ...options,
-            headers
-          });
-          cachedBaseUrl = fallbackUrl;
-          response = fallbackRes;
-          lastNetErr = null;
-          break;
-        } catch (fbErr) {
-          // Continue probing
-        }
+    // Auto-probe fallback URLs if primary/cached URL fails (local dev ports or live backend)
+    for (const fallbackUrl of FALLBACK_URLS) {
+      if (fallbackUrl === cachedBaseUrl) continue;
+      try {
+        const fallbackRes = await fetch(`${fallbackUrl}${endpoint}`, {
+          ...options,
+          headers
+        });
+        cachedBaseUrl = fallbackUrl;
+        response = fallbackRes;
+        lastNetErr = null;
+        break;
+      } catch (fbErr) {
+        // Continue probing
       }
     }
   }

@@ -1,3 +1,5 @@
+import os
+import json
 import jwt
 import firebase_admin
 from firebase_admin import credentials, auth
@@ -5,6 +7,18 @@ from app.core.config import settings
 
 def init_firebase():
     if not firebase_admin._apps:
+        # 1. Check for full service account JSON (Radar style)
+        sa_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON") or getattr(settings, "FIREBASE_SERVICE_ACCOUNT_JSON", "")
+        if sa_json:
+            try:
+                cred_dict = json.loads(sa_json) if isinstance(sa_json, str) else sa_json
+                cred = credentials.Certificate(cred_dict)
+                firebase_admin.initialize_app(cred)
+                return True
+            except Exception:
+                pass
+
+        # 2. Check individual email/private key settings
         client_email = settings.FIREBASE_CLIENT_EMAIL
         raw_key = settings.FIREBASE_PRIVATE_KEY or ""
         private_key = raw_key.strip().strip('"').strip("'")

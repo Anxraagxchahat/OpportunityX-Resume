@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     FIREBASE_PROJECT_ID: str = "opportunityx-61efd"
     FIREBASE_CLIENT_EMAIL: str = ""
     FIREBASE_PRIVATE_KEY: str = ""
+    FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
     FIREBASE_STORAGE_BUCKET: str = "opportunityx-61efd.appspot.com"
 
     # Cashfree Integration Credentials

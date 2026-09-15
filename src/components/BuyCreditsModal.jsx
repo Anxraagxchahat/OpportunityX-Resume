@@ -190,10 +190,24 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
       const mode = orderData.environment === 'production' ? 'production' : 'sandbox';
       const cashfree = window.Cashfree({ mode });
 
+      // Safety timeout: unstick loading state if checkout window never completes (e.g. popup blocked)
+      let checkoutResolved = false;
+      const safetyTimeout = setTimeout(() => {
+        if (!checkoutResolved) {
+          checkoutResolved = true;
+          setIsProcessing(false);
+          setProcessingStage('idle');
+          setErrorMsg('Payment window was closed or timed out. If money was deducted, click Retry or check your balance in a moment.');
+        }
+      }, 90000);
+
+      // Clean checkout invocation aligned with OpportunityX-Radar
       cashfree.checkout({
-        paymentSessionId: orderData.payment_session_id,
-        redirectTarget: '_modal'
+        paymentSessionId: orderData.payment_session_id
       }).then(async (result) => {
+        checkoutResolved = true;
+        clearTimeout(safetyTimeout);
+
         if (result && result.error) {
           setIsProcessing(false);
           setProcessingStage('idle');
@@ -204,7 +218,23 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
         }
 
         setProcessingStage('verifying');
-        const verifyRes = await apiService.verifyCashfreeOrder(orderData.order_id);
+
+        // Robust verification polling: poll up to 5 times (1.5s interval)
+        // to give UPI / netbanking settlement time to complete
+        let verifyRes = null;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          if (attempt > 0) {
+            await new Promise((r) => setTimeout(r, 1500));
+          }
+          try {
+            verifyRes = await apiService.verifyCashfreeOrder(orderData.order_id);
+            if (verifyRes && verifyRes.ok && verifyRes.status === 'PAID') {
+              break;
+            }
+          } catch (vErr) {
+            if (attempt === 4) throw vErr;
+          }
+        }
 
         if (verifyRes && verifyRes.ok && verifyRes.status === 'PAID') {
           // Instant authoritative credit balance update from database response
@@ -217,11 +247,13 @@ export const BuyCreditsModal = ({ isOpen, onClose }) => {
           }
           setPaymentStep('success');
         } else {
-          setErrorMsg(verifyRes?.message || "Payment verification returned pending/failed status. No credits were added.");
+          setErrorMsg(verifyRes?.message || "Payment verification returned pending status. If amount was deducted, credits will be added automatically.");
         }
         setIsProcessing(false);
         setProcessingStage('idle');
       }).catch((err) => {
+        checkoutResolved = true;
+        clearTimeout(safetyTimeout);
         setIsProcessing(false);
         setProcessingStage('idle');
         setErrorMsg(err?.message || "Payment was cancelled or closed. No charges were made to your account.");
