@@ -13,7 +13,7 @@ let cachedBaseUrl =
   import.meta.env.VITE_BACKEND_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD
-    ? 'https://opportunityx-resume.onrender.com/api/v1'
+    ? 'https://api-resume.opportunityx.co.in/api/v1'
     : DEFAULT_LOCAL_URL);
 
 async function getAuthToken() {

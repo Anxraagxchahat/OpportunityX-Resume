@@ -207,8 +207,8 @@ export const downloadDirectPDF = async (elementId = 'resume-a4-preview', candida
     candidateEndpoints.push('http://127.0.0.1:8000/api/v1/resumes/export-pdf');
     candidateEndpoints.push('http://127.0.0.1:8001/api/v1/resumes/export-pdf');
   } else {
-    // Production Render backend
-    candidateEndpoints.push('https://opportunityx-resume.onrender.com/api/v1/resumes/export-pdf');
+    // Production backend
+    candidateEndpoints.push('https://api-resume.opportunityx.co.in/api/v1/resumes/export-pdf');
   }
 
   // Deduplicate endpoints

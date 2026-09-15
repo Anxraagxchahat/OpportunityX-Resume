@@ -5,7 +5,7 @@
  * and preloads Cashfree Web SDK scripts before user interacts with payment UI.
  */
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://opportunityx-resume.onrender.com/api/v1').replace(/\/api\/v1\/?$/, '');
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://api-resume.opportunityx.co.in/api/v1').replace(/\/api\/v1\/?$/, '');
 
 let lastPingTime = 0;
 const PING_THROTTLE_MS = 120000; // 2 minutes throttle lock

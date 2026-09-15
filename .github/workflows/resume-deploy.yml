@@ -10,67 +10,38 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to AWS Lightsail
     runs-on: ubuntu-latest
 
     steps:
-      - name: SSH and Deploy to Lightsail Server
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Deploy to AWS Lightsail
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Resolve repository root path on server (auto-clone if first deploy)
-            if [ -d "$HOME/opportunityx-resume" ]; then
-              REPO_DIR="$HOME/opportunityx-resume"
-            elif [ -d "$HOME/OpportunityX-Resume" ]; then
-              REPO_DIR="$HOME/OpportunityX-Resume"
-            else
-              REPO_DIR="$HOME/opportunityx-resume"
-              echo "Repository not found at $REPO_DIR. Cloning from GitHub..."
-              git clone https://github.com/Anxraagxchahat/OpportunityX-Resume.git "$REPO_DIR"
-            fi
+            set -e
 
-            echo "Deploying in $REPO_DIR..."
-            cd "$REPO_DIR"
+            cd ~/OpportunityX-Resume
 
-            # 2. Pull latest changes from main branch
             git pull origin main
 
-            # 3. Navigate to backend directory
-            cd "$REPO_DIR/backend"
+            cd backend
 
-            # 4. Resolve production environment file path
-            ENV_FILE="$HOME/opportunityx-resume/backend/.env"
-            if [ ! -f "$ENV_FILE" ] && [ -f "$REPO_DIR/backend/.env" ]; then
-              ENV_FILE="$REPO_DIR/backend/.env"
-            fi
+            sudo docker build -t resume-backend:latest .
 
-            if [ ! -f "$ENV_FILE" ]; then
-              echo "Notice: $ENV_FILE not found. Creating empty file to avoid docker run failure..."
-              mkdir -p "$(dirname "$ENV_FILE")"
-              touch "$ENV_FILE"
-            fi
-
-            # 5. Build production Docker image locally on Lightsail
-            sudo docker build -t resume-backend .
-
-            # 6. Stop and remove existing container if running
             sudo docker stop resume-backend || true
             sudo docker rm resume-backend || true
 
-            # 7. Run updated production container
             sudo docker run -d \
               --name resume-backend \
-              --env-file "$ENV_FILE" \
+              --env-file .env \
               -p 8000:8000 \
               --restart unless-stopped \
-              resume-backend
+              resume-backend:latest
 
-            # 8. Startup wait & container verification
-            sleep 5
-            sudo docker ps --filter "name=resume-backend"
+            sleep 10
 
-            # 9. Automated health check verification
-            curl -f --retry 3 --retry-delay 3 --retry-connrefused http://localhost:8000/health
+            curl -f http://localhost:8000/health
+
+            echo "Resume backend deployed successfully."
