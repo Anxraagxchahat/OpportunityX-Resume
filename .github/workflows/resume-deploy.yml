@@ -1,0 +1,68 @@
+name: Deploy Resume Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/resume-deploy.yml"
+
+jobs:
+  deploy:
+    name: Deploy to AWS Lightsail
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH and Deploy to Lightsail Server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # 1. Resolve repository root path on server
+            if [ -d "$HOME/opportunityx-resume" ]; then
+              REPO_DIR="$HOME/opportunityx-resume"
+            elif [ -d "$HOME/OpportunityX-Resume" ]; then
+              REPO_DIR="$HOME/OpportunityX-Resume"
+            else
+              REPO_DIR="$HOME/opportunityx-resume"
+            fi
+
+            echo "Deploying in $REPO_DIR..."
+            cd "$REPO_DIR"
+
+            # 2. Pull latest changes from main branch
+            git pull origin main
+
+            # 3. Navigate to backend directory
+            cd "$REPO_DIR/backend"
+
+            # 4. Resolve production environment file path
+            ENV_FILE="$HOME/opportunityx-resume/backend/.env"
+            if [ ! -f "$ENV_FILE" ] && [ -f "$REPO_DIR/backend/.env" ]; then
+              ENV_FILE="$REPO_DIR/backend/.env"
+            fi
+
+            # 5. Build production Docker image locally on Lightsail
+            sudo docker build -t resume-backend .
+
+            # 6. Stop and remove existing container if running
+            sudo docker stop resume-backend || true
+            sudo docker rm resume-backend || true
+
+            # 7. Run updated production container
+            sudo docker run -d \
+              --name resume-backend \
+              --env-file "$ENV_FILE" \
+              -p 8000:8000 \
+              --restart unless-stopped \
+              resume-backend
+
+            # 8. Startup wait & container verification
+            sleep 5
+            sudo docker ps --filter "name=resume-backend"
+
+            # 9. Automated health check verification
+            curl -f --retry 3 --retry-delay 3 --retry-connrefused http://localhost:8000/health

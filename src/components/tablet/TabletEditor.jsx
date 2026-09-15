@@ -171,6 +171,52 @@ export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'po
       )
     );
 
+  const updateProjectBulletPoint = (projId, targetIdx, index, text) => {
+    updateProjects(
+      projects.map((p, idx) => {
+        if ((p.id && projId && p.id === projId) || idx === targetIdx) {
+          const currentBullets = Array.isArray(p.bullets) && p.bullets.length > 0
+            ? [...p.bullets]
+            : (p.description ? p.description.split(/\r?\n|•/).map((s) => s.trim().replace(/^[-*]\s*/, '')).filter(Boolean) : ['']);
+          currentBullets[index] = text;
+          return { ...p, bullets: currentBullets, description: currentBullets.filter(Boolean).join(' ') };
+        }
+        return p;
+      })
+    );
+  };
+
+  const addProjectBulletPoint = (projId, targetIdx) => {
+    updateProjects(
+      projects.map((p, idx) => {
+        if ((p.id && projId && p.id === projId) || idx === targetIdx) {
+          const currentBullets = Array.isArray(p.bullets) && p.bullets.length > 0
+            ? [...p.bullets]
+            : (p.description ? p.description.split(/\r?\n|•/).map((s) => s.trim().replace(/^[-*]\s*/, '')).filter(Boolean) : ['']);
+          const newBullets = [...currentBullets, ''];
+          return { ...p, bullets: newBullets, description: newBullets.filter(Boolean).join(' ') };
+        }
+        return p;
+      })
+    );
+  };
+
+  const removeProjectBulletPoint = (projId, targetIdx, bIdx) => {
+    updateProjects(
+      projects.map((p, idx) => {
+        if ((p.id && projId && p.id === projId) || idx === targetIdx) {
+          const currentBullets = Array.isArray(p.bullets) && p.bullets.length > 0
+            ? p.bullets
+            : (p.description ? p.description.split(/\r?\n|•/).map((s) => s.trim().replace(/^[-*]\s*/, '')).filter(Boolean) : ['']);
+          const newBullets = currentBullets.filter((_, i) => i !== bIdx);
+          const finalBullets = newBullets.length > 0 ? newBullets : [''];
+          return { ...p, bullets: finalBullets, description: finalBullets.filter(Boolean).join(' ') };
+        }
+        return p;
+      })
+    );
+  };
+
   // ================= SKILLS HANDLERS =================
   const addSkillChip = (category, name) => {
     if (!name.trim()) return;
@@ -965,13 +1011,48 @@ export const TabletEditor = ({ activeSection, onSelectSection, orientation = 'po
                       className="w-full min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
                     />
                   </div>
-                  <textarea
-                    rows={3}
-                    value={proj.description || ''}
-                    onChange={(e) => updateProjectField(proj.id, idx, 'description', e.target.value)}
-                    placeholder="Project overview and impact..."
-                    className="w-full bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg p-3 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
-                  />
+                  {/* Bullets */}
+                  <div className="space-y-2 pt-2 border-t border-[var(--ox-border)]">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-[var(--ox-text-secondary)]">Bullet Points / Details</label>
+                      <button
+                        type="button"
+                        onClick={() => addProjectBulletPoint(proj.id, idx)}
+                        className="px-2 py-0.5 text-xs font-semibold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-lg flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add Point
+                      </button>
+                    </div>
+                    {((Array.isArray(proj.bullets) && proj.bullets.length > 0)
+                      ? proj.bullets
+                      : (proj.description ? proj.description.split(/\r?\n|•/).map((s) => s.trim().replace(/^[-*]\s*/, '')).filter(Boolean) : [''])
+                    ).map((bullet, bIdx) => (
+                      <div key={bIdx} className="flex items-center gap-2">
+                        <span className="text-orange-400 font-bold text-sm select-none pl-1">•</span>
+                        <input
+                          type="text"
+                          value={bullet}
+                          onChange={(e) => updateProjectBulletPoint(proj.id, idx, bIdx, e.target.value)}
+                          placeholder="Key project detail or achievement..."
+                          className="flex-1 min-h-[44px] bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-lg px-3 py-2 text-xs text-[var(--ox-text-primary)] focus:outline-none focus:border-orange-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeProjectBulletPoint(proj.id, idx, bIdx)}
+                          className="min-h-[44px] min-w-[44px] p-2 text-[var(--ox-text-secondary)] hover:text-red-400 flex items-center justify-center cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addProjectBulletPoint(proj.id, idx)}
+                      className="text-xs font-semibold text-orange-400 hover:underline flex items-center gap-1 min-h-[44px] pt-1 cursor-pointer"
+                    >
+                      + Add Bullet Point
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

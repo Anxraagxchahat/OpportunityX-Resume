@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { initPaymentPreloader } from './utils/paymentPreloader';
 import { captureReferralFromUrl } from './utils/referralAttribution';
@@ -31,7 +31,7 @@ import {
   ForbiddenPage,
   ServerErrorPage,
 } from './pages/ErrorPages';
-import { MaintenancePage as GlobalMaintenancePage } from './pages/MaintenancePage';
+import { MaintenancePage } from './pages/MaintenancePage';
 import { MAINTENANCE_MODE } from './config/maintenance';
 
 // Route-level Code Splitting for Performance
@@ -85,11 +85,20 @@ function ResumeMigrationModalWrapper() {
 function AppContent() {
   const location = useLocation();
   const isWorkspace = location.pathname === '/builder';
+  const { isAuthenticated, authLoading } = useAuth();
+  const { openAuthModal } = useResume();
+  const hasAutoOpenedRefModal = useRef(false);
 
   useEffect(() => {
-    captureReferralFromUrl();
+    const code = captureReferralFromUrl();
     initPaymentPreloader();
-  }, []);
+
+    // If visitor arrives via referral link and is not authenticated, open signup directly
+    if (code && !hasAutoOpenedRefModal.current && !authLoading && !isAuthenticated) {
+      hasAutoOpenedRefModal.current = true;
+      openAuthModal('signup');
+    }
+  }, [isAuthenticated, authLoading, openAuthModal]);
 
   return (
     <div className="min-h-screen bg-[var(--ox-bg)] text-[var(--ox-text-primary)] font-sans flex flex-col transition-colors duration-300 selection:bg-orange-500/30 selection:text-slate-950 dark:selection:text-orange-100">
@@ -125,13 +134,13 @@ function AppContent() {
 }
 
 function AuthModalWrapper() {
-  const { isAuthOpen, setIsAuthOpen } = useResume();
-  return <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />;
+  const { isAuthOpen, setIsAuthOpen, authModalMode } = useResume();
+  return <AuthModal isOpen={isAuthOpen} initialMode={authModalMode} onClose={() => setIsAuthOpen(false)} />;
 }
 
 export function App() {
   if (MAINTENANCE_MODE) {
-    return <GlobalMaintenancePage />;
+    return <MaintenancePage />;
   }
 
   return (

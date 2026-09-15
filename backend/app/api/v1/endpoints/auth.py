@@ -37,16 +37,8 @@ async def sync_user_profile(
     client_ip = request.client.host if request.client else None
     session_service.start_user_session(user_id=user.uid, user_agent=user_agent, ip_address=client_ip)
 
-    # 3. Check / Claim 5 Welcome Credits if new user
-    wallet, newly_claimed = credit_repo.claim_welcome_bonus(user_id=user.uid, bonus_credits=5)
-    if newly_claimed:
-        notification_service.send_welcome_credits_notification(user_id=user.uid)
-        activity_repo.log_activity(
-            user_id=user.uid,
-            event_type="WELCOME_CREDITS_CLAIMED",
-            details={"credits": 5},
-            ip_address=client_ip
-        )
+    # 3. Ensure wallet exists (0 default credits; credits earned via social tasks)
+    credit_repo.get_or_create_wallet(user.uid, auto_grant_starter=False)
 
     # Log Login Activity
     activity_repo.log_activity(

@@ -19,6 +19,18 @@ export const ProfessionalCleanTemplate = ({ resumeData, accentHex, fontFamily, v
 
   const isVisible = (id) => shouldRenderBlock(id, visibleBlockIds);
 
+  const hasSidebarContent =
+    (education.length > 0 && education.some((_, i) => isVisible(`edu-${i}`))) ||
+    (skills && isVisible('skills') && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0)) ||
+    (certificates.length > 0 && certificates.some((_, i) => isVisible(`cert-${i}`))) ||
+    (achievements.length > 0 && achievements.some((_, i) => isVisible(`achieve-${i}`)));
+
+  const hasMainContent =
+    (personal.summary && isVisible('summary')) ||
+    (experience.length > 0 && experience.some((_, i) => isVisible(`exp-${i}`))) ||
+    (projects.length > 0 && projects.some((_, i) => isVisible(`proj-${i}`))) ||
+    isVisible('profiles');
+
   return (
     <div className="space-y-4 text-slate-800" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
       {/* Header */}
@@ -33,66 +45,72 @@ export const ProfessionalCleanTemplate = ({ resumeData, accentHex, fontFamily, v
       )}
 
       {/* Two Column Body */}
-      <div className="flex gap-6">
-        {/* Main Column */}
-        <div className="flex-1 space-y-4">
-          {personal.summary && isVisible('summary') && (
-            <div data-block-id="summary" className="pdf-block pdf-keep-together">
-              <SectionHeading title="Professional Summary" accentHex={accentHex} variant="underline" />
-              <p className="text-[10px] leading-relaxed text-slate-700">{personal.summary}</p>
+      {(hasMainContent || hasSidebarContent) && (
+        <div className="flex gap-6">
+          {/* Main Column */}
+          {hasMainContent && (
+            <div className="flex-1 space-y-4">
+              {personal.summary && isVisible('summary') && (
+                <div data-block-id="summary" className="pdf-block pdf-keep-together">
+                  <SectionHeading title="Professional Summary" accentHex={accentHex} variant="underline" />
+                  <p className="text-[10px] leading-relaxed text-slate-700">{personal.summary}</p>
+                </div>
+              )}
+
+              {experience.length > 0 && experience.some((_, i) => isVisible(`exp-${i}`)) && (
+                <div>
+                  <SectionHeading title="Work Experience" accentHex={accentHex} variant="underline" />
+                  <ExperienceBlock experience={experience} accentHex={accentHex} visibleBlockIds={visibleBlockIds} />
+                </div>
+              )}
+
+              {projects.length > 0 && projects.some((_, i) => isVisible(`proj-${i}`)) && (
+                <div>
+                  <SectionHeading title="Projects" accentHex={accentHex} variant="underline" />
+                  <ProjectBlock projects={projects} accentHex={accentHex} visibleBlockIds={visibleBlockIds} />
+                </div>
+              )}
+
+              {isVisible('profiles') && (
+                <SocialLinksBlock personal={personal} accentHex={accentHex} visibleBlockIds={visibleBlockIds} />
+              )}
             </div>
           )}
 
-          {experience.length > 0 && experience.some((_, i) => isVisible(`exp-${i}`)) && (
-            <div>
-              <SectionHeading title="Work Experience" accentHex={accentHex} variant="underline" />
-              <ExperienceBlock experience={experience} accentHex={accentHex} visibleBlockIds={visibleBlockIds} />
-            </div>
-          )}
+          {/* Right Column */}
+          {hasSidebarContent && (
+            <div className="w-[34%] space-y-4">
+              {education.length > 0 && education.some((_, i) => isVisible(`edu-${i}`)) && (
+                <div>
+                  <SectionHeading title="Education" accentHex={accentHex} variant="underline" />
+                  <EducationBlock education={education} variant="compact" visibleBlockIds={visibleBlockIds} />
+                </div>
+              )}
 
-          {projects.length > 0 && projects.some((_, i) => isVisible(`proj-${i}`)) && (
-            <div>
-              <SectionHeading title="Projects" accentHex={accentHex} variant="underline" />
-              <ProjectBlock projects={projects} accentHex={accentHex} visibleBlockIds={visibleBlockIds} />
-            </div>
-          )}
+              {skills && isVisible('skills') && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
+                <div>
+                  <SectionHeading title="Skills" accentHex={accentHex} variant="underline" />
+                  <SkillsBlock skills={skills} variant="tags" visibleBlockIds={visibleBlockIds} />
+                </div>
+              )}
 
-          {isVisible('profiles') && (
-            <SocialLinksBlock personal={personal} accentHex={accentHex} visibleBlockIds={visibleBlockIds} />
+              {certificates.length > 0 && certificates.some((_, i) => isVisible(`cert-${i}`)) && (
+                <div>
+                  <SectionHeading title="Certifications" accentHex={accentHex} variant="underline" />
+                  <CertificatesBlock certificates={certificates} visibleBlockIds={visibleBlockIds} />
+                </div>
+              )}
+
+              {achievements.length > 0 && achievements.some((_, i) => isVisible(`achieve-${i}`)) && (
+                <div>
+                  <SectionHeading title="Achievements" accentHex={accentHex} variant="underline" />
+                  <AchievementsBlock achievements={achievements} visibleBlockIds={visibleBlockIds} />
+                </div>
+              )}
+            </div>
           )}
         </div>
-
-        {/* Right Column */}
-        <div className="w-[34%] space-y-4">
-          {education.length > 0 && education.some((_, i) => isVisible(`edu-${i}`)) && (
-            <div>
-              <SectionHeading title="Education" accentHex={accentHex} variant="underline" />
-              <EducationBlock education={education} variant="compact" visibleBlockIds={visibleBlockIds} />
-            </div>
-          )}
-
-          {skills && isVisible('skills') && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
-            <div>
-              <SectionHeading title="Skills" accentHex={accentHex} variant="underline" />
-              <SkillsBlock skills={skills} variant="tags" visibleBlockIds={visibleBlockIds} />
-            </div>
-          )}
-
-          {certificates.length > 0 && certificates.some((_, i) => isVisible(`cert-${i}`)) && (
-            <div>
-              <SectionHeading title="Certifications" accentHex={accentHex} variant="underline" />
-              <CertificatesBlock certificates={certificates} visibleBlockIds={visibleBlockIds} />
-            </div>
-          )}
-
-          {achievements.length > 0 && achievements.some((_, i) => isVisible(`achieve-${i}`)) && (
-            <div>
-              <SectionHeading title="Achievements" accentHex={accentHex} variant="underline" />
-              <AchievementsBlock achievements={achievements} visibleBlockIds={visibleBlockIds} />
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

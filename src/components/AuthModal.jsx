@@ -2,25 +2,31 @@
  * OpportunityX Resume — Authentication Modal
  *
  * Production-grade authentication modal with real Firebase Auth:
- * - Google OAuth (signInWithPopup)
- * - GitHub OAuth (signInWithPopup)
+ * - Google OAuth (signInWithPopup) with new-user referral detection
+ * - GitHub OAuth (signInWithPopup) with new-user referral detection
  * - Email/Password (signInWithEmailAndPassword / createUserWithEmailAndPassword)
+ * - Mandatory Email Verification (sendEmailVerification & verification polling)
+ * - Referral Attribution Field (auto-filled from URL or manually entered)
  * - Password Reset (sendPasswordResetEmail)
  *
  * Continue-after-login: accepts onSuccess callback to resume interrupted actions.
  * Never writes to central OpportunityX user profiles.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  X, ShieldCheck, Mail, LogIn, LogOut, Check, Eye, EyeOff,
-  Loader2, AlertCircle, KeyRound, ArrowLeft
+  X, Mail, LogIn, LogOut, Check, Eye, EyeOff,
+  Loader2, AlertCircle, KeyRound, ArrowLeft,
+  Gift, RefreshCw, CheckCircle2
 } from 'lucide-react';
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
+  getAdditionalUserInfo,
+  signOut
 } from 'firebase/auth';
 import { auth, googleProvider, githubProvider } from '../firebase';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +35,13 @@ import { BrandLogo } from './common/BrandLogo';
 import { normalizeProvider, getProviderLabel } from '../utils/authProviders';
 import { trackAuthEvent, getAuthEventName } from '../utils/authAnalytics';
 import { UserAvatar } from './UserAvatar';
+import { apiService } from '../services/api';
+import {
+  getPendingReferralCode,
+  clearPendingReferralCode,
+  isValidReferralCode,
+  normalizeReferralCode
+} from '../utils/referralAttribution';
 
 const GithubIcon = ({ className = 'w-4 h-4' }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -45,51 +58,72 @@ const GoogleIcon = ({ className = 'w-4 h-4' }) => (
   </svg>
 );
 
-export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
+export const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = 'login' }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const { session } = useResume();
 
-  const [mode, setMode] = useState('login'); // 'login' | 'signup' | 'reset'
+  const [mode, setMode] = useState(initialMode || 'login'); // 'login' | 'signup' | 'reset' | 'verify-email'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState(() => getPendingReferralCode() || '');
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [isCheckingVerification, setIsCheckingVerification] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeProvider, setActiveProvider] = useState('');
   const [error, setError] = useState('');
   const [infoMsg, setInfoMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const authOpRef = React.useRef(false);
-  const infoTimerRef = React.useRef(null);
+  const authOpRef = useRef(false);
+  const infoTimerRef = useRef(null);
 
-  // Reset state when modal opens/closes
-  React.useEffect(() => {
-    if (!isOpen) {
+  // Sync mode and referral code whenever modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode || 'login');
+      const pending = getPendingReferralCode();
+      if (pending) {
+        setReferralCode(pending);
+      }
+    } else {
       setError('');
       setInfoMsg('');
       setSuccessMsg('');
       setIsSubmitting(false);
       setActiveProvider('');
+      setIsCheckingVerification(false);
       authOpRef.current = false;
       if (infoTimerRef.current) clearTimeout(infoTimerRef.current);
     }
-  }, [isOpen]);
+  }, [isOpen, initialMode]);
 
-  if (!isOpen) return null;
+  // Resend cooldown timer
+  useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
-  const showCancelNotice = (msg = 'Sign-in cancelled. You can try again anytime.') => {
-    setError('');
-    setInfoMsg(msg);
-    if (infoTimerRef.current) clearTimeout(infoTimerRef.current);
-    infoTimerRef.current = setTimeout(() => {
-      setInfoMsg('');
-    }, 3500);
+  const handleReferralChange = (val) => {
+    const normalized = normalizeReferralCode(val);
+    setReferralCode(normalized);
+    if (normalized.length === 6) {
+      localStorage.setItem('ox_pending_referral_code', normalized);
+      sessionStorage.setItem('ox_pending_referral_code', normalized);
+    }
   };
 
-  const handleSuccess = (firebaseUser) => {
+  const handleSuccess = (firebaseUser, extraSuccessMsg = '') => {
     setError('');
     setInfoMsg('');
-    setSuccessMsg(`Welcome, ${firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User'}!`);
+    const baseWelcome = `Welcome, ${firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User'}!`;
+    setSuccessMsg(extraSuccessMsg ? `${baseWelcome} ${extraSuccessMsg}` : baseWelcome);
 
     trackAuthEvent(getAuthEventName(normalizeProvider(firebaseUser), mode === 'signup'), {
       uid: firebaseUser.uid,
@@ -103,7 +137,63 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       setMode('login');
       onClose();
       if (onSuccess) onSuccess(firebaseUser);
-    }, 800);
+    }, 1000);
+  };
+
+  // Called when email verification succeeds
+  const handleVerificationSuccess = useCallback(async (verifiedUser) => {
+    setError('');
+    setInfoMsg('');
+    let bonusMsg = '';
+
+    // Redeem referral code if present
+    const codeToRedeem = referralCode || getPendingReferralCode();
+    if (codeToRedeem && isValidReferralCode(codeToRedeem)) {
+      try {
+        const redeemRes = await apiService.redeemReferralCode(codeToRedeem);
+        if (redeemRes && redeemRes.ok) {
+          bonusMsg = '🎉 +5 Referral Credits added to your account!';
+        }
+      } catch (refErr) {
+        console.warn('[Referral] Redemption note during verification:', refErr?.message);
+      } finally {
+        clearPendingReferralCode();
+      }
+    }
+
+    handleSuccess(verifiedUser, bonusMsg);
+  }, [referralCode, onSuccess, onClose]);
+
+  // Live polling for email verification when in 'verify-email' mode
+  useEffect(() => {
+    if (mode !== 'verify-email' || !isOpen) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        if (auth.currentUser) {
+          await auth.currentUser.reload();
+          if (auth.currentUser.emailVerified) {
+            clearInterval(pollInterval);
+            await handleVerificationSuccess(auth.currentUser);
+          }
+        }
+      } catch (err) {
+        // Silently ignore background polling reload errors
+      }
+    }, 3500);
+
+    return () => clearInterval(pollInterval);
+  }, [mode, isOpen, handleVerificationSuccess]);
+
+  if (!isOpen) return null;
+
+  const showCancelNotice = (msg = 'Sign-in cancelled. You can try again anytime.') => {
+    setError('');
+    setInfoMsg(msg);
+    if (infoTimerRef.current) clearTimeout(infoTimerRef.current);
+    infoTimerRef.current = setTimeout(() => {
+      setInfoMsg('');
+    }, 3500);
   };
 
   const handleError = (firebaseError) => {
@@ -139,7 +229,6 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   };
 
   const handleOAuthLogin = async (provider, providerInstance) => {
-    // Prevent duplicate concurrent popup requests
     if (authOpRef.current || isSubmitting) {
       return;
     }
@@ -152,17 +241,45 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     authOpRef.current = true;
 
     try {
+      // If user had filled referral code in signup mode, ensure it is stored
+      if (mode === 'signup' && referralCode && isValidReferralCode(referralCode)) {
+        localStorage.setItem('ox_pending_referral_code', referralCode);
+        sessionStorage.setItem('ox_pending_referral_code', referralCode);
+      }
+
       const result = await signInWithPopup(auth, providerInstance);
       if (result && result.user) {
-        handleSuccess(result.user);
+        const additionalInfo = getAdditionalUserInfo(result);
+        const isNewUser = Boolean(additionalInfo?.isNewUser);
+
+        let bonusMsg = '';
+        if (isNewUser) {
+          // Brand new user sign-up!
+          const codeToRedeem = referralCode || getPendingReferralCode();
+          if (codeToRedeem && isValidReferralCode(codeToRedeem)) {
+            try {
+              const redeemRes = await apiService.redeemReferralCode(codeToRedeem);
+              if (redeemRes && redeemRes.ok) {
+                bonusMsg = '🎉 +5 Referral Credits added to your account!';
+              }
+            } catch (refErr) {
+              console.warn('[Referral] OAuth redemption note:', refErr?.message);
+            } finally {
+              clearPendingReferralCode();
+            }
+          }
+        } else {
+          // Existing user logging in: referral is strictly not granted
+          clearPendingReferralCode();
+        }
+
+        handleSuccess(result.user, bonusMsg);
       }
     } catch (err) {
       const code = err?.code || '';
       if (code === 'auth/popup-closed-by-user') {
-        // Immediate clean reset on manual popup closure — non-fatal user cancellation
         showCancelNotice('Sign-in cancelled. You can try again anytime.');
       } else if (code === 'auth/cancelled-popup-request') {
-        // Fast reset on concurrent request cancellation
         setError('');
       } else if (code === 'auth/popup-blocked') {
         setError('Sign-in popup was blocked by your browser. Please allow popups for this site and try again.');
@@ -170,7 +287,6 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         handleError(err);
       }
     } finally {
-      // Immediate clean state recovery: no stuck spinners, no locked buttons
       authOpRef.current = false;
       setIsSubmitting(false);
       setActiveProvider('');
@@ -198,10 +314,41 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
     try {
       if (mode === 'signup') {
+        // Save entered referral code if valid
+        if (referralCode && isValidReferralCode(referralCode)) {
+          localStorage.setItem('ox_pending_referral_code', referralCode);
+          sessionStorage.setItem('ox_pending_referral_code', referralCode);
+        }
+
         const result = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-        handleSuccess(result.user);
+
+        // Send real Firebase email verification
+        try {
+          await sendEmailVerification(result.user);
+          setInfoMsg(`A verification link has been sent to ${cleanEmail}. Please click the link to activate your account.`);
+        } catch (verifyErr) {
+          console.error('[Auth] Failed to send verification email:', verifyErr);
+          if (verifyErr.code === 'auth/too-many-requests') {
+            setError('Too many verification emails requested. Please wait a few minutes before requesting another.');
+          } else {
+            setError(`Could not send verification email: ${verifyErr.message || verifyErr.code}`);
+          }
+        }
+
+        setVerificationEmail(cleanEmail);
+        setResendCooldown(60);
+        setMode('verify-email');
       } else {
         const result = await signInWithEmailAndPassword(auth, cleanEmail, password);
+
+        // Check mandatory email verification
+        if (!result.user.emailVerified) {
+          setVerificationEmail(cleanEmail);
+          setMode('verify-email');
+          setError('Your email is not verified yet. Please verify your email before logging in.');
+          return;
+        }
+
         handleSuccess(result.user);
       }
     } catch (err) {
@@ -210,6 +357,72 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       setIsSubmitting(false);
       setActiveProvider('');
     }
+  };
+
+  // Manual button: "I've Verified My Email"
+  const handleManualCheckVerification = async () => {
+    if (!auth.currentUser) {
+      setError('Session expired. Please log in again.');
+      setMode('login');
+      return;
+    }
+
+    setIsCheckingVerification(true);
+    setError('');
+    setInfoMsg('');
+
+    try {
+      await auth.currentUser.reload();
+      if (auth.currentUser.emailVerified) {
+        await handleVerificationSuccess(auth.currentUser);
+      } else {
+        setError('Email not verified yet. Please open the email sent to your inbox, click the verification link, and try again.');
+      }
+    } catch (err) {
+      setError(err?.message || 'Failed to check verification status. Please try again.');
+    } finally {
+      setIsCheckingVerification(false);
+    }
+  };
+
+  // Resend verification email button
+  const handleResendVerification = async () => {
+    if (resendCooldown > 0 || resendLoading) return;
+    if (!auth.currentUser) {
+      setError('Session expired. Please log in again.');
+      setMode('login');
+      return;
+    }
+
+    setResendLoading(true);
+    setError('');
+    setInfoMsg('');
+
+    try {
+      await sendEmailVerification(auth.currentUser);
+      setResendCooldown(60);
+      setInfoMsg('A fresh verification email has been sent! Check your inbox and spam folder.');
+    } catch (err) {
+      if (err?.code === 'auth/too-many-requests') {
+        setError('Too many requests. Firebase requires a short waiting period before sending another email.');
+        setResendCooldown(120);
+      } else {
+        handleError(err);
+      }
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  // "Use a different email / Back to signup"
+  const handleBackFromVerification = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {}
+    setError('');
+    setInfoMsg('');
+    setSuccessMsg('');
+    setMode('signup');
   };
 
   const handlePasswordReset = async (e) => {
@@ -240,6 +453,15 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     onClose();
   };
 
+  const handleModalClose = async () => {
+    if (mode === 'verify-email' && auth.currentUser && !auth.currentUser.emailVerified) {
+      try {
+        await signOut(auth);
+      } catch (e) {}
+    }
+    onClose();
+  };
+
   const isLoading = isSubmitting;
 
   return createPortal(
@@ -259,14 +481,16 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
               <h3 className="text-base font-black text-[var(--ox-text-primary)] flex items-center gap-1 truncate">
                 Opportunity<span className="text-orange-500">X</span> Account
               </h3>
-              <p className="text-[11px] text-[var(--ox-text-secondary)] truncate">Central ecosystem authentication</p>
+              <p className="text-[11px] text-[var(--ox-text-secondary)] truncate">
+                {mode === 'verify-email' ? 'Email Verification Required' : 'Central ecosystem authentication'}
+              </p>
             </div>
           </div>
 
-          {/* Close Button — 44x44px minimum touch target, always visible */}
+          {/* Close Button */}
           <button
-            onClick={onClose}
-            disabled={isLoading}
+            onClick={handleModalClose}
+            disabled={isLoading || isCheckingVerification}
             className="w-11 h-11 rounded-2xl bg-[var(--ox-surface-secondary)] border border-[var(--ox-border)] text-[var(--ox-text-secondary)] hover:text-[var(--ox-text-primary)] flex items-center justify-center transition-colors cursor-pointer shrink-0 disabled:opacity-40 active:scale-95 shadow-sm"
             aria-label="Close authentication modal"
             style={{ minWidth: 44, minHeight: 44 }}
@@ -284,7 +508,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
 
         {/* Authenticated State */}
-        {isAuthenticated && user && (
+        {isAuthenticated && user && mode !== 'verify-email' && (
           <div className="p-3 rounded-xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] text-xs flex items-center justify-between">
             <div className="flex items-center gap-3">
               <UserAvatar user={user} size="w-9 h-9" />
@@ -308,7 +532,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
         )}
 
-        {/* Info / Cancellation Notice */}
+        {/* Info Notice */}
         {infoMsg && !error && !successMsg && (
           <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-xs text-orange-400 font-medium flex items-center justify-between gap-2 animate-fadeIn">
             <span>{infoMsg}</span>
@@ -322,7 +546,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
         )}
 
-        {/* Error */}
+        {/* Error Notice */}
         {error && (
           <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 font-semibold flex items-start gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -330,7 +554,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
         )}
 
-        {/* Success */}
+        {/* Success Notice */}
         {successMsg && (
           <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 font-semibold flex items-center gap-2">
             <Check className="w-4 h-4 flex-shrink-0" />
@@ -338,16 +562,130 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
         )}
 
-        {/* Login Benefits */}
-        {(!isAuthenticated) && (
+        {/* MODE: VERIFY EMAIL SCREEN */}
+        {mode === 'verify-email' && (
+          <div className="space-y-4 py-1">
+            {/* Header Icon & Text */}
+            <div className="text-center space-y-2.5">
+              <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-400 flex items-center justify-center mx-auto shadow-inner relative">
+                <Mail className="w-7 h-7 text-orange-500 animate-pulse" />
+                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-orange-500"></span>
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="text-base font-black text-[var(--ox-text-primary)]">
+                  Verify Your Email Address
+                </h4>
+                <p className="text-xs text-[var(--ox-text-secondary)]">
+                  We've sent an activation link to:
+                </p>
+                <div className="p-2 rounded-xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] font-mono text-xs font-bold text-orange-400 max-w-xs mx-auto truncate select-all">
+                  {verificationEmail || auth?.currentUser?.email || email}
+                </div>
+              </div>
+            </div>
+
+            {/* Verification Instructions */}
+            <div className="p-3.5 rounded-2xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] space-y-2 text-xs text-[var(--ox-text-secondary)]">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>Open your inbox and click the verification link sent by OpportunityX.</span>
+              </div>
+              {isValidReferralCode(referralCode) && (
+                <div className="flex items-start gap-2">
+                  <Gift className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                  <span>Referral code <strong className="font-mono text-orange-400">{referralCode}</strong> applied — <strong>+5 Free AI Credits</strong> will be added upon verification!</span>
+                </div>
+              )}
+              <div className="text-[10px] text-[var(--ox-text-muted)] pt-1 border-t border-[var(--ox-border)] flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                <span>Auto-detecting verification... you can also click below once verified.</span>
+              </div>
+            </div>
+
+            {/* Verification Action Buttons */}
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={handleManualCheckVerification}
+                disabled={isCheckingVerification}
+                className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+              >
+                {isCheckingVerification ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Checking Status...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    <span>I've Verified My Email</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendCooldown > 0 || resendLoading}
+                className="w-full py-2.5 rounded-xl bg-[var(--ox-surface-primary)] hover:bg-[var(--ox-card-hover)] border border-[var(--ox-border)] text-xs font-bold text-[var(--ox-text-primary)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {resendLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-500" />
+                ) : (
+                  <Mail className="w-3.5 h-3.5 text-orange-500" />
+                )}
+                <span>
+                  {resendCooldown > 0
+                    ? `Resend Email in ${resendCooldown}s`
+                    : 'Resend Verification Email'}
+                </span>
+              </button>
+            </div>
+
+            {/* Google instant sign-in fallback */}
+            <div className="pt-2 border-t border-[var(--ox-border)] text-center space-y-2">
+              <p className="text-[11px] text-[var(--ox-text-muted)]">
+                Have a Google account? Google accounts are pre-verified:
+              </p>
+              <button
+                type="button"
+                onClick={() => handleOAuthLogin('google', googleProvider)}
+                disabled={isLoading}
+                className="w-full py-2 rounded-xl bg-[var(--ox-surface-primary)] hover:bg-[var(--ox-card-hover)] border border-[var(--ox-border)] text-xs font-bold text-[var(--ox-text-primary)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <GoogleIcon />
+                <span>Continue with Google (Instant Login)</span>
+              </button>
+            </div>
+
+            {/* Back / Change Email Option */}
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={handleBackFromVerification}
+                className="text-[11px] text-[var(--ox-text-muted)] hover:text-orange-500 font-medium transition-colors cursor-pointer"
+              >
+                Entered wrong email? <span className="underline font-bold">Use a different email</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* MODE: LOGIN, SIGNUP, RESET */}
+        {(!isAuthenticated || mode === 'verify-email') && mode !== 'verify-email' && (
           <>
+            {/* Login Benefits */}
             <div className="p-3 rounded-xl bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] space-y-2">
               <span className="text-xs font-bold text-[var(--ox-text-secondary)]">Login gives you:</span>
               <div className="space-y-1.5 text-xs text-[var(--ox-text-secondary)]">
-                {['5 Welcome AI Credits', 'Full Access to AI Features', 'Cloud Backup & Recovery', 'Multi-device Resume Sync', 'Purchased Credits Storage'].map((benefit) => (
+                {['Up to 5 Free Credits (via Social Tasks)', 'Full Access to AI Features', 'Cloud Backup & Recovery', 'Multi-device Resume Sync', 'Purchased Credits Storage'].map((benefit) => (
                   <div key={benefit} className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                    <span className={benefit.includes('5 Welcome') ? 'font-semibold text-emerald-400' : ''}>{benefit}</span>
+                    <span className={benefit.includes('Up to 5') ? 'font-semibold text-emerald-400' : ''}>{benefit}</span>
                   </div>
                 ))}
               </div>
@@ -459,6 +797,44 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                     </div>
                   </div>
 
+                  {/* Referral Code Field on Signup Mode */}
+                  {mode === 'signup' && (
+                    <div className="space-y-1.5 pt-0.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-[var(--ox-text-secondary)] flex items-center gap-1.5">
+                          <Gift className="w-3.5 h-3.5 text-orange-500" />
+                          <span>Referral Code</span>
+                          <span className="text-[10px] text-[var(--ox-text-muted)] font-normal">(Optional)</span>
+                        </label>
+                        {isValidReferralCode(referralCode) && (
+                          <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                            <Check className="w-2.5 h-2.5" /> +5 Credits
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={referralCode}
+                          onChange={(e) => handleReferralChange(e.target.value)}
+                          placeholder="e.g. 6-character code"
+                          maxLength={6}
+                          disabled={isLoading}
+                          className="w-full bg-[var(--ox-surface-primary)] border border-[var(--ox-border)] rounded-xl px-3.5 py-2.5 text-xs font-mono uppercase tracking-wider text-[var(--ox-text-primary)] placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-orange-500 disabled:opacity-50 transition-colors"
+                        />
+                      </div>
+                      {isValidReferralCode(referralCode) ? (
+                        <p className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                          <span>🎉 Referral code applied! Both you and your friend will receive <strong>+5 free AI credits</strong> upon email verification.</span>
+                        </p>
+                      ) : (
+                        <p className="text-[10px] text-[var(--ox-text-muted)]">
+                          Got an invite from a friend? Enter their 6-character referral code here to claim +5 bonus credits.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {mode === 'login' && (
                     <button
                       type="button"
@@ -479,7 +855,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                     ) : (
                       <LogIn className="w-4 h-4" />
                     )}
-                    {mode === 'signup' ? 'Create Account & Claim 5 Credits' : 'Login & Continue'}
+                    {mode === 'signup' ? 'Create Account & Claim Up to 5 Credits' : 'Login & Continue'}
                   </button>
                 </form>
 

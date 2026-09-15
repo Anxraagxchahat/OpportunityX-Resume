@@ -79,7 +79,15 @@ export const WhitespaceModernTemplate = ({ resumeData, accentHex, fontFamily, vi
                 <div key={p.id || i} data-block-id={blockId} className="mb-3 last:mb-0 pdf-block pdf-item">
                   <h3 className="text-xs font-bold text-slate-900">{p.name}</h3>
                   {p.techStack && <p className="text-[10px] text-slate-400 italic">{p.techStack}</p>}
-                  {p.description && <p className="text-[10px] text-slate-600 mt-0.5">{p.description}</p>}
+                  {Array.isArray(p.bullets) && p.bullets.filter(Boolean).length > 0 ? (
+                    <ul className="list-disc pl-4 text-[10px] text-slate-600 mt-0.5 space-y-0.5">
+                      {p.bullets.filter(Boolean).map((b, idx) => (
+                        <li key={idx}>{b}</li>
+                      ))}
+                    </ul>
+                  ) : p.description ? (
+                    <p className="text-[10px] text-slate-600 mt-0.5">{p.description}</p>
+                  ) : null}
                 </div>
               );
             })}

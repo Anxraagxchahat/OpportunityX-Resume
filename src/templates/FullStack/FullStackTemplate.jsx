@@ -65,12 +65,13 @@ export const FullStackTemplate = ({ resumeData, accentHex = '#0ea5e9', fontFamil
                 </span>
                 {(p.link || p.url) && <span className="font-mono text-slate-500 text-[10px]">{p.link || p.url}</span>}
               </div>
-              {p.description && <p className="text-slate-700 leading-relaxed">{p.description}</p>}
-              {p.bullets && (
+              {Array.isArray(p.bullets) && p.bullets.filter(Boolean).length > 0 ? (
                 <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
-                  {p.bullets.map((b, idx) => <li key={idx}>{b}</li>)}
+                  {p.bullets.filter(Boolean).map((b, idx) => <li key={idx}>{b}</li>)}
                 </ul>
-              )}
+              ) : p.description ? (
+                <p className="text-slate-700 leading-relaxed">{p.description}</p>
+              ) : null}
             </div>
           ))}
         </div>

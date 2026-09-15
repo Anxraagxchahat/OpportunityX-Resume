@@ -20,7 +20,7 @@ export const AICreditsCard = ({ compact = false }) => {
         className="px-3 py-1 rounded-full text-xs font-bold bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center gap-1.5 transition-all shadow-sm"
       >
         <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-        <span>{isLoggedIn ? `✨ ${remaining} AI Credits` : '✨ Claim 5 Free AI Credits'}</span>
+        <span>{isLoggedIn ? `✨ ${remaining} AI Credits` : '✨ Up to 5 Free Credits'}</span>
       </button>
     );
   }
@@ -39,7 +39,7 @@ export const AICreditsCard = ({ compact = false }) => {
           <div>
             <h3 className="text-sm font-bold text-white">✨ AI Credits System</h3>
             <p className="text-[11px] text-slate-400">
-              {isLoggedIn ? 'Non-expiring Account Credits' : 'Guest Mode — Login to claim 5 free credits'}
+              {isLoggedIn ? 'Non-expiring Account Credits' : 'Guest Mode — Earn up to 5 credits via social tasks'}
             </p>
           </div>
         </div>
@@ -75,7 +75,7 @@ export const AICreditsCard = ({ compact = false }) => {
             onClick={() => setIsUnlockAIModalOpen(true)}
             className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5"
           >
-            <Sparkles className="w-3.5 h-3.5" /> Login & Claim 5 Free Credits
+            <Sparkles className="w-3.5 h-3.5" /> Login & Earn Up to 5 Credits
           </button>
         )}
 

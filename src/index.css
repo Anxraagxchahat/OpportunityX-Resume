@@ -250,6 +250,8 @@ html, body {
 }
 
 [data-theme='light'] .bg-slate-900,
+[data-theme='light'] .bg-slate-900\/95,
+[data-theme='light'] .bg-slate-950\/80,
 [data-theme='light'] .bg-\[\#080B12\],
 [data-theme='light'] .bg-\[\#070A12\],
 [data-theme='light'] .bg-\[\#07090F\],
@@ -284,6 +286,7 @@ html, body {
 
 [data-theme='light'] .border-slate-800,
 [data-theme='light'] .border-slate-700,
+[data-theme='light'] .border-slate-700\/80,
 [data-theme='light'] .border-slate-800\/80 {
   border-color: #E2E8F0 !important;
 }
@@ -333,6 +336,8 @@ html, body {
 }
 
 [data-theme='monochromatic'] .bg-slate-900,
+[data-theme='monochromatic'] .bg-slate-900\/95,
+[data-theme='monochromatic'] .bg-slate-950\/80,
 [data-theme='monochromatic'] .bg-\[\#080B12\],
 [data-theme='monochromatic'] .bg-\[\#070A12\],
 [data-theme='monochromatic'] .bg-\[\#07090F\],
@@ -367,6 +372,7 @@ html, body {
 
 [data-theme='monochromatic'] .border-slate-800,
 [data-theme='monochromatic'] .border-slate-700,
+[data-theme='monochromatic'] .border-slate-700\/80,
 [data-theme='monochromatic'] .border-slate-800\/80 {
   border-color: #E4E4E7 !important;
 }
@@ -454,6 +460,73 @@ html, body {
   background-size: 200% 100%;
 }
 
+/* ==========================================================================
+   RESUME PREVIEW & PDF CANVAS IMMUNITY SYSTEM
+   Prevents IDE application UI themes (Light / Monochromatic) from leaking
+   into resume templates. Dark and custom-styled resume templates MUST retain
+   their own contrast, white text, and brand colors.
+   ========================================================================== */
+
+/* 1. White and Light Text Protection inside All Resume Containers */
+[data-theme='light'] .a4-paper-container .text-white,
+[data-theme='light'] #resume-a4-preview .text-white,
+[data-theme='light'] #resume-measure-node .text-white,
+[data-theme='light'] .pdf-a4-page .text-white,
+[data-theme='monochromatic'] .a4-paper-container .text-white,
+[data-theme='monochromatic'] #resume-a4-preview .text-white,
+[data-theme='monochromatic'] #resume-measure-node .text-white,
+[data-theme='monochromatic'] .pdf-a4-page .text-white {
+  color: #FFFFFF !important;
+}
+
+[data-theme='light'] .a4-paper-container .text-gray-100,
+[data-theme='light'] #resume-a4-preview .text-gray-100,
+[data-theme='light'] #resume-measure-node .text-gray-100,
+[data-theme='monochromatic'] .a4-paper-container .text-gray-100,
+[data-theme='monochromatic'] #resume-a4-preview .text-gray-100,
+[data-theme='monochromatic'] #resume-measure-node .text-gray-100 {
+  color: #F3F4F6 !important;
+}
+
+[data-theme='light'] .a4-paper-container .text-gray-200,
+[data-theme='light'] #resume-a4-preview .text-gray-200,
+[data-theme='light'] #resume-measure-node .text-gray-200,
+[data-theme='monochromatic'] .a4-paper-container .text-gray-200,
+[data-theme='monochromatic'] #resume-a4-preview .text-gray-200,
+[data-theme='monochromatic'] #resume-measure-node .text-gray-200 {
+  color: #E5E7EB !important;
+}
+
+[data-theme='light'] .a4-paper-container .text-gray-300,
+[data-theme='light'] #resume-a4-preview .text-gray-300,
+[data-theme='light'] #resume-measure-node .text-gray-300,
+[data-theme='monochromatic'] .a4-paper-container .text-gray-300,
+[data-theme='monochromatic'] #resume-a4-preview .text-gray-300,
+[data-theme='monochromatic'] #resume-measure-node .text-gray-300 {
+  color: #D1D5DB !important;
+}
+
+[data-theme='light'] .a4-paper-container .text-gray-400,
+[data-theme='light'] #resume-a4-preview .text-gray-400,
+[data-theme='light'] #resume-measure-node .text-gray-400,
+[data-theme='monochromatic'] .a4-paper-container .text-gray-400,
+[data-theme='monochromatic'] #resume-a4-preview .text-gray-400,
+[data-theme='monochromatic'] #resume-measure-node .text-gray-400 {
+  color: #9CA3AF !important;
+}
+
+/* 2. Specific Dark Templates Complete Theme Isolation */
+.bre-material-dark-container,
+.developer-dark-container {
+  color-scheme: dark !important;
+}
+
+[data-theme='light'] .bre-material-dark-container .text-white,
+[data-theme='monochromatic'] .bre-material-dark-container .text-white,
+[data-theme='light'] .bre-material-dark-container h1,
+[data-theme='monochromatic'] .bre-material-dark-container h1 {
+  color: #FFFFFF !important;
+}
 
 /* ==========================================================================
    PRODUCTION PDF PAGINATION & FRAGMENTATION ENGINE

@@ -90,7 +90,7 @@ export const ResumeProvider = ({ children }) => {
     setSession(newSession);
     cacheSession(newSession);
 
-    if (firebaseUser) {
+    if (firebaseUser && fbIsAuth) {
       setPersistenceMode('cloud');
 
       // 1. Sync User with Backend & Fetch Authoritative Credit Balance
@@ -100,28 +100,15 @@ export const ResumeProvider = ({ children }) => {
             console.warn("[CloudSync] Backend auth sync notice:", err.message);
           });
 
-          // Check if there is a pending referral code to redeem
+          // Referral redemption is strictly performed upon new account signup in AuthModal.
+          // Stale pending referral codes from existing user logins are discarded.
           const pendingRef = getPendingReferralCode();
           if (pendingRef) {
-            try {
-              const redeemRes = await apiService.redeemReferralCode(pendingRef);
-              if (redeemRes && redeemRes.ok) {
-                console.log("[Referral] Successfully redeemed pending referral:", pendingRef);
-              }
-            } catch (refErr) {
-              console.warn("[Referral] Pending referral redemption note:", refErr.message);
-            } finally {
-              clearPendingReferralCode();
-            }
+            clearPendingReferralCode();
           }
 
           let walletData = await apiService.getCreditBalance();
           if (walletData && typeof walletData.remaining_credits === 'number') {
-            if (!walletData.has_claimed_welcome) {
-              try {
-                walletData = await apiService.claimWelcomeCredits();
-              } catch (e) {}
-            }
             const txList = await apiService.getCreditTransactions().catch(() => []);
             const calculatedUsed = (txList || []).filter(t => t.credits_changed < 0).reduce((acc, t) => acc + Math.abs(t.credits_changed), 0);
             setAiCredits({
@@ -240,7 +227,7 @@ export const ResumeProvider = ({ children }) => {
       setResumes([defaultGuest]);
       setActiveResumeIdState('ox-resume-initial');
     }
-  }, [firebaseUser]);
+  }, [firebaseUser, fbIsAuth]);
 
   // Derived Active Resume Object
   const activeResume = useMemo(() => {
@@ -423,6 +410,11 @@ export const ResumeProvider = ({ children }) => {
   const [isBuyCreditsModalOpen, setIsBuyCreditsModalOpen] = useState(false);
   const [isAICreditsModalOpen, setIsAICreditsModalOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
+  const openAuthModal = useCallback((mode = 'login') => {
+    setAuthModalMode(mode);
+    setIsAuthOpen(true);
+  }, []);
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [isAssetManagerOpen, setIsAssetManagerOpen] = useState(false);
   const [isExportCenterOpen, setIsExportCenterOpen] = useState(false);
@@ -937,34 +929,55 @@ export const ResumeProvider = ({ children }) => {
         const title = guestRes.metadata?.title || guestRes.personal?.fullName || 'Migrated Resume';
         const template = guestRes.metadata?.template || 'modern';
         const newId = `res_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-        await apiService.createResume({
-          id: newId,
-          title,
-          content: guestRes,
-          template_id: template,
-          font_family: guestRes.metadata?.font || 'Inter',
-          accent_color: guestRes.metadata?.accentColor || '#F97316'
-        });
+        try {
+          await apiService.createResume({
+            id: newId,
+            title,
+            content: guestRes,
+            template_id: template,
+            font_family: guestRes.metadata?.font || 'Inter',
+            accent_color: guestRes.metadata?.accentColor || '#F97316'
+          });
+        } catch (singleErr) {
+          console.warn('[CloudSync] Error saving single migrated resume to backend:', singleErr);
+        }
       }
 
       // Re-fetch all cloud resumes
-      const cloudList = await apiService.getResumes();
-      if (Array.isArray(cloudList) && cloudList.length > 0) {
-        const normalized = cloudList.map(r => hydrateAndNormalizeResume({
-          ...r.content,
-          metadata: {
-            ...(r.content?.metadata || {}),
-            id: r.id,
-            uuid: r.id,
-            title: r.title || r.content?.metadata?.title || 'Untitled Resume',
-            template: r.template_id || r.content?.metadata?.template || 'modern',
-            font: r.font_family || r.content?.metadata?.font || 'Inter',
-            accentColor: r.accent_color || r.content?.metadata?.accentColor || '#F97316',
-            lastSaved: r.updated_at || new Date().toISOString()
+      try {
+        const cloudList = await apiService.getResumes();
+        if (Array.isArray(cloudList) && cloudList.length > 0) {
+          const normalized = cloudList.map(r => hydrateAndNormalizeResume({
+            ...r.content,
+            metadata: {
+              ...(r.content?.metadata || {}),
+              id: r.id,
+              uuid: r.id,
+              title: r.title || r.content?.metadata?.title || 'Untitled Resume',
+              template: r.template_id || r.content?.metadata?.template || 'modern',
+              font: r.font_family || r.content?.metadata?.font || 'Inter',
+              accentColor: r.accent_color || r.content?.metadata?.accentColor || '#F97316',
+              lastSaved: r.updated_at || new Date().toISOString()
+            }
+          }));
+          setResumes(normalized);
+          setActiveResumeIdState(normalized[0].metadata.id);
+        }
+      } catch (fetchErr) {
+        console.warn('[CloudSync] Fallback to local resume list after migration:', fetchErr);
+        setResumes(prev => {
+          const merged = [...localGuestResumes.map(r => hydrateAndNormalizeResume(r)), ...prev];
+          const unique = [];
+          const seen = new Set();
+          for (const r of merged) {
+            const rid = r.metadata?.id || r.metadata?.uuid;
+            if (!seen.has(rid)) {
+              seen.add(rid);
+              unique.push(r);
+            }
           }
-        }));
-        setResumes(normalized);
-        setActiveResumeIdState(normalized[0].metadata.id);
+          return unique;
+        });
       }
 
       localStorage.setItem(`ox_migrated_${firebaseUser.uid}`, 'true');
@@ -972,6 +985,9 @@ export const ResumeProvider = ({ children }) => {
       setIsMigrationModalOpen(false);
     } catch (err) {
       console.warn('[CloudSync] Migration error:', err);
+      localStorage.setItem(`ox_migrated_${firebaseUser.uid}`, 'true');
+      setLocalGuestResumes([]);
+      setIsMigrationModalOpen(false);
     } finally {
       setIsMigrating(false);
     }
@@ -1403,6 +1419,9 @@ export const ResumeProvider = ({ children }) => {
         setIsAICreditsModalOpen,
         isAuthOpen,
         setIsAuthOpen,
+        authModalMode,
+        setAuthModalMode,
+        openAuthModal,
         isInspectorOpen,
         setIsInspectorOpen,
         isAssetManagerOpen,

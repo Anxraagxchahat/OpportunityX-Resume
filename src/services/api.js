@@ -1,12 +1,12 @@
 import { auth } from '../firebase';
 
 // Smart multi-port detection for local development (supports 8001, 8000, 8002, or Render in prod)
-const DEFAULT_LOCAL_URL = 'http://localhost:8001/api/v1';
+const DEFAULT_LOCAL_URL = 'http://localhost:8000/api/v1';
 const FALLBACK_LOCAL_URLS = [
-  'http://localhost:8001/api/v1',
   'http://localhost:8000/api/v1',
-  'http://127.0.0.1:8001/api/v1',
-  'http://127.0.0.1:8000/api/v1'
+  'http://localhost:8001/api/v1',
+  'http://127.0.0.1:8000/api/v1',
+  'http://127.0.0.1:8001/api/v1'
 ];
 
 let cachedBaseUrl =
@@ -122,23 +122,32 @@ export const apiService = {
   },
 
   async createResume(resumeData) {
+    const content = resumeData.content || resumeData.resume_data || resumeData;
     return request('/resumes', {
       method: 'POST',
       body: JSON.stringify({
-        title: resumeData.title || 'Untitled Resume',
-        resume_data: resumeData.resume_data || resumeData,
-        ats_score: resumeData.ats_score || 0
+        id: resumeData.id,
+        title: resumeData.title || content?.metadata?.title || 'Untitled Resume',
+        content: content,
+        template_id: resumeData.template_id || content?.metadata?.template || 'modern',
+        font_family: resumeData.font_family || content?.metadata?.font || 'Inter',
+        accent_color: resumeData.accent_color || content?.metadata?.accentColor || '#F97316'
       })
     });
   },
 
   async updateResume(id, updateData) {
+    const content = updateData.content || updateData.resume_data || updateData;
     return request(`/resumes/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
-        title: updateData.title,
-        resume_data: updateData.resume_data || updateData,
-        ats_score: updateData.ats_score
+        title: updateData.title || content?.metadata?.title,
+        content: content,
+        template_id: updateData.template_id || content?.metadata?.template,
+        font_family: updateData.font_family || content?.metadata?.font,
+        accent_color: updateData.accent_color || content?.metadata?.accentColor,
+        is_archived: updateData.is_archived,
+        is_favorite: updateData.is_favorite
       })
     });
   },

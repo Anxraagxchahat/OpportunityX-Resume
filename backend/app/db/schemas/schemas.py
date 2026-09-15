@@ -145,7 +145,8 @@ class NotificationResponse(BaseModel):
 class ResumeCreateRequest(BaseModel):
     id: Optional[str] = None
     title: str = "Untitled Resume"
-    content: Dict[str, Any]
+    content: Optional[Dict[str, Any]] = None
+    resume_data: Optional[Dict[str, Any]] = None
     template_id: Optional[str] = "modern"
     font_family: Optional[str] = "Inter"
     accent_color: Optional[str] = "#F97316"
@@ -153,6 +154,7 @@ class ResumeCreateRequest(BaseModel):
 class ResumeUpdateRequest(BaseModel):
     title: Optional[str] = None
     content: Optional[Dict[str, Any]] = None
+    resume_data: Optional[Dict[str, Any]] = None
     template_id: Optional[str] = None
     font_family: Optional[str] = None
     accent_color: Optional[str] = None
@@ -231,9 +233,9 @@ class ReferralProfileResponse(BaseModel):
     referral_credits_earned: int
 
 class StarterCreditsInfo(BaseModel):
-    amount: int = 5
-    claimed: bool
-    type: str = "GUARANTEED"
+    amount: int = 0
+    claimed: bool = True
+    type: str = "SOCIAL_TASKS"
 
 class RewardsOverviewResponse(BaseModel):
     starter_credits: StarterCreditsInfo

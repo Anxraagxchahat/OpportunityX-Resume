@@ -67,15 +67,23 @@ export const AuthProvider = ({ children }) => {
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       clearTimeout(safetyTimer);
+      
+      const isEmailUser = currentUser?.providerData?.some(p => p.providerId === 'password');
+      const isVerified = currentUser ? (!isEmailUser || Boolean(currentUser.emailVerified)) : false;
+
       setUser(currentUser);
-      cacheUserIdentity(currentUser);
+      if (currentUser && isVerified) {
+        cacheUserIdentity(currentUser);
+      } else {
+        cacheUserIdentity(null);
+      }
 
       if (!initializedRef.current) {
         initializedRef.current = true;
         setAuthLoading(false);
 
         // Track initial auth state
-        if (currentUser) {
+        if (currentUser && isVerified) {
           trackAuthEvent('session_restored', {
             uid: currentUser.uid,
             provider: normalizeProvider(currentUser),
@@ -101,8 +109,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  const isAuthenticated = !!user;
-  const isGuest = !user;
+  const isEmailUser = user?.providerData?.some(p => p.providerId === 'password');
+  const isEmailUnverified = Boolean(user && isEmailUser && !user.emailVerified);
+  const isAuthenticated = Boolean(user && (!isEmailUser || user.emailVerified));
+  const isGuest = !isAuthenticated;
 
   return (
     <AuthContext.Provider
@@ -111,6 +121,7 @@ export const AuthProvider = ({ children }) => {
         authLoading,
         isAuthenticated,
         isGuest,
+        isEmailUnverified,
         logout,
       }}
     >

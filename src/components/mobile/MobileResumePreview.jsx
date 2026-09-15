@@ -44,7 +44,9 @@ export const MobileResumePreview = () => {
   const pageMargin = style?.pageMargin || 'normal';
   const pageBreakOffset = Number(style?.pageBreakOffset) || 0;
   const showPage2Header = style?.showPage2Header !== false;
-  const page2TopMargin = Number(style?.page2TopMargin) ?? 10;
+  const page2TopMargin = style?.page2TopMargin != null && Number.isFinite(Number(style.page2TopMargin))
+    ? Number(style.page2TopMargin)
+    : 10;
 
   const topPadMm = pageMargin === 'compact' ? 6 : pageMargin === 'spacious' ? 14 : 10;
   const sidePadMm = pageMargin === 'compact' ? 8 : pageMargin === 'spacious' ? 16 : 12;
@@ -66,7 +68,8 @@ export const MobileResumePreview = () => {
           pageMargin,
           pageBreakOffset,
           showPage2Header,
-          page2TopMargin
+          page2TopMargin,
+          template
         });
         setPageAssignments(computedPages);
         setTotalPages(Math.max(1, computedPages.length));
@@ -74,8 +77,26 @@ export const MobileResumePreview = () => {
     };
 
     updatePagination();
-    const timer = setTimeout(updatePagination, 200);
-    return () => clearTimeout(timer);
+    const timer1 = setTimeout(updatePagination, 80);
+    const timer2 = setTimeout(updatePagination, 300);
+
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== 'undefined' && measureRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        updatePagination();
+      });
+      resizeObserver.observe(measureRef.current);
+    }
+
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(updatePagination);
+    }
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
   }, [activeResume, template, fontFamily, accentHex, style, pageBreakOffset, topPadMm, showPage2Header, page2TopMargin, pageMargin]);
 
   // ─── Zoom Handlers ──────────────────────────────────────────

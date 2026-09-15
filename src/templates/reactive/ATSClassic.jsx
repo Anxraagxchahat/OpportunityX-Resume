@@ -19,6 +19,18 @@ export const ATSClassicTemplate = ({ resumeData, accentHex, fontFamily, visibleB
 
   const isVisible = (id) => shouldRenderBlock(id, visibleBlockIds);
 
+  const hasSidebarContent =
+    (skills && isVisible('skills') && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0)) ||
+    (education.length > 0 && education.some((_, i) => isVisible(`edu-${i}`))) ||
+    (certificates.length > 0 && certificates.some((_, i) => isVisible(`cert-${i}`)));
+
+  const hasMainContent =
+    (personal.summary && isVisible('summary')) ||
+    (experience.length > 0 && experience.some((_, i) => isVisible(`exp-${i}`))) ||
+    (projects.length > 0 && projects.some((_, i) => isVisible(`proj-${i}`))) ||
+    (achievements.length > 0 && achievements.some((_, i) => isVisible(`achieve-${i}`))) ||
+    isVisible('profiles');
+
   return (
     <div className="text-slate-800" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
       {/* Minimal Header */}
@@ -33,33 +45,37 @@ export const ATSClassicTemplate = ({ resumeData, accentHex, fontFamily, visibleB
       )}
 
       {/* Two Column */}
-      <div className="flex gap-5">
-        {/* Left Narrow Column */}
-        <div className="w-[30%] space-y-3">
-          {skills && isVisible('skills') && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
-            <div>
-              <SectionHeading title="Skills" accentHex={accentHex} variant="minimal" />
-              <SkillsBlock skills={skills} variant="inline" visibleBlockIds={visibleBlockIds} />
+      {(hasSidebarContent || hasMainContent) && (
+        <div className="flex gap-5">
+          {/* Left Narrow Column */}
+          {hasSidebarContent && (
+            <div className="w-[30%] space-y-3">
+              {skills && isVisible('skills') && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
+                <div>
+                  <SectionHeading title="Skills" accentHex={accentHex} variant="minimal" />
+                  <SkillsBlock skills={skills} variant="inline" visibleBlockIds={visibleBlockIds} />
+                </div>
+              )}
+
+              {education.length > 0 && education.some((_, i) => isVisible(`edu-${i}`)) && (
+                <div>
+                  <SectionHeading title="Education" accentHex={accentHex} variant="minimal" />
+                  <EducationBlock education={education} variant="compact" visibleBlockIds={visibleBlockIds} />
+                </div>
+              )}
+
+              {certificates.length > 0 && certificates.some((_, i) => isVisible(`cert-${i}`)) && (
+                <div>
+                  <SectionHeading title="Certifications" accentHex={accentHex} variant="minimal" />
+                  <CertificatesBlock certificates={certificates} visibleBlockIds={visibleBlockIds} />
+                </div>
+              )}
             </div>
           )}
 
-          {education.length > 0 && education.some((_, i) => isVisible(`edu-${i}`)) && (
-            <div>
-              <SectionHeading title="Education" accentHex={accentHex} variant="minimal" />
-              <EducationBlock education={education} variant="compact" visibleBlockIds={visibleBlockIds} />
-            </div>
-          )}
-
-          {certificates.length > 0 && certificates.some((_, i) => isVisible(`cert-${i}`)) && (
-            <div>
-              <SectionHeading title="Certifications" accentHex={accentHex} variant="minimal" />
-              <CertificatesBlock certificates={certificates} visibleBlockIds={visibleBlockIds} />
-            </div>
-          )}
-        </div>
-
-        {/* Right Main Column */}
-        <div className="flex-1 space-y-3">
+          {/* Right Main Column */}
+          {hasMainContent && (
+            <div className="flex-1 space-y-3">
           {personal.summary && isVisible('summary') && (
             <div data-block-id="summary" className="pdf-block pdf-keep-together">
               <SectionHeading title="Summary" accentHex={accentHex} variant="minimal" />
@@ -91,8 +107,10 @@ export const ATSClassicTemplate = ({ resumeData, accentHex, fontFamily, visibleB
           {isVisible('profiles') && (
             <SocialLinksBlock personal={personal} accentHex={accentHex} visibleBlockIds={visibleBlockIds} />
           )}
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

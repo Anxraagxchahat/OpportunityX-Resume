@@ -248,11 +248,14 @@ export const ThemeCustomizerModal = () => {
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-slate-400 font-medium">Page 2 Top Push Spacing (Text Offset)</span>
-                <span className="text-amber-400 font-mono font-bold">{style.page2TopMargin || 10}mm</span>
+                <span className="text-amber-400 font-mono font-bold">
+                  {style?.page2TopMargin != null && Number.isFinite(Number(style.page2TopMargin)) ? Number(style.page2TopMargin) : 10}mm
+                </span>
               </div>
               <div className="grid grid-cols-6 gap-1 text-[10px]">
                 {[0, 5, 10, 15, 20, 25].map((m) => {
-                  const isSel = (Number(style.page2TopMargin) ?? 10) === m;
+                  const currentP2Margin = style?.page2TopMargin != null && Number.isFinite(Number(style.page2TopMargin)) ? Number(style.page2TopMargin) : 10;
+                  const isSel = currentP2Margin === m;
                   return (
                     <button
                       key={m}

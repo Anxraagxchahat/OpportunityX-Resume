@@ -110,14 +110,14 @@ export const TabletTopBar = () => {
             }
           }}
           className="min-h-[44px] px-2.5 sm:px-3 py-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 whitespace-nowrap"
-          title={isGuest ? 'Claim 5 Free AI Credits' : `${aiCredits?.remaining || 5} AI Credits`}
+          title={isGuest ? 'Earn Up to 5 Free AI Credits' : `${aiCredits?.remaining || 0} AI Credits`}
         >
           <Sparkles className="w-3.5 h-3.5 text-orange-400 shrink-0 animate-pulse" />
           <span className="hidden min-[840px]:inline">
-            {isGuest ? 'Claim 5 Free Credits' : `${aiCredits?.remaining || 5} Credits`}
+            {isGuest ? 'Up to 5 Free Credits' : `${aiCredits?.remaining || 0} Credits`}
           </span>
           <span className="inline min-[840px]:hidden">
-            {isGuest ? '5 Free Cr' : `${aiCredits?.remaining || 5} Cr`}
+            {isGuest ? 'Up to 5 Cr' : `${aiCredits?.remaining || 0} Cr`}
           </span>
         </button>
 

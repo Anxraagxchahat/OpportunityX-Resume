@@ -1,6 +1,11 @@
 import asyncio
-from typing import Optional
-from playwright.async_api import async_playwright, Browser, Playwright
+from typing import Optional, Any
+try:
+    from playwright.async_api import async_playwright, Browser, Playwright
+except ImportError:
+    async_playwright = None
+    Browser = Any
+    Playwright = Any
 from app.core.logging import logger
 
 class CanonicalPDFExportService:
@@ -19,6 +24,8 @@ class CanonicalPDFExportService:
     async def _get_browser(self) -> Browser:
         async with self._lock:
             if self._browser is None or not self._browser.is_connected():
+                if async_playwright is None:
+                    raise RuntimeError("Playwright is not installed. PDF export requires playwright.")
                 if self._playwright is None:
                     self._playwright = await async_playwright().start()
                 self._browser = await self._playwright.chromium.launch(

@@ -90,7 +90,7 @@ async def claim_welcome_credits(
         photo_url=user.photo_url
     )
     repo = CreditRepository(db)
-    wallet, _ = repo.claim_welcome_bonus(user.uid, bonus_credits=5)
+    wallet, _ = repo.claim_welcome_bonus(user.uid, bonus_credits=0)
     return wallet
 
 @router.post("/claim-social", response_model=SocialClaimResponse)

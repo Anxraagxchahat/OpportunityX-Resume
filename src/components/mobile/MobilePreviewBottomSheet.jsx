@@ -162,7 +162,9 @@ const SpacingTab = () => {
   const sectionSpacing = style.sectionSpacing || 'normal';
   const lineSpacing = style.lineSpacing || 'normal';
   const pageBreakOffset = Number(style.pageBreakOffset) || 0;
-  const page2TopMargin = Number(style.page2TopMargin) ?? 10;
+  const page2TopMargin = style?.page2TopMargin != null && Number.isFinite(Number(style.page2TopMargin))
+    ? Number(style.page2TopMargin)
+    : 10;
 
   const handleFitOnePage = () => {
     updateStyle('pageMargin', 'compact');

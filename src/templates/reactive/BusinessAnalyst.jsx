@@ -19,48 +19,66 @@ export const BusinessAnalystTemplate = ({ resumeData, accentHex, fontFamily, vis
 
   const isVisible = (id) => shouldRenderBlock(id, visibleBlockIds);
 
+  const hasSidebarContent =
+    isVisible('contact') ||
+    (skills && isVisible('skills') && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0)) ||
+    (education.length > 0 && education.some((_, i) => isVisible(`edu-${i}`))) ||
+    (certificates.length > 0 && certificates.some((_, i) => isVisible(`cert-${i}`))) ||
+    (languages.length > 0 && isVisible('languages'));
+
+  const hasMainContent =
+    isVisible('header') ||
+    (personal.summary && isVisible('summary')) ||
+    (experience.length > 0 && experience.some((_, i) => isVisible(`exp-${i}`))) ||
+    (projects.length > 0 && projects.some((_, i) => isVisible(`proj-${i}`))) ||
+    (achievements.length > 0 && achievements.some((_, i) => isVisible(`achieve-${i}`))) ||
+    isVisible('profiles');
+
   return (
     <div className="flex min-h-full" style={{ fontFamily: `'${fontFamily || 'Inter'}', sans-serif` }}>
       {/* Left Sidebar — light tinted */}
-      <div className="w-[33%] p-5 space-y-4" style={{ backgroundColor: `${accentHex}08`, borderRight: `2px solid ${accentHex}20` }}>
-        {isVisible('contact') && (
-          <div data-block-id="contact">
-            <SectionHeading title="Contact" accentHex={accentHex} variant="bold-rule" />
-            <ContactInfo personal={personal} variant="stacked" />
-          </div>
-        )}
+      {hasSidebarContent && (
+        <div className="w-[33%] p-5 space-y-4" style={{ backgroundColor: `${accentHex}08`, borderRight: `2px solid ${accentHex}20` }}>
+          {isVisible('contact') && (
+            <div data-block-id="contact">
+              <SectionHeading title="Contact" accentHex={accentHex} variant="bold-rule" />
+              <ContactInfo personal={personal} variant="stacked" />
+            </div>
+          )}
 
-        {skills && isVisible('skills') && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
-          <div>
-            <SectionHeading title="Skills" accentHex={accentHex} variant="bold-rule" />
-            <SkillsBlock skills={skills} variant="tags" visibleBlockIds={visibleBlockIds} />
-          </div>
-        )}
+          {skills && isVisible('skills') && (skills.languages?.length > 0 || skills.frameworks?.length > 0 || skills.tools?.length > 0) && (
+            <div>
+              <SectionHeading title="Skills" accentHex={accentHex} variant="bold-rule" />
+              <SkillsBlock skills={skills} variant="tags" visibleBlockIds={visibleBlockIds} />
+            </div>
+          )}
 
-        {education.length > 0 && education.some((_, i) => isVisible(`edu-${i}`)) && (
-          <div>
-            <SectionHeading title="Education" accentHex={accentHex} variant="bold-rule" />
-            <EducationBlock education={education} variant="compact" visibleBlockIds={visibleBlockIds} />
-          </div>
-        )}
+          {education.length > 0 && education.some((_, i) => isVisible(`edu-${i}`)) && (
+            <div>
+              <SectionHeading title="Education" accentHex={accentHex} variant="bold-rule" />
+              <EducationBlock education={education} variant="compact" visibleBlockIds={visibleBlockIds} />
+            </div>
+          )}
 
-        {certificates.length > 0 && certificates.some((_, i) => isVisible(`cert-${i}`)) && (
-          <div>
-            <SectionHeading title="Certifications" accentHex={accentHex} variant="bold-rule" />
-            <CertificatesBlock certificates={certificates} visibleBlockIds={visibleBlockIds} />
-          </div>
-        )}
+          {certificates.length > 0 && certificates.some((_, i) => isVisible(`cert-${i}`)) && (
+            <div>
+              <SectionHeading title="Certifications" accentHex={accentHex} variant="bold-rule" />
+              <CertificatesBlock certificates={certificates} visibleBlockIds={visibleBlockIds} />
+            </div>
+          )}
 
-        {languages.length > 0 && isVisible('languages') && (
-          <div data-block-id="languages">
-            <SectionHeading title="Languages" accentHex={accentHex} variant="bold-rule" />
-            <LanguagesBlock languages={languages} visibleBlockIds={visibleBlockIds} />
-          </div>
-        )}
-      </div>
+          {languages.length > 0 && isVisible('languages') && (
+            <div data-block-id="languages">
+              <SectionHeading title="Languages" accentHex={accentHex} variant="bold-rule" />
+              <LanguagesBlock languages={languages} visibleBlockIds={visibleBlockIds} />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main Content */}
-      <div className="flex-1 p-5 space-y-4 text-slate-800">
+      {hasMainContent && (
+        <div className="flex-1 p-5 space-y-4 text-slate-800">
         {isVisible('header') && (
           <div data-block-id="header" className="pb-3 border-b" style={{ borderColor: `${accentHex}30` }}>
             <h1 className="text-2xl font-black text-slate-900">{personal.fullName || 'Your Name'}</h1>
@@ -99,7 +117,8 @@ export const BusinessAnalystTemplate = ({ resumeData, accentHex, fontFamily, vis
         {isVisible('profiles') && (
           <SocialLinksBlock personal={personal} accentHex={accentHex} visibleBlockIds={visibleBlockIds} />
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,0 +1,81 @@
+# ==============================================================================
+# OpportunityX Resume - Backend .dockerignore
+# Excludes unnecessary build artifacts, secrets, virtual environments, and test files
+# ==============================================================================
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Environment secrets & credentials (NEVER bake secrets into image)
+.env
+.env.local
+.env.*
+*.env
+*credential*.json
+*service-account*.json
+serviceAccountKey*.json
+firebase*.json
+*.pem
+*.key
+*.cert
+*.crt
+
+# Git & repository metadata
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# Node.js artifacts (if present)
+node_modules/
+
+# IDE & editor configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing & quality cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+tests/
+
+# Local databases & storage
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Local scratch & temporary files
+scratch/
+tmp/
+temp/
+*.tmp
+*.temp
+
+# OS-generated metadata
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker build configs
+Dockerfile*
+.dockerignore

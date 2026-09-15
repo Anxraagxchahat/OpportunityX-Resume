@@ -20,49 +20,49 @@ class TestCreditFlow(unittest.TestCase):
         self.db_session.close()
 
     def test_a_existing_opportunityx_user_gets_starter_credits(self):
-        """TEST A: Existing OpportunityX account, first Resume use -> +5 starter"""
+        """TEST A: Existing OpportunityX account, first Resume use -> 0 initial credits"""
         user_id = "ox-existing-user-1"
         self.user_repo.sync_user(uid=user_id, email="ox.existing@opportunityx.co.in", display_name="Existing Dev")
 
         wallet = self.repo.get_or_create_wallet(user_id)
-        self.assertEqual(wallet.remaining_credits, 5)
+        self.assertEqual(wallet.remaining_credits, 0)
         self.assertTrue(wallet.has_claimed_welcome)
 
     def test_b_new_opportunityx_user_gets_starter_credits(self):
-        """TEST B: New OpportunityX account, first Resume use -> +5 starter"""
+        """TEST B: New OpportunityX account, first Resume use -> 0 initial credits"""
         user_id = "ox-new-user-2"
         wallet = self.repo.get_or_create_wallet(user_id)
-        self.assertEqual(wallet.remaining_credits, 5)
+        self.assertEqual(wallet.remaining_credits, 0)
         self.assertTrue(wallet.has_claimed_welcome)
 
-        # Duplicate claim attempt must be rejected (idempotent, balance stays 5)
-        wallet, claimed_again = self.repo.claim_welcome_bonus(user_id, bonus_credits=5)
+        # Duplicate claim attempt must be rejected (idempotent, balance stays 0)
+        wallet, claimed_again = self.repo.claim_welcome_bonus(user_id, bonus_credits=0)
         self.assertFalse(claimed_again)
-        self.assertEqual(wallet.remaining_credits, 5)
+        self.assertEqual(wallet.remaining_credits, 0)
 
     def test_c_complete_instagram_task_once_and_repeat(self):
         """TEST C: Complete Instagram task -> +2 once; repeat -> +0"""
         user_id = "user-social-insta"
-        # Initial 5 starter credits
+        # Initial 0 starter credits
         wallet = self.repo.get_or_create_wallet(user_id)
-        self.assertEqual(wallet.remaining_credits, 5)
+        self.assertEqual(wallet.remaining_credits, 0)
 
         # Claim Instagram task (+2)
         wallet, added, msg = self.repo.claim_social_task_reward(user_id, "instagram_follow")
         self.assertEqual(added, 2)
-        self.assertEqual(wallet.remaining_credits, 7)
+        self.assertEqual(wallet.remaining_credits, 2)
 
         # Repeat claim attempt -> must grant 0 additional credits
         wallet, added_again, msg2 = self.repo.claim_social_task_reward(user_id, "instagram_follow")
         self.assertEqual(added_again, 0)
-        self.assertEqual(wallet.remaining_credits, 7)
+        self.assertEqual(wallet.remaining_credits, 2)
 
     def test_d_complete_all_configured_social_tasks_max_five(self):
         """TEST D: Complete all configured social tasks -> Maximum social reward = +5"""
         user_id = "user-all-social"
-        # 5 starter credits
+        # 0 starter credits
         wallet = self.repo.get_or_create_wallet(user_id)
-        self.assertEqual(wallet.remaining_credits, 5)
+        self.assertEqual(wallet.remaining_credits, 0)
 
         # Claim Instagram (+2)
         self.repo.claim_social_task_reward(user_id, "instagram_follow")
@@ -74,8 +74,8 @@ class TestCreditFlow(unittest.TestCase):
         wallet, added_yt, _ = self.repo.claim_social_task_reward(user_id, "youtube_subscribe")
 
         self.assertEqual(added_yt, 1)
-        # Total = 5 starter + 2 + 1 + 1 + 1 = 10 total credits
-        self.assertEqual(wallet.remaining_credits, 10)
+        # Total = 0 starter + 2 + 1 + 1 + 1 = 5 total credits (Up to 5)
+        self.assertEqual(wallet.remaining_credits, 5)
 
         overview = self.repo.get_rewards_overview(user_id)
         self.assertEqual(overview["social_bonus_earned"], 5)
@@ -106,11 +106,11 @@ class TestCreditFlow(unittest.TestCase):
         user_a = "user-referrer-a"
         user_b = "user-referred-b"
 
-        # Initialize both users with 5 starter credits
+        # Initialize both users with 0 starter credits
         wallet_a = self.repo.get_or_create_wallet(user_a)
         wallet_b = self.repo.get_or_create_wallet(user_b)
-        self.assertEqual(wallet_a.remaining_credits, 5)
-        self.assertEqual(wallet_b.remaining_credits, 5)
+        self.assertEqual(wallet_a.remaining_credits, 0)
+        self.assertEqual(wallet_b.remaining_credits, 0)
 
         profile_a = self.repo.get_or_create_referral_profile(user_a)
         code_a = profile_a.referral_code
@@ -118,11 +118,11 @@ class TestCreditFlow(unittest.TestCase):
         # User B redeems User A's code
         wallet_b_updated, added, msg = self.repo.redeem_referral_code(user_b, code_a)
         self.assertEqual(added, 5)
-        self.assertEqual(wallet_b_updated.remaining_credits, 10)
+        self.assertEqual(wallet_b_updated.remaining_credits, 5)
 
         # Refresh User A wallet
         wallet_a_updated = self.repo.get_wallet(user_a)
-        self.assertEqual(wallet_a_updated.remaining_credits, 10)
+        self.assertEqual(wallet_a_updated.remaining_credits, 5)
 
         # Check transactions
         txs_b = self.repo.get_transactions(user_b)
@@ -166,6 +166,13 @@ class TestCreditFlow(unittest.TestCase):
         """Verify credit deduction, balance floor, and transaction ledger"""
         user_id = "user-deduct-audit"
         wallet = self.repo.get_or_create_wallet(user_id)
+        self.assertEqual(wallet.remaining_credits, 0)
+
+        # Earn 5 credits through social tasks
+        self.repo.claim_social_task_reward(user_id, "instagram_follow")
+        self.repo.claim_social_task_reward(user_id, "linkedin_follow")
+        self.repo.claim_social_task_reward(user_id, "x_follow")
+        wallet, _, _ = self.repo.claim_social_task_reward(user_id, "youtube_subscribe")
         self.assertEqual(wallet.remaining_credits, 5)
 
         wallet, success = self.repo.deduct_credits(user_id, 2, "AI ATS Analysis")

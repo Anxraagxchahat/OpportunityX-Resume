@@ -11,6 +11,7 @@ export const ProjectBlock = ({ projects, accentHex, variant = 'default', visible
       const blockId = `proj-${i}`;
       if (!isVisible(blockId)) return null;
       const techStr = p.techStack || (Array.isArray(p.technologies) ? p.technologies.join(', ') : p.technologies) || '';
+      const hasBullets = Array.isArray(p.bullets) && p.bullets.filter(Boolean).length > 0;
       return (
         <div key={p.id || i} data-block-id={blockId} className="mb-2 last:mb-0 pdf-block pdf-item">
           <div className="flex justify-between items-baseline text-xs font-bold text-slate-900">
@@ -18,7 +19,15 @@ export const ProjectBlock = ({ projects, accentHex, variant = 'default', visible
             {(p.link || p.url) && <span className="font-mono text-slate-500 text-[10px] font-normal">{p.link || p.url}</span>}
           </div>
           {techStr && <div className="text-[10px] text-slate-500 italic">{techStr}</div>}
-          {p.description && <div className="text-[10px] text-slate-700 mt-0.5">{p.description}</div>}
+          {hasBullets ? (
+            <ul className="list-disc pl-4 text-[10px] text-slate-700 mt-0.5 space-y-0.5">
+              {p.bullets.filter(Boolean).map((b, idx) => (
+                <li key={idx}>{b}</li>
+              ))}
+            </ul>
+          ) : p.description ? (
+            <div className="text-[10px] text-slate-700 mt-0.5">{p.description}</div>
+          ) : null}
         </div>
       );
     });
@@ -44,6 +53,7 @@ export const ProjectBlock = ({ projects, accentHex, variant = 'default', visible
     const blockId = `proj-${i}`;
     if (!isVisible(blockId)) return null;
     const techStr = p.techStack || (Array.isArray(p.technologies) ? p.technologies.join(', ') : p.technologies) || '';
+    const hasBullets = Array.isArray(p.bullets) && p.bullets.filter(Boolean).length > 0;
     return (
       <div key={p.id || i} data-block-id={blockId} className="mb-2.5 last:mb-0 pdf-block pdf-item">
         <div className="flex justify-between items-baseline text-xs font-bold text-slate-900">
@@ -53,12 +63,15 @@ export const ProjectBlock = ({ projects, accentHex, variant = 'default', visible
           </span>
           {(p.link || p.url) && <span className="font-mono text-slate-500 font-normal text-[10px]">{p.link || p.url}</span>}
         </div>
-        {p.description && <p className="text-[10px] text-slate-700 mt-0.5">{p.description}</p>}
-        {p.bullets && (
+        {hasBullets ? (
           <ul className="list-disc pl-4 text-[10px] text-slate-700 mt-0.5 space-y-0.5">
-            {p.bullets.map((b, idx) => b ? <li key={idx}>{b}</li> : null)}
+            {p.bullets.filter(Boolean).map((b, idx) => (
+              <li key={idx}>{b}</li>
+            ))}
           </ul>
-        )}
+        ) : p.description ? (
+          <p className="text-[10px] text-slate-700 mt-0.5">{p.description}</p>
+        ) : null}
       </div>
     );
   });

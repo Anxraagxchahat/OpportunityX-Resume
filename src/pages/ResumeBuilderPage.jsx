@@ -409,6 +409,7 @@ export const ResumeBuilderPage = () => {
                 updateProjects={updateProjects}
                 addProjectItem={addProjectItem}
                 removeProjectItem={removeProjectItem}
+                openAiModal={openAiModal}
               />
             )}
 

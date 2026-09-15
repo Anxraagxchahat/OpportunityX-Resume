@@ -64,12 +64,13 @@ export const BREGreenTemplate = ({ resumeData, accentHex, fontFamily, visibleBlo
             <div key={p.id || i} data-block-id={`proj-${i}`} className="mb-2.5 pdf-block pdf-item pdf-keep-together break-inside-avoid">
               <div className="text-xs font-bold text-slate-900">{p.name || p.title} {p.techStack && <span className="text-slate-500 font-normal">({p.techStack})</span>}</div>
               {(p.link || p.url) && <div className="text-[10px] text-slate-500 font-mono">{p.link || p.url}</div>}
-              {p.description && <p className="text-[11px] text-slate-700 mt-0.5">{p.description}</p>}
-              {p.bullets && (
+              {Array.isArray(p.bullets) && p.bullets.filter(Boolean).length > 0 ? (
                 <ul className="list-disc pl-4 text-[11px] text-slate-700 mt-1 space-y-0.5">
-                  {p.bullets.map((b, idx) => <li key={idx}>{b}</li>)}
+                  {p.bullets.filter(Boolean).map((b, idx) => <li key={idx}>{b}</li>)}
                 </ul>
-              )}
+              ) : p.description ? (
+                <p className="text-[11px] text-slate-700 mt-0.5">{p.description}</p>
+              ) : null}
             </div>
           ))}
         </div>

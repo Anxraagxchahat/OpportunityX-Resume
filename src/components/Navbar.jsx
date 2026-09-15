@@ -130,9 +130,9 @@ export const Navbar = () => {
           >
             <Sparkles className="w-3.5 h-3.5 animate-pulse" />
             <span className="hidden sm:inline">
-              {session.isAuthenticated && !session.isGuest ? `${aiCredits.remaining} Credits` : 'Claim 5 Free Credits'}
+              {session.isAuthenticated && !session.isGuest ? `${aiCredits.remaining} Credits` : 'Up to 5 Free Credits'}
             </span>
-            <span className="sm:hidden">{aiCredits.remaining || 5} Cr</span>
+            <span className="sm:hidden">{session.isAuthenticated && !session.isGuest ? `${aiCredits.remaining} Cr` : 'Up to 5 Cr'}</span>
           </button>
 
           <button

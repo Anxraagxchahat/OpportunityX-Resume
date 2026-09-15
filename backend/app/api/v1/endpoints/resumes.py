@@ -43,13 +43,13 @@ async def create_resume(
     )
     repo = ResumeRepository(db)
 
-    # Check if a resume with this custom ID already exists for this user (upsert / idempotency)
+    content_payload = req.content if req.content is not None else (req.resume_data or {})
     resume_id = req.id if (req.id and req.id.strip()) else f"res_{uuid.uuid4().hex[:16]}"
     existing = repo.get_by_user_and_id(user.uid, resume_id)
     if existing:
         updated = repo.update(existing, {
             "title": req.title,
-            "content": req.content,
+            "content": content_payload,
             "template_id": req.template_id or existing.template_id or "modern",
             "font_family": req.font_family or existing.font_family or "Inter",
             "accent_color": req.accent_color or existing.accent_color or "#F97316"
@@ -65,7 +65,7 @@ async def create_resume(
         id=resume_id,
         user_id=user.uid,
         title=req.title,
-        content=req.content,
+        content=content_payload,
         template_id=req.template_id or "modern",
         font_family=req.font_family or "Inter",
         accent_color=req.accent_color or "#F97316"
@@ -109,6 +109,8 @@ async def update_resume(
         raise HTTPException(status_code=404, detail="Resume not found.")
 
     updated_data = req.model_dump(exclude_unset=True)
+    if "resume_data" in updated_data and "content" not in updated_data:
+        updated_data["content"] = updated_data.pop("resume_data")
     if "content" in updated_data and updated_data["content"]:
         # Save snapshot version before updating
         repo.create_version(resume_id=resume.id, title="AutoSave snapshot", content=resume.content)

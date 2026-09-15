@@ -244,7 +244,7 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
             <p className="text-xs text-[var(--ox-text-secondary)] truncate font-medium">
               {isLoggedIn
                 ? `Account: ${session.user?.email || 'Authenticated User'}`
-                : 'Guest Session — Login to unlock 5 Guaranteed Starter Credits'}
+                : 'Guest Session — Login & complete social tasks to earn up to 5 AI Credits'}
             </p>
           </div>
         </div>
@@ -270,17 +270,17 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* 1. Guaranteed Starter Credits Status */}
-        <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs gap-2">
+        {/* Free Credits via Social Tasks Status */}
+        <div className="p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-between text-xs gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+            <Gift className="w-4 h-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
             <div className="min-w-0">
-              <span className="font-bold text-emerald-700 dark:text-emerald-300">5 Starter Credits</span>
-              <span className="text-[var(--ox-text-muted)] ml-1.5 hidden sm:inline">— Guaranteed on first use</span>
+              <span className="font-bold text-orange-600 dark:text-orange-400">Up to 5 Free Credits</span>
+              <span className="text-[var(--ox-text-muted)] ml-1.5 hidden sm:inline">— Earn by completing social tasks</span>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 flex items-center gap-1 shrink-0">
-            <Check className="w-3 h-3" /> Active
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/40 flex items-center gap-1 shrink-0">
+            {isLoggedIn ? `${socialBonusEarned} / 5 Earned` : 'Up to 5 Cr'}
           </span>
         </div>
 
@@ -291,10 +291,10 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="text-xs sm:text-sm font-bold text-[var(--ox-text-primary)] flex items-center gap-1.5">
-                    <Gift className="w-4 h-4 text-orange-500 dark:text-orange-400" /> Earn More Credits (Social Tasks)
+                    <Gift className="w-4 h-4 text-orange-500 dark:text-orange-400" /> Earn Free Credits (Social Tasks)
                   </h4>
                   <p className="text-[11px] text-[var(--ox-text-secondary)] font-medium">
-                    Earn up to <strong className="text-orange-600 dark:text-orange-400 font-bold">+5 Bonus Credits</strong> by following official channels.
+                    Earn up to <strong className="text-orange-600 dark:text-orange-400 font-bold">+5 Credits</strong> by following official channels.
                   </p>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/30 shrink-0">
@@ -605,7 +605,7 @@ export const AICreditsModal = ({ isOpen, onClose }) => {
               }}
               className="w-full py-3 min-h-[44px] bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs rounded-2xl shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Sparkles className="w-4 h-4" /> Login & Claim 5 Guaranteed Credits
+              <Sparkles className="w-4 h-4" /> Login & Earn Up to 5 Credits
             </button>
           )}
 

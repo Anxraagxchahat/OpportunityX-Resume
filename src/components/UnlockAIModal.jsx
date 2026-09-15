@@ -73,7 +73,7 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
           <div>
             <h3 className="text-xl font-black text-[var(--ox-text-primary)]">Unlock AI Features</h3>
             <p className="text-xs text-[var(--ox-text-secondary)] mt-0.5">
-              Login to claim your <strong className="text-amber-500 font-bold">5 FREE Welcome AI Credits</strong>.
+              Login to earn <strong className="text-amber-500 font-bold">Up to 5 FREE AI Credits</strong> via social tasks.
             </p>
             <p className="text-[11px] text-[var(--ox-text-muted)]">
               Continue building resumes without login anytime.
@@ -87,7 +87,7 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
           <div className="grid grid-cols-2 gap-2 text-xs text-[var(--ox-text-primary)] pt-1">
             <div className="flex items-center gap-1.5 font-semibold text-orange-500">
               <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
-              <span>5 Welcome Credits</span>
+              <span>Up to 5 Free Credits</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
@@ -156,7 +156,7 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
                 type="submit"
                 className="w-full py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>Claim 5 Free Credits & Continue</span> <ArrowRight className="w-3.5 h-3.5" />
+                <span>Unlock AI & Earn Up to 5 Credits</span> <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </form>
           )}
@@ -173,7 +173,7 @@ export const UnlockAIModal = ({ isOpen, onClose }) => {
         <div className="pt-3 border-t border-[var(--ox-border)] space-y-1.5">
           <span className="text-[11px] font-bold text-[var(--ox-text-secondary)]">Login gives you:</span>
           <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--ox-text-muted)]">
-            <span className="text-emerald-500 font-semibold">✓ 5 Welcome AI Credits</span>
+            <span className="text-emerald-500 font-semibold">✓ Up to 5 Free Credits (Tasks)</span>
             <span>✓ AI Features</span>
             <span>✓ Cloud Backup</span>
             <span>✓ Multi-device Sync</span>

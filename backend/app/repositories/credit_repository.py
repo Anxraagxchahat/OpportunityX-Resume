@@ -63,17 +63,16 @@ class CreditRepository:
     def get_wallet(self, user_id: str) -> Optional[AICreditWallet]:
         return self.db.query(AICreditWallet).filter(AICreditWallet.user_id == user_id).first()
 
-    def get_or_create_wallet(self, user_id: str, auto_grant_starter: bool = True) -> AICreditWallet:
+    def get_or_create_wallet(self, user_id: str, auto_grant_starter: bool = False) -> AICreditWallet:
         """
         Retrieves or creates the user's AICreditWallet.
-        If auto_grant_starter is True (default), checks whether the user has received their
-        Resume starter credits (5 credits). If not yet claimed (new or existing OpportunityX user),
-        automatically grants 5 starter credits and records the transaction.
+        Initial balance starts at 0 credits.
+        Users earn up to 5 credits by completing official social media tasks.
         """
         wallet = self.get_wallet(user_id)
         if not wallet:
             initial_credits = 5 if auto_grant_starter else 0
-            has_claimed = True if auto_grant_starter else False
+            has_claimed = True
             wallet = AICreditWallet(
                 user_id=user_id,
                 remaining_credits=initial_credits,
@@ -90,7 +89,7 @@ class CreditRepository:
                     action_type="WELCOME_BONUS",
                     credits_changed=initial_credits,
                     resulting_balance=initial_credits,
-                    metadata_info={"source": "resume", "description": "Guaranteed 5 Resume Starter Credits"}
+                    metadata_info={"source": "resume", "description": "Starter Credits"}
                 )
                 self.db.add(tx)
                 self.db.commit()
@@ -103,7 +102,7 @@ class CreditRepository:
                 action_type="WELCOME_BONUS",
                 credits_changed=5,
                 resulting_balance=wallet.remaining_credits,
-                metadata_info={"source": "resume", "description": "Guaranteed 5 Resume Starter Credits"}
+                metadata_info={"source": "resume", "description": "Starter Credits"}
             )
             self.db.add(tx)
             self.db.commit()
@@ -111,52 +110,13 @@ class CreditRepository:
 
         return wallet
 
-    def claim_welcome_bonus(self, user_id: str, bonus_credits: int = 5) -> tuple[AICreditWallet, bool]:
+    def claim_welcome_bonus(self, user_id: str, bonus_credits: int = 0) -> tuple[AICreditWallet, bool]:
         """
-        Authoritatively grants Resume starter bonus credits to a user if not already granted.
-        Returns (wallet, True) if newly granted, or (wallet, False) if already granted previously.
+        Welcome starter credits on simple login are disabled.
+        Users can earn up to 5 credits via official social tasks.
         """
-        wallet = self.get_wallet(user_id)
-        if not wallet:
-            wallet = AICreditWallet(
-                user_id=user_id,
-                remaining_credits=bonus_credits,
-                total_purchased=0,
-                has_claimed_welcome=True
-            )
-            self.db.add(wallet)
-            self.db.commit()
-            self.db.refresh(wallet)
-
-            tx = AICreditTransaction(
-                user_id=user_id,
-                action_type="WELCOME_BONUS",
-                credits_changed=bonus_credits,
-                resulting_balance=bonus_credits,
-                metadata_info={"source": "resume", "description": f"Claimed {bonus_credits} Welcome AI Credits on first login"}
-            )
-            self.db.add(tx)
-            self.db.commit()
-            self.db.refresh(wallet)
-            return wallet, True
-
-        if wallet.has_claimed_welcome:
-            return wallet, False
-
-        wallet.remaining_credits += bonus_credits
-        wallet.has_claimed_welcome = True
-
-        tx = AICreditTransaction(
-            user_id=user_id,
-            action_type="WELCOME_BONUS",
-            credits_changed=bonus_credits,
-            resulting_balance=wallet.remaining_credits,
-            metadata_info={"source": "resume", "description": f"Claimed {bonus_credits} Welcome AI Credits on first login"}
-        )
-        self.db.add(tx)
-        self.db.commit()
-        self.db.refresh(wallet)
-        return wallet, True
+        wallet = self.get_or_create_wallet(user_id, auto_grant_starter=False)
+        return wallet, False
 
     def add_purchased_credits(self, user_id: str, credits: int, pack_id: str, order_id: str) -> AICreditWallet:
         wallet = self.get_or_create_wallet(user_id, auto_grant_starter=False)
@@ -221,7 +181,7 @@ class CreditRepository:
         return wallet, True
 
     def get_user_credit_summary(self, user_id: str) -> Dict[str, Any]:
-        wallet = self.get_or_create_wallet(user_id, auto_grant_starter=True)
+        wallet = self.get_or_create_wallet(user_id, auto_grant_starter=False)
         transactions = self.get_transactions(user_id, limit=50)
         total_used = sum(abs(t.credits_changed) for t in transactions if t.credits_changed < 0)
         return {
@@ -312,7 +272,7 @@ class CreditRepository:
         referrer_profile.referral_credits_earned += reward_amount
 
         # Grant +5 credits to Referred User
-        user_wallet = self.get_or_create_wallet(user_id, auto_grant_starter=True)
+        user_wallet = self.get_or_create_wallet(user_id, auto_grant_starter=False)
         user_wallet.remaining_credits += reward_amount
         user_tx = AICreditTransaction(
             user_id=user_id,
@@ -328,7 +288,7 @@ class CreditRepository:
         self.db.add(user_tx)
 
         # Grant +5 credits to Referrer
-        referrer_wallet = self.get_or_create_wallet(referrer_profile.user_id, auto_grant_starter=True)
+        referrer_wallet = self.get_or_create_wallet(referrer_profile.user_id, auto_grant_starter=False)
         referrer_wallet.remaining_credits += reward_amount
         referrer_tx = AICreditTransaction(
             user_id=referrer_profile.user_id,
@@ -355,7 +315,7 @@ class CreditRepository:
         if not task_config:
             raise HTTPException(status_code=400, detail="Invalid or unsupported social task.")
 
-        wallet = self.get_or_create_wallet(user_id, auto_grant_starter=True)
+        wallet = self.get_or_create_wallet(user_id, auto_grant_starter=False)
 
         # Check if already completed
         existing = self.db.query(UserSocialTask).filter(
@@ -404,7 +364,7 @@ class CreditRepository:
         return wallet, reward_amount, f"Successfully claimed +{reward_amount} credits for {task_config['platform']}!"
 
     def get_rewards_overview(self, user_id: str) -> Dict[str, Any]:
-        wallet = self.get_or_create_wallet(user_id, auto_grant_starter=True)
+        wallet = self.get_or_create_wallet(user_id, auto_grant_starter=False)
         referral_profile = self.get_or_create_referral_profile(user_id)
         completed_tasks = self.db.query(UserSocialTask).filter(UserSocialTask.user_id == user_id).all()
         completed_map = {t.task_id: t for t in completed_tasks}
@@ -426,9 +386,9 @@ class CreditRepository:
 
         return {
             "starter_credits": {
-                "amount": 5,
-                "claimed": bool(wallet.has_claimed_welcome),
-                "type": "GUARANTEED"
+                "amount": 0,
+                "claimed": True,
+                "type": "SOCIAL_TASKS"
             },
             "social_tasks": social_tasks_list,
             "social_bonus_earned": social_bonus_earned,

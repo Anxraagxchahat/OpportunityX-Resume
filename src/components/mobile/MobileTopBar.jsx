@@ -14,7 +14,7 @@ export const MobileTopBar = () => {
     renameResume,
     resumeHealth = { percentage: 0 },
     session = {},
-    aiCredits = { remaining: 5 },
+    aiCredits = { remaining: 0 },
     setIsUnlockAIModalOpen,
     setIsAICreditsModalOpen,
     setIsAuthOpen
@@ -114,8 +114,8 @@ export const MobileTopBar = () => {
             style={{ minHeight: 32 }}
           >
             <Sparkles className="w-3.5 h-3.5 animate-pulse text-amber-400 shrink-0" />
-            <span className="mobile-credits-full font-extrabold">{session.isAuthenticated && !session.isGuest ? `${aiCredits.remaining} Cr` : '5 Cr'}</span>
-            <span className="mobile-credits-short font-extrabold">{session.isAuthenticated && !session.isGuest ? aiCredits.remaining : '5'}</span>
+            <span className="mobile-credits-full font-extrabold">{session.isAuthenticated && !session.isGuest ? `${aiCredits.remaining} Cr` : 'Up to 5 Cr'}</span>
+            <span className="mobile-credits-short font-extrabold">{session.isAuthenticated && !session.isGuest ? aiCredits.remaining : '0'}</span>
           </button>
 
           {/* Account / Profile / Login — ALWAYS visible */}

@@ -140,7 +140,7 @@ export const AIAssistantPage = () => {
               AI Suite is Locked for Guests
             </h2>
             <p className="text-xs text-[var(--ox-text-secondary)] font-medium max-w-md mx-auto break-words leading-relaxed">
-              Login to claim your <strong className="text-orange-500 font-bold">5 FREE Welcome AI Credits</strong> and unlock all 9 AI capabilities. Core Resume Builder remains 100% Free Forever without login!
+              Login to earn <strong className="text-orange-500 font-bold">Up to 5 FREE AI Credits</strong> via social tasks and unlock all 9 AI capabilities. Core Resume Builder remains 100% Free Forever without login!
             </p>
           </div>
           <button
@@ -149,7 +149,7 @@ export const AIAssistantPage = () => {
             className="w-full sm:w-auto min-h-[44px] px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
           >
             <Sparkles className="w-4 h-4 shrink-0" />
-            <span className="truncate">Unlock AI Features (Claim 5 Free Credits)</span>
+            <span className="truncate">Unlock AI Features (Earn Up to 5 Credits)</span>
           </button>
         </div>
       )}

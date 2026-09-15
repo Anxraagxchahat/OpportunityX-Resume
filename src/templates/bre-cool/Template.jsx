@@ -93,12 +93,13 @@ export const BRECoolTemplate = ({ resumeData, accentHex, fontFamily, visibleBloc
                 <div key={p.id || i} data-block-id={`proj-${i}`} className="bre-cool-item pdf-block pdf-item pdf-keep-together break-inside-avoid">
                   <div className="bre-cool-header">{p.name || p.title}</div>
                   {p.techStack && <div className="text-[10px] text-slate-500 italic">{p.techStack}</div>}
-                  {p.description && <div className="text-[11px] text-slate-700 mt-0.5">{p.description}</div>}
-                  {p.bullets && (
+                  {Array.isArray(p.bullets) && p.bullets.filter(Boolean).length > 0 ? (
                     <ul className="list-disc pl-4 text-[11px] text-slate-700 mt-1 space-y-0.5">
-                      {p.bullets.map((b, idx) => <li key={idx}>{b}</li>)}
+                      {p.bullets.filter(Boolean).map((b, idx) => <li key={idx}>{b}</li>)}
                     </ul>
-                  )}
+                  ) : p.description ? (
+                    <div className="text-[11px] text-slate-700 mt-0.5">{p.description}</div>
+                  ) : null}
                 </div>
               ))}
             </div>

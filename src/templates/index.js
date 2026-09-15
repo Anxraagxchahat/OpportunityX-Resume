@@ -87,7 +87,7 @@ export const TEMPLATE_REGISTRY = {
   'bre-cool': LazyBRECool,
   'bre-creative': LazyBRECreative,
   'bre-green': LazyBREGreen,
-  'bre-purple': LazyBREGreen, // Unified with BRE Accent Header
+  'bre-purple': LazyBREPurple,
   'bre-left-right': LazyBRELeftRight,
   'bre-material-dark': LazyBREMaterialDark,
   'bre-oblique': LazyBREOblique,

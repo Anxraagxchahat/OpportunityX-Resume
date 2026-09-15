@@ -64,7 +64,7 @@ async def generate_ai_content(
         required_credits = FEATURE_CREDIT_COSTS.get(norm_feat, 1)
 
     # 4. Pre-Generation Balance Check (Never execute if balance is insufficient)
-    wallet = credit_repo.get_or_create_wallet(user.uid, auto_grant_starter=True)
+    wallet = credit_repo.get_or_create_wallet(user.uid, auto_grant_starter=False)
     if required_credits > 0 and wallet.remaining_credits < required_credits:
         raise HTTPException(
             status_code=402,

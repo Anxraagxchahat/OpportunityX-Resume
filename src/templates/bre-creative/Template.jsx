@@ -95,12 +95,13 @@ export const BRECreativeTemplate = ({ resumeData, accentHex, fontFamily, visible
               <div key={p.id || i} data-block-id={`proj-${i}`} className="mb-2.5 pdf-block pdf-item pdf-keep-together break-inside-avoid">
                 <div className="font-bold text-xs text-slate-900">{p.name || p.title}</div>
                 {p.techStack && <div className="text-[10px] text-slate-500 italic">{p.techStack}</div>}
-                {p.description && <div className="text-[11px] text-slate-700 mt-0.5">{p.description}</div>}
-                {p.bullets && (
+                {Array.isArray(p.bullets) && p.bullets.filter(Boolean).length > 0 ? (
                   <ul className="list-disc pl-4 text-[11px] text-slate-700 space-y-0.5 mt-0.5">
-                    {p.bullets.map((b, idx) => <li key={idx}>{b}</li>)}
+                    {p.bullets.filter(Boolean).map((b, idx) => <li key={idx}>{b}</li>)}
                   </ul>
-                )}
+                ) : p.description ? (
+                  <div className="text-[11px] text-slate-700 mt-0.5">{p.description}</div>
+                ) : null}
               </div>
             ))}
           </div>

@@ -1,28 +1,74 @@
 /* BRE Material Dark Template Styles */
 .bre-material-dark-container {
   padding: 24px;
-  background-color: #121212;
-  color: #e0e0e0;
+  background-color: #121212 !important;
+  color: #e0e0e0 !important;
   font-family: inherit;
   font-size: 13px;
   min-height: 100%;
+  color-scheme: dark !important;
+}
+
+.bre-material-dark-container * {
+  box-sizing: border-box;
 }
 
 .bre-material-card {
-  background-color: #1e1e1e;
+  background-color: #1e1e1e !important;
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
-  border: 1px solid #2d2d2d;
+  border: 1px solid #2d2d2d !important;
 }
 
 .bre-material-heading {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #bb86fc;
-  border-bottom: 1px solid #333333;
+  border-bottom: 1px solid #333333 !important;
   padding-bottom: 6px;
   margin-bottom: 12px;
+}
+
+/* Force high-contrast white and light text inside Material Dark so external UI themes cannot turn it black */
+.bre-material-dark-container h1,
+.bre-material-dark-container .bre-material-name,
+.bre-material-dark-container .bre-item-title,
+.bre-material-dark-container .text-white {
+  color: #FFFFFF !important;
+}
+
+.bre-material-dark-container .bre-material-meta,
+.bre-material-dark-container .text-gray-400 {
+  color: #9CA3AF !important;
+}
+
+.bre-material-dark-container .bre-material-body,
+.bre-material-dark-container .text-gray-300 {
+  color: #D1D5DB !important;
+}
+
+.bre-material-dark-container .bre-material-pill,
+.bre-material-dark-container .text-gray-200 {
+  color: #F3F4F6 !important;
+}
+
+.bre-material-dark-container a,
+.bre-material-dark-container .bre-material-link {
+  color: #38BDF8 !important;
+  text-decoration: none;
+}
+
+.bre-material-dark-container a:hover,
+.bre-material-dark-container .bre-material-link:hover {
+  text-decoration: underline;
+}
+
+.bre-material-dark-container ul {
+  color: #D1D5DB !important;
+}
+
+.bre-material-dark-container li {
+  color: #D1D5DB !important;
 }
